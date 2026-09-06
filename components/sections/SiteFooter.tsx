@@ -1,0 +1,122 @@
+// components/sections/SiteFooter.tsx
+//
+// Carries the DPDP surface: privacy notice, consent preferences (the withdrawal
+// mechanism, which the Act requires to be as easy as giving consent), and the named
+// grievance officer. These links exist from Phase 1 even though the pages behind them
+// fill out later — retrofitting a rights surface into a finished IA is painful, and its
+// absence at launch is a visible gap.
+//
+// Server component.
+
+import Link from 'next/link'
+import { Container } from '@/components/primitives/Container'
+import type { Location, NavItem } from '@/types'
+
+export interface SiteFooterProps {
+  centres: NavItem[]
+  patientServices: NavItem[]
+  primaryLocation: Location
+}
+
+export function SiteFooter({ centres, patientServices, primaryLocation }: SiteFooterProps) {
+  const year = new Date().getFullYear()
+
+  return (
+    <footer className="on-dark bg-teal-900 text-white">
+      {/* Thematic divider: the one copper line that marks the page ending and the
+          institutional footer beginning. copper-500 on teal-900 is 3.89:1 — fine for
+          a non-text element (WCAG 1.4.11 wants 3:1), and it would not be fine as text. */}
+      <span className="divider-accent" aria-hidden="true" />
+      <Container>
+        <div className="grid gap-10 py-section md:grid-cols-2 lg:grid-cols-4">
+          <div>
+            <p className="font-serif text-step-1 font-semibold text-white">
+              Lifeline Institute of Medical Sciences
+            </p>
+            <span className="rule-accent-lg mt-3" aria-hidden="true" />
+            <address className="mt-4 not-italic text-step--1 leading-relaxed text-teal-100">
+              {primaryLocation.addressLines.map((line) => (
+                <span key={line} className="block">
+                  {line}
+                </span>
+              ))}
+              <span className="block">
+                {primaryLocation.city}, {primaryLocation.state}
+                {primaryLocation.pincode ? ` ${primaryLocation.pincode}` : ''}
+              </span>
+              <a
+                href={`tel:${primaryLocation.phone}`}
+                className="mt-3 inline-flex min-h-[44px] items-center font-semibold
+                           text-white underline-offset-4 hover:underline"
+              >
+                {primaryLocation.phone}
+              </a>
+            </address>
+          </div>
+
+          <FooterNav title="Centres of Excellence" items={centres} label="Centres" />
+          <FooterNav title="Patient services" items={patientServices} label="Patient services" />
+
+          <nav aria-label="Legal and privacy">
+            <h2 className="text-step-0 font-semibold text-white">Privacy &amp; policies</h2>
+            <ul className="mt-4 space-y-1">
+              {[
+                { label: 'Privacy notice', href: '/privacy' },
+                // The consent-withdrawal mechanism. Required on every page under DPDP.
+                { label: 'Cookie & consent preferences', href: '/privacy/preferences' },
+                { label: 'Your data rights', href: '/privacy/your-rights' },
+                { label: 'Grievance officer', href: '/privacy/grievance' },
+                { label: 'Terms of use', href: '/terms' },
+              ].map((item) => (
+                <li key={item.href}>
+                  <Link
+                    href={item.href}
+                    className="flex min-h-[44px] items-center text-step--1 text-teal-100
+                               underline-offset-4 hover:text-white hover:underline"
+                  >
+                    {item.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        </div>
+
+        <div className="border-t border-copper-500/40 py-6 text-step--1 text-teal-200">
+          <p>&copy; {year} Lifeline Institute of Medical Sciences, Hisar. All rights reserved.</p>
+          <p className="mt-1">
+            Information on this website is for general awareness and is not a substitute for
+            professional medical advice, diagnosis or treatment.
+          </p>
+        </div>
+      </Container>
+    </footer>
+  )
+}
+
+interface FooterNavProps {
+  title: string
+  items: NavItem[]
+  label: string
+}
+
+function FooterNav({ title, items, label }: FooterNavProps) {
+  return (
+    <nav aria-label={label}>
+      <h2 className="text-step-0 font-semibold text-white">{title}</h2>
+      <ul className="mt-4 space-y-1">
+        {items.map((item) => (
+          <li key={item.href}>
+            <Link
+              href={item.href}
+              className="flex min-h-[44px] items-center text-step--1 text-teal-100
+                         underline-offset-4 hover:text-white hover:underline"
+            >
+              {item.label}
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  )
+}

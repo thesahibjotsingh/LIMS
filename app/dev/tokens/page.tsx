@@ -1,0 +1,233 @@
+// app/dev/tokens/page.tsx
+//
+// Living reference for the LIMS design system. The point is that palette and typography
+// drift is visible immediately rather than discovered six departments later — over a
+// multi-year hospital build, that drift is the main way a design system dies.
+//
+// Not linked from navigation, and excluded from indexing. Remove or gate behind an env
+// check before production if you'd rather it not exist publicly.
+
+import type { Metadata } from 'next'
+import { Section } from '@/components/primitives/Section'
+
+export const metadata: Metadata = {
+  title: 'Design tokens',
+  robots: { index: false, follow: false },
+}
+
+const tealRamp = [
+  ['50', '#EFFAFB'], ['100', '#D6F2F5'], ['200', '#ABE5ED'], ['300', '#6FD4E2'],
+  ['400', '#25BCD0'], ['500', '#1BA0B1'], ['600', '#168B99'], ['700', '#13707C'],
+  ['800', '#0F5B66'], ['900', '#0B4047'], ['950', '#07282C'],
+] as const
+
+const copperRamp = [
+  ['50', '#FBF2EF'], ['100', '#F6E1DA'], ['200', '#EEC4B5'], ['300', '#E3A791'],
+  ['400', '#DD9378'], ['500', '#D68060'], ['600', '#C86541'], ['700', '#B35C34'],
+  ['800', '#9C4A28'], ['900', '#592918'],
+] as const
+
+const inkRamp = [
+  ['50', '#F7FAFA'], ['100', '#EBF0F0'], ['200', '#D7E0E1'], ['300', '#B4C2C5'],
+  ['400', '#7E9094'], ['600', '#4A5B5E'], ['800', '#1E2A2D'], ['950', '#0B1416'],
+] as const
+
+const typeSteps = [
+  ['step-5', 'text-step-5', 'Page title'],
+  ['step-4', 'text-step-4', 'Section heading'],
+  ['step-3', 'text-step-3', 'Subsection'],
+  ['step-2', 'text-step-2', 'Large heading'],
+  ['step-1', 'text-step-1', 'Card title'],
+  ['step-0', 'text-step-0', 'Body copy'],
+  ['step--1', 'text-step--1', 'Caption / meta'],
+] as const
+
+export default function TokensPage() {
+  return (
+    <Section labelledBy="tokens-heading">
+      <h1 id="tokens-heading" className="text-step-5">
+        LIMS design tokens
+      </h1>
+      <span className="rule-accent mt-3" aria-hidden="true" />
+
+      <h2 className="mt-12 text-step-3">Brand anchors</h2>
+      <div className="mt-4 grid gap-4 sm:grid-cols-3">
+        <Anchor name="Primary Teal" token="teal-800" hex="#0F5B66" ratio="7.75:1 · AAA"
+          note="Body text, headings, primary buttons. Safe everywhere." fg="text-white" bg="bg-teal-800" />
+        <Anchor name="Secondary Cyan" token="teal-600" hex="#168B99" ratio="4.05:1 · AA-large"
+          note="Icons, borders, focus rings, ≥24px headings. Not body copy." fg="text-white" bg="bg-teal-600" />
+        <Anchor name="Accent Copper" token="copper-500" hex="#D68060" ratio="2.95:1 · fails"
+          note="Decorative only. As a fill with ink-950 text it reaches 6.32:1. When copper must be text, use copper-800." fg="text-ink-950" bg="bg-copper-500" />
+      </div>
+
+      <h2 className="mt-12 text-step-3">Teal ramp</h2>
+      <Ramp entries={tealRamp} />
+
+      <h2 className="mt-12 text-step-3">Copper ramp</h2>
+      <Ramp entries={copperRamp} />
+
+      <h2 className="mt-12 text-step-3">Ink (warm neutrals)</h2>
+      <Ramp entries={inkRamp} />
+
+      <h2 className="mt-12 text-step-3">Clinical status</h2>
+      <p className="mt-2 max-w-prose text-step--1 text-ink-600">
+        Each of these must always be paired with text or an icon. Never colour alone.
+      </p>
+      <div className="mt-4 flex flex-wrap gap-3">
+        <span className="rounded bg-emergency px-4 py-2 text-step--1 font-semibold text-white">
+          Emergency #B3261E
+        </span>
+        <span className="rounded bg-caution px-4 py-2 text-step--1 font-semibold text-white">
+          Caution #8A5A00
+        </span>
+        <span className="rounded bg-success px-4 py-2 text-step--1 font-semibold text-white">
+          Success #1F6B3F
+        </span>
+      </div>
+
+      <h2 className="mt-12 text-step-3">Fluid type scale</h2>
+      <p className="mt-2 max-w-prose text-step--1 text-ink-600">
+        Resize the window: every step scales continuously between 360px and 1440px, so no
+        viewport is an afterthought.
+      </p>
+      <dl className="mt-4 space-y-4">
+        {typeSteps.map(([token, className, role]) => (
+          <div key={token} className="border-b border-ink-200 pb-4">
+            <dt className="text-step--1 font-semibold text-teal-600">
+              {token} — {role}
+            </dt>
+            <dd className={`${className} mt-1 font-sans text-ink-950`}>
+              Cardiac Sciences at LIMS Hisar
+            </dd>
+          </div>
+        ))}
+      </dl>
+
+      <h2 className="mt-12 text-step-3">Copper accent system</h2>
+      <span className="rule-accent mt-3" aria-hidden="true" />
+      <p className="mt-4 max-w-prose text-step--1 text-ink-600">
+        Copper is the brand&rsquo;s only warm hue and carries structure — where a section
+        starts, what is interactive, what is worth noticing. It never carries meaning on
+        its own; clinical meaning belongs to the status colours above. The recipes live in
+        <code className="mx-1 rounded bg-ink-100 px-1">app/globals.css</code>
+        so the contrast rule is enforced in one place rather than re-derived per component.
+      </p>
+
+      <dl className="mt-6 space-y-6">
+        <Recipe name=".eyebrow" note="copper-800 — 6.13:1 on white, 5.76:1 on teal-50, 5.56:1 on copper-50">
+          <span className="eyebrow">Centres of Excellence</span>
+        </Recipe>
+
+        <Recipe name=".rule-accent / .rule-accent-lg" note="hairline under h2, 3px under h1">
+          <span className="rule-accent" aria-hidden="true" />
+          <span className="rule-accent-lg mt-3" aria-hidden="true" />
+        </Recipe>
+
+        <Recipe name=".divider-accent" note="full-bleed band transition; fades at both ends">
+          <span className="divider-accent" aria-hidden="true" />
+        </Recipe>
+
+        <Recipe name=".badge-accent / .badge-accent-soft" note="ink-950 on copper-500 = 6.32:1; copper-800 on copper-50 = 5.56:1">
+          <span className="badge-accent">24&times;7</span>
+          <span className="badge-accent-soft ml-2">Cardiac sciences</span>
+        </Recipe>
+
+        <Recipe name=".card-accent" note="edge thickens on hover AND focus-within — tab into the link">
+          <a
+            href="#tokens-heading"
+            className="card-accent block rounded border border-ink-200 bg-white p-5 pl-7
+                       shadow-card transition-shadow ease-standard hover:shadow-raised"
+          >
+            <span className="text-step-1 font-semibold text-teal-800">Interactive card</span>
+          </a>
+        </Recipe>
+
+        <Recipe name=".link-accent" note="underline is always present; colour never marks a link alone">
+          <a href="#tokens-heading" className="link-accent">
+            Read the patient information leaflet
+          </a>
+        </Recipe>
+      </dl>
+
+      <h2 className="mt-12 text-step-3">Component recipes</h2>
+      <div className="mt-4 flex flex-wrap items-center gap-3">
+        <button type="button" className="min-h-[44px] rounded bg-teal-800 px-5 font-semibold text-white hover:bg-teal-700">
+          Primary
+        </button>
+        <button type="button" className="min-h-[44px] rounded border-2 border-teal-800 px-5 font-semibold text-teal-800 hover:bg-teal-50">
+          Secondary
+        </button>
+        <button type="button" className="min-h-[44px] rounded bg-copper-500 px-5 font-semibold text-ink-950 hover:bg-copper-600">
+          Accent CTA
+        </button>
+        <a href="#tokens-heading" className="text-teal-800 underline decoration-teal-600/40 underline-offset-2 hover:decoration-teal-600">
+          Text link
+        </a>
+        <span className="rounded-full border border-teal-200 bg-teal-50 px-3 py-1 text-step--1 text-teal-800">
+          Chip
+        </span>
+      </div>
+    </Section>
+  )
+}
+
+interface RecipeProps {
+  name: string
+  note: string
+  children: React.ReactNode
+}
+
+/** One row of the copper reference: the class name, why it is safe, and it rendered. */
+function Recipe({ name, note, children }: RecipeProps) {
+  return (
+    <div className="border-b border-ink-200 pb-6">
+      <dt>
+        <code className="text-step--1 font-semibold text-copper-800">{name}</code>
+        <span className="ml-3 text-step--1 text-ink-600">{note}</span>
+      </dt>
+      <dd className="mt-3">{children}</dd>
+    </div>
+  )
+}
+
+interface AnchorProps {
+  name: string
+  token: string
+  hex: string
+  ratio: string
+  note: string
+  fg: string
+  bg: string
+}
+
+function Anchor({ name, token, hex, ratio, note, fg, bg }: AnchorProps) {
+  return (
+    <div className="rounded border border-ink-200 shadow-card">
+      <div className={`${bg} ${fg} rounded-t p-6`}>
+        <p className="font-semibold">{name}</p>
+        <p className="text-step--1 tabular-nums">{hex}</p>
+      </div>
+      <div className="p-4">
+        <p className="text-step--1 font-semibold text-teal-800">{token}</p>
+        <p className="text-step--1 tabular-nums text-ink-600">{ratio} on white</p>
+        <p className="mt-2 text-step--1 text-ink-950">{note}</p>
+      </div>
+    </div>
+  )
+}
+
+function Ramp({ entries }: { entries: ReadonlyArray<readonly [string, string]> }) {
+  return (
+    <div className="mt-4 grid grid-cols-[repeat(auto-fit,minmax(7rem,1fr))] gap-2">
+      {entries.map(([step, hex]) => (
+        <div key={step} className="rounded border border-ink-200 text-step--1">
+          <div className="h-14 rounded-t" style={{ backgroundColor: hex }} />
+          <div className="p-2">
+            <p className="font-semibold text-teal-800">{step}</p>
+            <p className="tabular-nums text-ink-600">{hex}</p>
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}

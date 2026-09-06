@@ -1,0 +1,197 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ---------------------------------------------------------------------------
+   LIMS token layer
+   Mirrors tailwind.config.ts for the handful of places that need raw CSS vars
+   (focus ring, scrollbar, third-party overrides). Keep the two in sync.
+   --------------------------------------------------------------------------- */
+
+:root {
+  --brand: #0f5b66; /* Primary Teal   */
+  --brand-secondary: #168b99; /* Secondary Cyan */
+  --brand-accent: #d68060; /* Accent Copper  */
+
+  --surface: #ffffff;
+  --surface-alt: #f7fafa;
+  --surface-tint: #effafb;
+  --surface-warm: #fbf2ef;
+  --surface-dark: #0b4047;
+
+  --text: #0b1416;
+  --text-muted: #4a5b5e;
+  --border: #d7e0e1;
+
+  --focus: #168b99;
+  --radius: 0.5rem;
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--surface);
+    color: var(--text);
+    @apply font-sans text-step-0 antialiased;
+  }
+
+  /* Headings default to Primary Teal — 7.75:1, AAA at any size. */
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-serif text-teal-800;
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  /* Focus ring: 2px Secondary Cyan + 2px offset = 4.05:1 on white, comfortably above
+     the 3:1 minimum for non-text indicators (WCAG 1.4.11).
+     Never remove this outline. Patients who navigate by keyboard have no other way
+     to know where they are on the page. */
+  :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+    border-radius: var(--radius);
+  }
+
+  /* On dark bands cyan-on-teal is too low-contrast — switch the ring to white. */
+  .on-dark :where(a, button, input, select, textarea, [tabindex]):focus-visible {
+    outline-color: #ffffff;
+  }
+
+  ::selection {
+    background-color: #d6f2f5;
+    color: #0f5b66;
+  }
+}
+
+@layer components {
+  /* Skip link: first focusable element in the document, visible only on focus.
+     WCAG 2.4.1 — lets keyboard users jump the header on every page. */
+  .skip-link {
+    @apply sr-only;
+  }
+
+  .skip-link:focus {
+    @apply not-sr-only fixed left-4 top-4 z-[100] rounded bg-teal-800 px-4 py-3
+           font-semibold text-white shadow-raised;
+  }
+
+  /* -------------------------------------------------------------------------
+     Copper accent system
+     -------------------------------------------------------------------------
+     Copper is the brand's only warm hue, so it is what tells a patient "this is
+     LIMS" rather than any of the hundred other teal hospital sites. It carries
+     structure — where a section starts, what is interactive, what is worth
+     noticing — and never carries meaning on its own (WCAG 1.4.1); clinical
+     meaning belongs to the status colours.
+
+     The contrast law repeats here because it is where it gets broken:
+       copper-500 (#D68060)  2.95:1 on white  -> RULES, FILLS, BORDERS. Never text.
+       ink-950 on copper-500 6.32:1           -> this is how copper carries text
+       copper-700 (#B35C34)  4.67:1 on white  -> text-safe ON WHITE ONLY. It drops to
+                                                 4.39:1 on teal-50 and 4.24:1 on
+                                                 copper-50 and fails AA on both bands.
+       copper-800 (#9C4A28)  6.13:1 white / 5.76:1 teal-50 / 5.56:1 copper-50
+                                              -> the copper that is safe on EVERY
+                                                 surface this platform uses. Default to
+                                                 it for text and only drop to 700 after
+                                                 checking the actual background.
+       copper-500 on teal-900 3.89:1          -> dividers/large text on dark bands
+     ------------------------------------------------------------------------- */
+
+  /* The signature copper accent: a short rule under section headings. */
+  .rule-accent {
+    @apply block h-px w-16 bg-copper-500;
+  }
+
+  /* Heavier sibling for page-level headings (h1) where a hairline reads as an
+     artefact rather than a decision. */
+  .rule-accent-lg {
+    @apply block h-[3px] w-20 rounded-full bg-copper-500;
+  }
+
+  /* Full-bleed thematic divider between bands. Fades at both ends so it reads as
+     a transition rather than a table border. */
+  .divider-accent {
+    @apply block h-px w-full border-0;
+    background-image: linear-gradient(
+      to right,
+      transparent,
+      theme('colors.copper.500') 15%,
+      theme('colors.copper.500') 85%,
+      transparent
+    );
+  }
+
+  /* Section eyebrow / subheading.
+     copper-800, not the copper-700 the ramp comment suggests: the eyebrow appears on
+     white AND on the teal-50 and copper-50 bands, and copper-700 only clears 4.5:1 on
+     white. Picking the tone that survives every surface is what stops this from
+     silently failing the first time someone moves a section to a tinted band. */
+  .eyebrow {
+    @apply block text-step--1 font-semibold uppercase tracking-[0.1em] text-copper-800;
+  }
+
+  .eyebrow-on-dark {
+    @apply block text-step--1 font-semibold uppercase tracking-[0.1em] text-copper-300;
+  }
+
+  /* Badging. Text sits on the fill, never beside it — ink-950 on copper-500 is
+     6.32:1, whereas copper-500 as text on white is 2.95:1 and fails outright. */
+  .badge-accent {
+    @apply inline-flex items-center rounded-full bg-copper-500 px-3 py-1 text-step--1
+           font-semibold text-ink-950;
+  }
+
+  .badge-accent-soft {
+    @apply inline-flex items-center rounded-full border border-copper-200 bg-copper-50
+           px-3 py-1 text-step--1 font-semibold text-copper-800;
+  }
+
+  /* Interactive surface: a copper edge that thickens on hover and on keyboard focus
+     anywhere inside. The transition is width-only and sits behind the global
+     reduced-motion guard. Focus-within matters — a card whose only affordance is a
+     mouse hover is invisible to keyboard users. */
+  .card-accent {
+    @apply relative overflow-hidden;
+  }
+
+  .card-accent::before {
+    content: '';
+    @apply absolute left-0 top-0 h-full w-1 bg-copper-500 transition-[width] ease-standard;
+  }
+
+  .card-accent:hover::before,
+  .card-accent:focus-within::before {
+    @apply w-1.5;
+  }
+
+  /* Copper text link. Underline is always present — colour alone never marks a link. */
+  .link-accent {
+    @apply font-semibold text-copper-800 underline decoration-copper-500 decoration-2
+           underline-offset-4 transition-colors ease-standard hover:text-copper-900
+           hover:decoration-copper-700;
+  }
+}
+
+/* Vestibular disorders are a real clinical population, and this site serves them.
+   Every transition in the platform sits behind this guard. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
