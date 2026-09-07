@@ -25,11 +25,12 @@
 // THE HEADER IS FLUID; THE PAGE BENEATH IT IS NOT.
 // Both tiers are edge-to-edge — w-full with px-6 / lg:px-12 — rather than sitting in the
 // 80rem page container. The logo therefore locks to the left margin and the buttons to
-// the right, at every width. The trade is that on a screen wider than 80rem the logo no
-// longer lines up with the page content below it: the header runs to the edges while
-// the content stays centred. That is the intended look here, but it is a real
-// misalignment, so PADDING_X is a single constant — both tiers share it, and the day the
-// page container changes there is one number to reconcile, not four.
+// the right, at every width, and tier 2 centres between them. The trade is that on a
+// screen wider than 80rem the header no longer lines up with the page content below it:
+// the header runs to the edges while the content stays centred. That is the intended
+// look here, but it is a real misalignment, so PADDING_X is a single constant — both
+// tiers share it, and the day the page container changes there is one number to
+// reconcile, not four.
 //
 // The header is sticky. That is not decoration: the red emergency band that used to sit
 // above it was always on screen, and moving the emergency number into the header would
@@ -71,11 +72,11 @@ const LOGO_HEIGHT = 112
 const PADDING_X = 'w-full px-6 lg:px-12'
 
 /**
- * The nav tier's padding is PADDING_X minus the nav item's own px-3, so the first label
- * sits optically flush under the logo instead of indented a further 12px past it.
- * Optical alignment, not mathematical: the eye lines up the text, not the box.
+ * The nav tier's own px-3 on each item means the ribbon's visual edge sits 12px inside
+ * its padding box. That mattered while the nav was left-aligned under the logo; centred,
+ * there is nothing to align to, so it simply shares PADDING_X and the padding only does
+ * work at narrow widths, where it keeps a wrapped row off the screen edge.
  */
-const NAV_PADDING_X = 'w-full px-3 lg:px-9'
 
 export function SiteHeader({ nav, emergencyPhone, name, city, tagline }: SiteHeaderProps) {
   return (
@@ -197,10 +198,15 @@ export function SiteHeader({ nav, emergencyPhone, name, city, tagline }: SiteHea
       {/* Distinct aria-label: the footer has its own <nav>, and screen-reader users
           navigate by landmark. "Navigation, navigation" tells them nothing. */}
       <nav aria-label="Primary" className="border-t border-ink-200 bg-teal-50">
-        {/* Same PADDING_X as tier 1, less the nav item's own px-3, so the first label
-            sits optically under the logo rather than indented past it. */}
-        <div className={NAV_PADDING_X}>
-          <ul className="flex flex-wrap items-center gap-x-1">
+        <div className={PADDING_X}>
+          {/* Centred, not left-aligned under the logo. With tier 1 running lockup-left
+              and actions-right across the full screen, a centred ribbon is the axis that
+              holds the two ends together; left-aligning it puts every item on one side
+              and leaves the right half of a wide header empty.
+
+              justify-center also does the right thing when the row wraps at narrow
+              widths — each line centres on its own rather than leaving a ragged tail. */}
+          <ul className="flex flex-wrap items-center justify-center gap-x-1">
             {nav.map((item, index) =>
               item.children?.length ? (
                 <li key={item.label}>
