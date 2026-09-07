@@ -201,14 +201,12 @@
 
   /* Shared mechanics. */
   .sweep,
-  .sweep-card,
   .sweep-solid {
     @apply relative isolate overflow-hidden;
     transition: color 140ms cubic-bezier(0.2, 0, 0, 1);
   }
 
   .sweep::before,
-  .sweep-card::before,
   .sweep-solid::before {
     content: '';
     @apply absolute inset-0 -z-10 origin-left;
@@ -219,8 +217,6 @@
   .sweep:hover::before,
   .sweep:focus-visible::before,
   .sweep[aria-expanded='true']::before,
-  .sweep-card:hover::before,
-  .sweep-card:focus-within::before,
   .sweep-solid:hover::before,
   .sweep-solid:focus-visible::before {
     transform: scaleX(1);
@@ -241,38 +237,49 @@
     @apply text-teal-950;
   }
 
-  /* 2. Cards and tiles, which carry several text colours at once.
-        focus-within, not focus-visible: the affordance has to exist for someone
-        tabbing to a link inside the card, not only for a mouse. */
-  .sweep-card {
-    @apply rounded;
+  /* -------------------------------------------------------------------------
+     .card-edge — department and service cards.
+     -------------------------------------------------------------------------
+     Named for what it does. It used to be .sweep-card and used to flood the whole
+     card with copper on hover; the fill is gone. A card is a container for several
+     text colours at once, and filling it meant repainting every one of them to
+     survive the new ground — a lot of machinery for a hover state, and it buried
+     the copper edge that identifies the card at rest.
+
+     What replaces it is a single strip on the left edge:
+       rest   4px copper-500  — the card's resting identity
+       state  6px teal-800    — hover and focus-within
+
+     The strip is an absolutely-positioned ::before, not a real border, for one
+     reason: widening a border reflows the card's content 2px to the right on every
+     hover. Absolute positioning takes it out of flow, so the width change is free
+     and nothing else on the card moves.
+
+     Contrast: teal-800 on the white card is 7.75:1, far past the 3:1 a state
+     indicator needs (WCAG 1.4.11). The resting copper is 2.95:1 and does not need
+     to clear that bar — at rest it is decoration, not a state.
+
+     120ms, not the 260ms the buttons use. The card should feel like a switch
+     throwing rather than a wave arriving: the strip is either the resting colour
+     or the active one, and the eye should not catch it in between. Still a
+     transition rather than an instant swap, so it does not read as a rendering
+     glitch, and still behind the reduced-motion guard below.
+     ------------------------------------------------------------------------- */
+  .card-edge {
+    @apply relative overflow-hidden rounded;
   }
 
-  /* The copper edge. It is the card's resting identity — the thing that says LIMS
-     before anyone touches it — and the sweep is what answers when they do.
-
-     A real left border, not the absolutely-positioned overlay this used to be: a
-     border grows the box outward, so no card needs extra left padding to keep its
-     text off the copper. The doubled class is deliberate. It lifts specificity to
-     0-2-0, above the border-ink-200 utility every card also carries, which would
-     otherwise repaint all four sides including this one. */
-  .sweep-card.sweep-card {
-    border-left-width: 4px;
-    border-left-color: theme('colors.copper.500');
+  .card-edge::before {
+    content: '';
+    @apply absolute left-0 top-0 h-full w-1 bg-copper-500;
+    transition:
+      width 120ms cubic-bezier(0.2, 0, 0, 1),
+      background-color 120ms cubic-bezier(0.2, 0, 0, 1);
   }
 
-  .sweep-card::before {
-    @apply bg-copper-500;
-  }
-
-  /* Descendants keep their own utility colours at rest and are overridden only
-     while the copper is present. :is() raises specificity above a Tailwind
-     utility, which is what makes this stick without !important. */
-  .sweep-card:hover,
-  .sweep-card:focus-within,
-  .sweep-card:hover :is(h2, h3, p, span, a, strong, li, time),
-  .sweep-card:focus-within :is(h2, h3, p, span, a, strong, li, time) {
-    color: theme('colors.teal.950');
+  .card-edge:hover::before,
+  .card-edge:focus-within::before {
+    @apply w-1.5 bg-teal-800;
   }
 
   /* -------------------------------------------------------------------------
@@ -327,15 +334,11 @@
      Once the card fills copper it inverts to a solid teal button — white on
      teal-800 is 7.75:1, so the label is never the thing at risk.
 
-     The border is teal-950 rather than teal-800 on hover, and that is the whole
-     point of the rule: a teal-800 edge against the copper card measures 2.63:1,
-     under the 3:1 WCAG 1.4.11 asks of the boundary that identifies a control.
-     teal-950 gets it to 5.28:1, so the button still reads as a button once the
-     card behind it has changed colour.
-
-     Specificity note: this is 0-3-0, which beats the 0-2-1 descendant rule above
-     that pushes every other label in the card to teal-950. Without that margin the
-     button's white label would be overwritten. */
+     The card no longer changes colour behind it, so the border stays teal-800
+     throughout: it was teal-950 on hover only because a teal-800 edge against the
+     old copper fill measured 2.63:1, under the 3:1 WCAG 1.4.11 asks of the
+     boundary that identifies a control. On white it is 7.75:1 and there is
+     nothing to compensate for. */
   .card-cta {
     @apply rounded-full border-2 border-teal-800 font-semibold text-teal-800;
     transition:
@@ -344,9 +347,9 @@
       color 140ms cubic-bezier(0.2, 0, 0, 1);
   }
 
-  .sweep-card:hover .card-cta,
-  .sweep-card:focus-within .card-cta {
-    @apply border-teal-950 bg-teal-800 text-white;
+  .card-edge:hover .card-cta,
+  .card-edge:focus-within .card-cta {
+    @apply bg-teal-800 text-white;
   }
 
   /* 3. Filled primary buttons. White text throughout; the fill goes one step

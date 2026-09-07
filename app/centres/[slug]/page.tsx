@@ -97,7 +97,7 @@ export default async function ServicePage({ params }: ServicePageProps) {
             {doctors.map((doctor) => (
               <article
                 key={doctor.id}
-                className="sweep-card flex flex-col border border-ink-200 bg-white p-5
+                className="card-edge flex flex-col border border-ink-200 bg-white p-5
                            shadow-card transition-shadow ease-standard hover:shadow-raised"
               >
                 <h3 className="text-step-1">

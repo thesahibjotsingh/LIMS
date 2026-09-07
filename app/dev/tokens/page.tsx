@@ -146,12 +146,12 @@ export default function TokensPage() {
         </Recipe>
 
         <Recipe
-          name=".sweep-card"
-          note="cards and tiles. Copper left edge at rest; on hover the fill lands, every descendant goes teal-950, and any .card-cta inside inverts to a solid teal button. Fires on focus-within too"
+          name=".card-edge"
+          note="department and service cards. 4px copper edge at rest, 6px teal-800 on hover and focus-within (7.75:1 on white). 120ms so it reads as a switch, not a wave. Any .card-cta inside becomes a solid teal button"
         >
           <a
             href="#tokens-heading"
-            className="sweep-card block border border-ink-200 bg-white p-5 shadow-card
+            className="card-edge block border border-ink-200 bg-white p-5 shadow-card
                        transition-shadow ease-standard hover:shadow-raised"
           >
             <span className="block text-step-1 font-semibold text-teal-800">
