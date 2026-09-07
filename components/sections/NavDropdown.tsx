@@ -7,6 +7,11 @@
 //
 // OPENS ON HOVER — and also on click, on Enter/Space, and on keyboard focus.
 //
+// The trigger and every row carry .nav-sweep, the left-to-right copper fill defined in
+// app/globals.css. Its text goes to teal-950 rather than staying teal-800, because
+// mid-sweep a label straddles white and copper-500 and teal-800 is only 2.63:1 on the
+// copper half. See the working next to the recipe.
+//
 // Hover ALONE cannot be the whole mechanism, and this is not a preference:
 //   • a keyboard user has no pointer, so a hover-only menu is unreachable
 //   • on touch there is no hover at all. The first tap would both open the menu and
@@ -137,9 +142,8 @@ export function NavDropdown({
         aria-expanded={open}
         aria-controls={panelId}
         onClick={() => (open ? closeNow() : openNow())}
-        className="flex min-h-[44px] items-center gap-1.5 border-b-2 border-transparent
-                   px-1 text-step--1 font-semibold text-teal-950 transition-colors
-                   ease-standard hover:border-teal-950 aria-expanded:border-teal-950"
+        className="nav-sweep flex min-h-[44px] items-center gap-1.5 px-3
+                   text-[0.75rem] font-semibold"
       >
         {label}
         {/* Decorative: aria-expanded on the button already announces the state. */}
@@ -150,8 +154,9 @@ export function NavDropdown({
         Rendered only when open. Keeping it mounted and hidden would put 15 links into
         the tab order of every page for no benefit.
 
-        pt-2 on the wrapper is the hover bridge: the panel's own padding covers the gap
-        below the ribbon, so the pointer never crosses dead space on its way down.
+        pt-2 on the wrapper is the hover bridge: it covers the gap between the trigger
+        and the panel, so the pointer never crosses dead space on its way down and the
+        menu does not close under it.
       */}
       {open ? (
         <div
@@ -167,13 +172,11 @@ export function NavDropdown({
             <ul className={columns === 2 ? 'grid w-[34rem] max-w-full sm:grid-cols-2' : 'w-64'}>
               {items.map((item) => (
                 <li key={item.href}>
-                  {/* Back on a white surface, so teal-800 (7.75:1) is correct here —
-                      the teal-950 above is specific to the copper ribbon. */}
+                  {/* Same copper sweep as the triggers, so the menu reads as one
+                      surface rather than two hover languages. */}
                   <Link
                     href={item.href}
-                    className="flex min-h-[44px] items-center rounded px-3 text-step--1
-                               text-teal-800 transition-colors ease-standard
-                               hover:bg-teal-50 hover:text-teal-900"
+                    className="nav-sweep flex min-h-[44px] items-center px-3 text-step--1"
                   >
                     {item.label}
                   </Link>
@@ -182,12 +185,14 @@ export function NavDropdown({
 
               {overviewHref && overviewLabel ? (
                 <li className={columns === 2 ? 'sm:col-span-2' : undefined}>
+                  {/* The section's own index. Kept visually distinct from the
+                      department rows: copper-800 text (6.13:1) and a rule above it, so
+                      it reads as "everything" rather than as one more department. */}
                   <Link
                     href={overviewHref}
-                    className="mt-1 flex min-h-[44px] items-center rounded border-t
+                    className="nav-sweep mt-1 flex min-h-[44px] items-center border-t
                                border-ink-200 px-3 text-step--1 font-semibold
-                               text-copper-800 transition-colors ease-standard
-                               hover:bg-copper-50"
+                               !text-copper-800 hover:!text-teal-950"
                   >
                     {overviewLabel}
                   </Link>

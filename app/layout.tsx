@@ -91,15 +91,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           Skip to main content
         </a>
 
-        {/* The standalone red emergency band is gone; the emergency number now lives in
-            the header as a filled copper button, and the header is sticky so it stays
-            reachable. The role split between the two published LIMS lines is still
-            unconfirmed — see lib/site-config.ts. */}
+        {/* Single-row header: lockup left, nav centre, actions right. The standalone
+            red emergency band is gone; the emergency number is a filled copper button in
+            the header, and the header is sticky so it stays reachable. The role split
+            between the two published LIMS lines is still unconfirmed — see
+            lib/site-config.ts. */}
         <SiteHeader
           nav={primaryNav}
           emergencyPhone={contact.primary}
           emergencyPhoneDisplay={contact.primaryDisplay}
-          appointmentPhone={contact.secondary}
           name={siteConfig.name}
           city={siteConfig.city}
           tagline={siteConfig.tagline}

@@ -183,6 +183,54 @@
     @apply w-1.5;
   }
 
+  /* -------------------------------------------------------------------------
+     .nav-sweep — the header's left-to-right copper fill on hover.
+     -------------------------------------------------------------------------
+     A ::before panel scaled from origin-left, NOT an animated width or a
+     background-position slide. transform is the only one of the three the
+     compositor can run off the main thread; the other two relayout or repaint
+     every frame, and this fires on eight elements in a sticky header.
+
+     THE TEXT COLOUR IS THE WHOLE PROBLEM HERE.
+     Mid-sweep the label sits half on white and half on copper-500, so whatever
+     colour it takes has to clear 4.5:1 on BOTH grounds at once:
+       teal-800  7.75:1 on white  but 2.63:1 on copper-500  -> unusable
+       white     1.00:1 on white  and 2.95:1 on copper-500  -> unusable
+       teal-950 15.57:1 on white  and 5.28:1 on copper-500  -> passes both
+     So the label goes to teal-950 on hover and stays legible across the whole
+     sweep, including the frames where it straddles the boundary. Colour is
+     never the only signal either — the fill itself is the affordance.
+
+     The colour transition is deliberately shorter than the fill (140ms vs
+     260ms) so the text is already safe before the copper reaches it.
+
+     Both transitions sit behind the global prefers-reduced-motion guard below,
+     which collapses them to 0.01ms — the fill still appears, it just does not
+     travel. ------------------------------------------------------------- */
+  .nav-sweep {
+    @apply relative isolate overflow-hidden rounded text-teal-800;
+    transition: color 140ms cubic-bezier(0.2, 0, 0, 1);
+  }
+
+  .nav-sweep::before {
+    content: '';
+    @apply absolute inset-0 -z-10 origin-left bg-copper-500;
+    transform: scaleX(0);
+    transition: transform 260ms cubic-bezier(0.2, 0, 0, 1);
+  }
+
+  .nav-sweep:hover,
+  .nav-sweep:focus-visible,
+  .nav-sweep[aria-expanded='true'] {
+    @apply text-teal-950;
+  }
+
+  .nav-sweep:hover::before,
+  .nav-sweep:focus-visible::before,
+  .nav-sweep[aria-expanded='true']::before {
+    transform: scaleX(1);
+  }
+
   /* Copper text link. Underline is always present — colour alone never marks a link. */
   .link-accent {
     @apply font-semibold text-copper-800 underline decoration-copper-500 decoration-2
