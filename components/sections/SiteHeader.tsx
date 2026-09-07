@@ -8,15 +8,14 @@
 //   tier 2  teal-50   Specialities ▾  Find a doctor  Services ▾  …  Contact Us ▾
 //
 // WHY TIER 2 IS teal-50 AND NOT A SOLID COPPER BAND.
-// The copper sweep is this header's signature: every nav item fills left-to-right with
-// copper-500 on hover. Painting the tier itself copper-500 would make that fill
-// invisible — the animation would be copper arriving on copper. A sweep needs a quiet
-// ground to travel across, so the tier is the palette's lightest teal under a hairline
-// rule. The two tiers stay legibly separate; the copper stays the thing that moves.
+// The ribbon's indicator is a copper underline that grows left to right. Painting the
+// tier itself copper-500 would make it invisible — copper arriving on copper. The
+// indicator needs a quiet ground to draw on, so the tier is the palette's lightest teal
+// under a hairline rule. The two tiers stay legibly separate; the copper stays the thing
+// that moves.
 //
-// Contrast on that ground: the label is teal-800 on teal-50 at 7.29:1 at rest, and
-// teal-950 on copper-500 at 5.28:1 once the fill lands. Both clear AA, and the label is
-// never caught between two failing values mid-sweep.
+// Labels are teal-800 on teal-50 at 7.29:1 and never change colour, because nothing
+// fills behind them here — only the 3px bar at the bottom edge moves.
 //
 // Eight items fit here comfortably, which is why the three secondary entries came back
 // out of the dropdowns — a tier of its own removes the width constraint that put them
@@ -40,6 +39,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { NavDropdown } from '@/components/sections/NavDropdown'
+import { NavLink } from '@/components/sections/NavLink'
 import type { NavItem } from '@/types'
 
 export interface SiteHeaderProps {
@@ -223,15 +223,16 @@ export function SiteHeader({ nav, emergencyPhone, name, city, tagline }: SiteHea
                 </li>
               ) : (
                 <li key={item.href}>
-                  {/* .sweep carries the copper fill and the teal-950 hover text —
-                      see the recipe and its contrast working in app/globals.css. */}
-                  <Link
+                  {/* NavLink is a client leaf purely so it can read the pathname and
+                      mark itself aria-current. .sweep carries the copper fill and
+                      .nav-underline the state bar — both are in app/globals.css with
+                      their contrast working. */}
+                  <NavLink
                     href={item.href}
-                    className="sweep flex min-h-[44px] items-center whitespace-nowrap
-                               px-3 text-step--1 font-semibold"
-                  >
-                    {item.label}
-                  </Link>
+                    label={item.label}
+                    className="flex min-h-[44px] items-center whitespace-nowrap px-3
+                               text-step--1 font-semibold"
+                  />
                 </li>
               ),
             )}

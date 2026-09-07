@@ -7,12 +7,12 @@
 //
 // OPENS ON HOVER — and also on click, on Enter/Space, and on keyboard focus.
 //
-// The trigger and every row carry .sweep, the left-to-right copper fill defined in
-// app/globals.css. Its text goes to teal-950 rather than staying teal-800: mid-sweep a
-// label straddles its resting ground and copper-500, and teal-800 is only 2.63:1 on the
-// copper half. teal-950 clears AA on both halves at once — 5.28:1 on copper-500, 15.57:1
-// on white inside the panels, 14.5:1 on the teal-50 ribbon. See the working next to the
-// recipe.
+// The trigger carries .nav-underline — a copper bar that grows left to right along its
+// bottom edge — and the rows inside the panel carry .sweep, the full copper fill. Two
+// different effects on purpose: the rows sit on white, where a fill reads, while the
+// trigger sits on the teal-50 ribbon, where a copper fill would swallow the copper
+// underline entirely. Row labels go teal-950 as their fill lands, because teal-800 is
+// only 2.63:1 on copper-500. See the working next to both recipes in app/globals.css.
 //
 // Hover ALONE cannot be the whole mechanism, and this is not a preference:
 //   • a keyboard user has no pointer, so a hover-only menu is unreachable
@@ -36,6 +36,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useCallback, useEffect, useId, useRef, useState } from 'react'
+import { isActiveHref } from '@/lib/is-active'
 import type { NavItem } from '@/types'
 
 /** Grace period for the pointer to cross the gap between trigger and panel. */
@@ -67,6 +68,18 @@ export function NavDropdown({
   const triggerRef = useRef<HTMLButtonElement>(null)
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const pathname = usePathname()
+
+  /*
+   * Active when one of the CHILDREN matches, never when the trigger's own href does.
+   *
+   * Specialities and Services both point at /centres, so matching on the trigger would
+   * light both of them up on every service page and on /centres itself — an indicator
+   * that is always on for two items tells a patient nothing. Matching on children
+   * disambiguates: /centres/urology lights Specialities, /centres/ultrasound lights
+   * Services, and /centres itself lights neither, which is correct — that page is the
+   * whole catalogue, not one branch of it.
+   */
+  const active = items.some((item) => isActiveHref(pathname, item.href))
 
   const cancelClose = useCallback(() => {
     if (closeTimer.current) {
@@ -146,8 +159,9 @@ export function NavDropdown({
         type="button"
         aria-expanded={open}
         aria-controls={panelId}
+        aria-current={active ? 'page' : undefined}
         onClick={() => (open ? closeNow() : openNow())}
-        className="sweep flex min-h-[44px] items-center gap-1.5 whitespace-nowrap
+        className="nav-underline flex min-h-[44px] items-center gap-1.5 whitespace-nowrap
                    px-3 text-step--1 font-semibold"
       >
         {label}

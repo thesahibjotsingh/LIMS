@@ -275,6 +275,53 @@
     color: theme('colors.teal.950');
   }
 
+  /* -------------------------------------------------------------------------
+     .nav-underline — the ribbon's state indicator.
+     -------------------------------------------------------------------------
+     A copper bar along the bottom edge that GROWS from left to right, scaled
+     from origin-left rather than animated from zero width. Same reason the
+     card sweep uses transform: it is the only property of the three the
+     compositor can run off the main thread, and this fires on eight items in a
+     sticky header that repaints on every scroll.
+
+     THE RIBBON ITEMS NO LONGER TAKE .sweep. That is not a loss, it is the fix:
+     a copper-500 underline on a copper-500 fill is invisible, so the two
+     effects could never coexist on the same element. The nav shows the
+     underline; buttons and cards keep the fill. The dropdown ROWS inside the
+     panels still use .sweep — they sit on white, where the fill reads.
+
+     ON THE ACCENT TONE, which is a real trade and worth stating plainly:
+     copper-500 measures 2.77:1 against the teal-50 ribbon, under the 3:1 WCAG
+     1.4.11 asks of a non-text state indicator. copper-600 would clear it at
+     3.66:1 and is all but indistinguishable at 3px. The accent tone is used
+     here because it was specified, and the shortfall is covered the only way
+     that actually helps a screen-reader user: the active item carries
+     aria-current="page", so the state is never conveyed by colour alone
+     (WCAG 1.4.1). If the visual bar needs to stand on its own, change
+     bg-copper-500 to bg-copper-600 below and nothing else moves.
+
+     The active bar renders already-grown. A transition only fires on a change,
+     and aria-current is present at first paint, so the current page's underline
+     is simply there rather than animating in on every navigation.
+     ------------------------------------------------------------------------- */
+  .nav-underline {
+    @apply relative text-teal-800;
+  }
+
+  .nav-underline::after {
+    content: '';
+    @apply absolute inset-x-0 bottom-0 h-[3px] origin-left bg-copper-500;
+    transform: scaleX(0);
+    transition: transform 260ms cubic-bezier(0.2, 0, 0, 1);
+  }
+
+  .nav-underline:hover::after,
+  .nav-underline:focus-visible::after,
+  .nav-underline[aria-expanded='true']::after,
+  .nav-underline[aria-current='page']::after {
+    transform: scaleX(1);
+  }
+
   /* A call to action sitting INSIDE a card that sweeps.
      At rest it is an outline button on white: teal-800 on white is 7.75:1.
      Once the card fills copper it inverts to a solid teal button — white on
