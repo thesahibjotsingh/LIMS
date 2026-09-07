@@ -134,7 +134,7 @@ export default function TokensPage() {
 
         <Recipe
           name=".menu-row"
-          note="a row inside a dropdown panel. teal-100 lift plus a 6px teal-800 strip, no fill — the card language at menu scale. Labels keep their resting colour: teal-800 is 6.60:1 on the tint"
+          note="a row inside a dropdown panel. A 6px teal-800 strip grows up from the bottom (180ms) over a teal-100 fade (100ms) — the card language at menu scale, no fill. Labels keep their resting colour: teal-800 is 6.60:1 on the tint"
         >
           <a
             href="#tokens-heading"
@@ -160,7 +160,7 @@ export default function TokensPage() {
 
         <Recipe
           name=".card-edge"
-          note="department and service cards. 4px copper strip at rest; on hover and focus-within it goes 6px teal-800 and the body tints teal-100, both in 120ms. No fill, so labels never repaint — teal-800 holds 6.60:1 on the tint"
+          note="department and service cards. 4px copper strip at rest; on hover and focus-within a 6px teal-800 strip grows up over it (180ms) and the body fades to teal-100 (100ms). No fill, so labels never repaint — teal-800 holds 6.60:1 on the tint"
         >
           <a
             href="#tokens-heading"

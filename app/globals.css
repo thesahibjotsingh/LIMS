@@ -260,7 +260,22 @@
      section. Deliberately quiet either way; the strip carries the state and the
      tint only confirms it.
 
-     The strip is an absolutely-positioned ::before, not a real border, for one
+     THE STRIP HAS AN ORIGIN. Two layers rather than a colour swap:
+       ::before  the copper strip, always present, 4px -> 6px
+       ::after   the teal strip, scaleY(0) -> scaleY(1) from origin-bottom
+     The teal grows UP over the copper instead of replacing it in a fade. A fade
+     has no source, so the eye reads it as a state swap and it appears from
+     nowhere; a transform has a direction, so the copper identity is visibly
+     replaced rather than exchanged. It is also the cheaper of the two — transform
+     on a 6px element is compositor work, a colour change is a repaint.
+
+     Only the strip moves. The tint stays a 100ms fade and is settled before the
+     strip finishes: two directional animations at once fight each other, and the
+     eye can follow one origin per interaction. It is the same reason the copper
+     fill went — a tint sweeping sideways while a strip grows upward is two
+     gestures asking to be watched at the same time.
+
+     Both strips are absolutely positioned rather than real borders, for one
      reason: widening a border reflows the card's content 2px to the right on every
      hover. Out of flow, the width change costs nothing and nothing else moves.
 
@@ -276,7 +291,7 @@
      ------------------------------------------------------------------------- */
   .card-edge {
     @apply relative overflow-hidden rounded;
-    transition: background-color 120ms cubic-bezier(0.2, 0, 0, 1);
+    transition: background-color 100ms cubic-bezier(0.2, 0, 0, 1);
   }
 
   /* 0-2-0, which outranks the bg-white utility the cards carry in their markup. */
@@ -285,17 +300,30 @@
     background-color: theme('colors.teal.100');
   }
 
+  /* The resting copper identity. Widens under the teal so the finished strip is
+     6px rather than a 6px teal band sitting on a 4px copper one. */
   .card-edge::before {
     content: '';
     @apply absolute left-0 top-0 h-full w-1 bg-copper-500;
-    transition:
-      width 120ms cubic-bezier(0.2, 0, 0, 1),
-      background-color 120ms cubic-bezier(0.2, 0, 0, 1);
+    transition: width 120ms cubic-bezier(0.2, 0, 0, 1);
+  }
+
+  /* The teal, growing up over it. */
+  .card-edge::after {
+    content: '';
+    @apply absolute bottom-0 left-0 h-full w-1.5 origin-bottom bg-teal-800;
+    transform: scaleY(0);
+    transition: transform 180ms cubic-bezier(0.2, 0, 0, 1);
   }
 
   .card-edge:hover::before,
   .card-edge:focus-within::before {
-    @apply w-1.5 bg-teal-800;
+    @apply w-1.5;
+  }
+
+  .card-edge:hover::after,
+  .card-edge:focus-within::after {
+    transform: scaleY(1);
   }
 
   /* -------------------------------------------------------------------------
@@ -366,20 +394,28 @@
      and a card should not disagree about what "hovered" looks like. On the white
      panel it is 1.175 against 1.064 — the more visible of the two anyway.
 
-     The strip has a fixed 6px width and animates colour only. Cards grow 4px to
-     6px because they carry a resting copper edge that has to become a state; a
-     menu row has no resting edge, so there is nothing to grow from and a width
-     animation would just be a wipe. 120ms, matching the cards.
+     The strip grows from the bottom — scaleY(0) to scaleY(1), origin-bottom, the
+     same gesture the cards use. A colour fade has no source, so it reads as a
+     state swap appearing from nowhere; a transform has a direction, so the strip
+     arrives from somewhere. Compositor work rather than a repaint, on a 6px
+     element, which is as cheap as an animation gets.
+
+     Only the strip moves. The tint is a 100ms fade, settled before the strip
+     finishes. On a menu that is not a preference but a requirement: the cursor
+     crosses rows faster than a 180ms sweep completes, so a directional tint would
+     leave a column of permanently half-swept rows trailing the pointer. A fade
+     always lands.
      ------------------------------------------------------------------------- */
   .menu-row {
     @apply relative overflow-hidden rounded;
-    transition: background-color 120ms cubic-bezier(0.2, 0, 0, 1);
+    transition: background-color 100ms cubic-bezier(0.2, 0, 0, 1);
   }
 
   .menu-row::before {
     content: '';
-    @apply absolute left-0 top-0 h-full w-1.5 bg-transparent;
-    transition: background-color 120ms cubic-bezier(0.2, 0, 0, 1);
+    @apply absolute bottom-0 left-0 h-full w-1.5 origin-bottom bg-teal-800;
+    transform: scaleY(0);
+    transition: transform 180ms cubic-bezier(0.2, 0, 0, 1);
   }
 
   .menu-row:hover,
@@ -389,7 +425,7 @@
 
   .menu-row:hover::before,
   .menu-row:focus-visible::before {
-    @apply bg-teal-800;
+    transform: scaleY(1);
   }
 
   /* A call to action sitting INSIDE a card that sweeps.
