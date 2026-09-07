@@ -64,7 +64,7 @@ export default function HomePage() {
           How can we help today?
         </h2>
         <span className="rule-accent mt-3" aria-hidden="true" />
-        {/* .card-edge fills copper and turns its left strip teal on hover AND on
+        {/* .card-edge turns its left strip teal and tints the body on hover AND on
             focus-within, so the affordance exists for someone tabbing through as
             well as for a mouse. */}
         <Grid min="sm" className="mt-8">

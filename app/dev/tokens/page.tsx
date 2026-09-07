@@ -147,7 +147,7 @@ export default function TokensPage() {
 
         <Recipe
           name=".card-edge"
-          note="department and service cards, two layers: a copper fill swept in over 260ms, and a left strip above it that goes 4px copper to 6px teal-800 in 120ms. Labels move to teal-950 (5.28:1 on the fill). Fires on focus-within too"
+          note="department and service cards. 4px copper strip at rest; on hover and focus-within it goes 6px teal-800 and the body tints teal-100, both in 120ms. No fill, so labels never repaint — teal-800 holds 6.60:1 on the tint"
         >
           <a
             href="#tokens-heading"

@@ -238,61 +238,54 @@
   }
 
   /* -------------------------------------------------------------------------
-     .card-edge — department and service cards. TWO LAYERS, not one.
+     .card-edge — department and service cards. Strip and tint, no fill.
      -------------------------------------------------------------------------
-       ::before   the copper fill, swept in from the left  (behind the text, -z-10)
-       ::after    the left edge strip                       (in front of the fill)
-
-     They are separate pseudo-elements because they have to move independently:
-     the fill arrives across 260ms, the strip changes colour in 120ms, and the
-     strip has to sit ON TOP of the fill or it disappears the moment the copper
-     reaches it. A single element cannot be both.
-
                      rest              hover / focus-within
-       fill          none              copper-500, swept left to right
-       strip         4px copper-500    6px teal-800
-       label         teal-800          teal-950
+       strip         4px copper-500    6px teal-800   (120ms)
+       card body     white             teal-100       (120ms)
+       label         teal-800          teal-800       — unchanged
 
-     WHY THE STRIP TURNS TEAL. At rest it is copper on white and reads as the
-     card's identity. Once the fill lands, a copper strip on a copper card is
-     invisible — the edge would simply cease to exist exactly when the card is
-     being interacted with. Teal is the only direction left, and it is what the
-     card is meant to look like.
+     THE LABEL ROW IS THE POINT. The copper fill this replaces forced four colours
+     to repaint on every hover just to stay readable: teal-800 drops to 2.63:1 on
+     copper-500, ink-600 to 2.41:1, and the button's border needed its own rule.
+     A hover state that has to fight the palette to stay legible is doing too much.
+     On teal-100 nothing moves — teal-800 holds 6.60:1 and ink-600 6.06:1 — so the
+     :is() descendant override and the button's teal-950 border rule are both gone,
+     along with the isolate/-z-10 stacking they needed.
 
-     Contrast, stated honestly: teal-800 on copper-500 is 2.63:1, which does not
-     clear the 3:1 WCAG 1.4.11 asks of a state indicator. It does not have to. The
-     FILL is the state indicator here — a whole card changing colour is not
-     something anyone can miss — and the strip on top of it is decoration. If the
-     strip ever became the only signal of state, this would need to be teal-950 at
-     5.28:1 instead.
+     WHY teal-100 AND NOT teal-50. teal-50 is the tint used by Section tone="tint",
+     and the home page's Centres grid sits on exactly that. A teal-50 hover there
+     measures 1.000 against its own ground — not subtle, absent. teal-100 is one
+     step up and reads on both: 1.175 against white, 1.104 against the teal-50
+     section. Deliberately quiet either way; the strip carries the state and the
+     tint only confirms it.
 
-     The label is the part that genuinely cannot be missed, so it moves to teal-950:
-     teal-800 measures 2.63:1 on copper-500 and ink-600 measures 2.41:1, while
-     teal-950 holds 5.28:1 on the fill and 15.57:1 on white, which is what lets a
-     label stay legible in the frames where it straddles both.
+     The strip is an absolutely-positioned ::before, not a real border, for one
+     reason: widening a border reflows the card's content 2px to the right on every
+     hover. Out of flow, the width change costs nothing and nothing else moves.
+
+     Contrast on the strip: teal-800 on white is 7.75:1 and on teal-100 6.60:1,
+     both far past the 3:1 WCAG 1.4.11 asks of a state indicator — and stronger, in
+     contrast terms, than the copper fill managed at 2.95:1. The resting copper is
+     2.95:1 and does not need to clear that bar: at rest it is identity, not state.
+
+     120ms, against the 260ms the buttons use. A card should read as a switch
+     throwing rather than a wave arriving; the eye should not catch it in between.
+     Still a transition rather than an instant swap, so it does not look like a
+     rendering glitch, and still behind the reduced-motion guard below.
      ------------------------------------------------------------------------- */
   .card-edge {
-    @apply relative isolate overflow-hidden rounded;
-    transition: color 140ms cubic-bezier(0.2, 0, 0, 1);
+    @apply relative overflow-hidden rounded;
+    transition: background-color 120ms cubic-bezier(0.2, 0, 0, 1);
   }
 
-  /* Layer 1 — the fill. */
+  /* 0-2-0, which outranks the bg-white utility the cards carry in their markup. */
+  .card-edge:hover,
+  .card-edge:focus-within {
+    background-color: theme('colors.teal.100');
+  }
+
   .card-edge::before {
-    content: '';
-    @apply absolute inset-0 -z-10 origin-left bg-copper-500;
-    transform: scaleX(0);
-    transition: transform 260ms cubic-bezier(0.2, 0, 0, 1);
-  }
-
-  .card-edge:hover::before,
-  .card-edge:focus-within::before {
-    transform: scaleX(1);
-  }
-
-  /* Layer 2 — the edge strip. Default z-index, so it draws over the fill at -10.
-     Absolutely positioned rather than a real border: widening a border reflows the
-     card's content 2px to the right on every hover, and out of flow it is free. */
-  .card-edge::after {
     content: '';
     @apply absolute left-0 top-0 h-full w-1 bg-copper-500;
     transition:
@@ -300,18 +293,9 @@
       background-color 120ms cubic-bezier(0.2, 0, 0, 1);
   }
 
-  .card-edge:hover::after,
-  .card-edge:focus-within::after {
+  .card-edge:hover::before,
+  .card-edge:focus-within::before {
     @apply w-1.5 bg-teal-800;
-  }
-
-  /* Labels, while the copper is present. :is() outranks a Tailwind utility, which
-     is what makes this hold without !important. */
-  .card-edge:hover,
-  .card-edge:focus-within,
-  .card-edge:hover :is(h2, h3, p, span, a, strong, li, time),
-  .card-edge:focus-within :is(h2, h3, p, span, a, strong, li, time) {
-    color: theme('colors.teal.950');
   }
 
   /* -------------------------------------------------------------------------
@@ -366,15 +350,10 @@
      Once the card fills copper it inverts to a solid teal button — white on
      teal-800 is 7.75:1, so the label is never the thing at risk.
 
-     The border goes teal-950 once the card fills, and that is the whole point of
-     the rule: a teal-800 edge against the copper card measures 2.63:1, under the
-     3:1 WCAG 1.4.11 asks of the boundary that identifies a control. teal-950 gets
-     it to 5.28:1, so the button still reads as a button once the card behind it
-     has changed colour.
-
-     Specificity note: this is 0-3-0, which beats the 0-2-1 label rule above that
-     pushes everything else in the card to teal-950. Without that margin the
-     button's white label would be overwritten by it. */
+     The border stays teal-800 throughout. It needed a teal-950 override back when
+     the card filled copper, where a teal-800 edge measured 2.63:1 — under the 3:1
+     WCAG 1.4.11 asks of the boundary that identifies a control. On the teal-100
+     hover tint it is 6.60:1, so there is nothing left to compensate for. */
   .card-cta {
     @apply rounded-full border-2 border-teal-800 font-semibold text-teal-800;
     transition:
@@ -385,7 +364,7 @@
 
   .card-edge:hover .card-cta,
   .card-edge:focus-within .card-cta {
-    @apply border-teal-950 bg-teal-800 text-white;
+    @apply bg-teal-800 text-white;
   }
 
   /* 3. Filled primary buttons. White text throughout; the fill goes one step
