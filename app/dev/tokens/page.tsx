@@ -132,13 +132,44 @@ export default function TokensPage() {
           <span className="badge-accent-soft ml-2">Cardiac sciences</span>
         </Recipe>
 
-        <Recipe name=".card-accent" note="edge thickens on hover AND focus-within — tab into the link">
+        <Recipe
+          name=".sweep"
+          note="light ground, one label — nav items, menu rows, outline buttons. teal-800 -> teal-950 as the copper lands (2.63:1 vs 5.28:1 on copper-500)"
+        >
           <a
             href="#tokens-heading"
-            className="card-accent block rounded border border-ink-200 bg-white p-5 pl-7
-                       shadow-card transition-shadow ease-standard hover:shadow-raised"
+            className="sweep inline-flex min-h-[44px] items-center rounded-full border-2
+                       border-teal-800 px-4 font-semibold"
           >
-            <span className="text-step-1 font-semibold text-teal-800">Interactive card</span>
+            Find a doctor
+          </a>
+        </Recipe>
+
+        <Recipe
+          name=".sweep-card"
+          note="cards and tiles — forces every descendant to teal-950 while the copper is present, and fires on focus-within so it works from the keyboard"
+        >
+          <a
+            href="#tokens-heading"
+            className="sweep-card block border border-ink-200 bg-white p-5 shadow-card
+                       transition-shadow ease-standard hover:shadow-raised"
+          >
+            <span className="block text-step-1 font-semibold text-teal-800">
+              Cardiac Sciences
+            </span>
+            <span className="mt-1 block text-step--1 text-ink-600">2 consultants</span>
+          </a>
+        </Recipe>
+
+        <Recipe
+          name=".sweep-solid"
+          note="filled primary buttons. Fills to copper-700, not copper-500: white is 2.95:1 on the accent and 4.67:1 on copper-700, and no dark colour clears both halves of a teal-800 -> copper sweep"
+        >
+          <a
+            href="#tokens-heading"
+            className="sweep-solid inline-flex min-h-[44px] items-center px-5 font-semibold"
+          >
+            Book an appointment
           </a>
         </Recipe>
 

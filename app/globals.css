@@ -165,70 +165,111 @@
            px-3 py-1 text-step--1 font-semibold text-copper-800;
   }
 
-  /* Interactive surface: a copper edge that thickens on hover and on keyboard focus
-     anywhere inside. The transition is width-only and sits behind the global
-     reduced-motion guard. Focus-within matters — a card whose only affordance is a
-     mouse hover is invisible to keyboard users. */
-  .card-accent {
-    @apply relative overflow-hidden;
-  }
-
-  .card-accent::before {
-    content: '';
-    @apply absolute left-0 top-0 h-full w-1 bg-copper-500 transition-[width] ease-standard;
-  }
-
-  .card-accent:hover::before,
-  .card-accent:focus-within::before {
-    @apply w-1.5;
-  }
-
   /* -------------------------------------------------------------------------
-     .nav-sweep — the header's left-to-right copper fill on hover.
+     THE SWEEP — one interaction language for every clickable surface.
      -------------------------------------------------------------------------
-     A ::before panel scaled from origin-left, NOT an animated width or a
-     background-position slide. transform is the only one of the three the
-     compositor can run off the main thread; the other two relayout or repaint
-     every frame, and this fires on eight elements in a sticky header.
+     A copper panel scaled from origin-left. transform, not width and not
+     background-position: it is the only one of the three the compositor runs
+     off the main thread, and this fires on eight nav items, four quick actions,
+     twenty-six service tiles and every doctor card.
 
-     THE TEXT COLOUR IS THE WHOLE PROBLEM HERE.
-     Mid-sweep the label sits half on white and half on copper-500, so whatever
-     colour it takes has to clear 4.5:1 on BOTH grounds at once:
-       teal-800  7.75:1 on white  but 2.63:1 on copper-500  -> unusable
-       white     1.00:1 on white  and 2.95:1 on copper-500  -> unusable
-       teal-950 15.57:1 on white  and 5.28:1 on copper-500  -> passes both
-     So the label goes to teal-950 on hover and stays legible across the whole
-     sweep, including the frames where it straddles the boundary. Colour is
-     never the only signal either — the fill itself is the affordance.
+     THE TEXT COLOUR IS THE WHOLE PROBLEM, and it is why there are three
+     variants rather than one. Measured against the actual grounds:
+
+       on white / teal-50            on copper-500
+       teal-800  7.75 / 7.29  PASS   2.63  FAIL   <- the resting colour fails
+       ink-600   7.12 / 6.69  PASS   2.41  FAIL      the moment copper arrives
+       teal-950 15.57 /14.63  PASS   5.28  PASS   <- survives both
+       ink-950  18.65 /17.53  PASS   6.32  PASS
+
+     So anything on a light ground swaps to teal-950 as the copper lands.
+
+     A FILLED teal-800 BUTTON CANNOT USE THE SAME FILL AT ALL:
+       white     on teal-800 7.75 PASS -> on copper-500 2.95 FAIL
+       teal-950  on teal-800 2.01 FAIL -> on copper-500 5.28 PASS
+       ink-950   on teal-800 2.41 FAIL -> on copper-500 6.32 PASS
+     There is no text colour that clears 4.5:1 on both halves, so mid-sweep is
+     unreadable whichever way you go. .sweep-solid fills to copper-700 instead,
+     where white holds at 4.67:1 against 7.75:1 at rest — the same gesture, one
+     step darker, and legible at every frame.
 
      The colour transition is deliberately shorter than the fill (140ms vs
-     260ms) so the text is already safe before the copper reaches it.
+     260ms) so text is already safe before the copper reaches it. Both sit
+     behind the prefers-reduced-motion guard below, which collapses them to
+     0.01ms — the fill still appears, it just does not travel.
+     ------------------------------------------------------------------------- */
 
-     Both transitions sit behind the global prefers-reduced-motion guard below,
-     which collapses them to 0.01ms — the fill still appears, it just does not
-     travel. ------------------------------------------------------------- */
-  .nav-sweep {
-    @apply relative isolate overflow-hidden rounded text-teal-800;
+  /* Shared mechanics. */
+  .sweep,
+  .sweep-card,
+  .sweep-solid {
+    @apply relative isolate overflow-hidden;
     transition: color 140ms cubic-bezier(0.2, 0, 0, 1);
   }
 
-  .nav-sweep::before {
+  .sweep::before,
+  .sweep-card::before,
+  .sweep-solid::before {
     content: '';
-    @apply absolute inset-0 -z-10 origin-left bg-copper-500;
+    @apply absolute inset-0 -z-10 origin-left;
     transform: scaleX(0);
     transition: transform 260ms cubic-bezier(0.2, 0, 0, 1);
   }
 
-  .nav-sweep:hover,
-  .nav-sweep:focus-visible,
-  .nav-sweep[aria-expanded='true'] {
+  .sweep:hover::before,
+  .sweep:focus-visible::before,
+  .sweep[aria-expanded='true']::before,
+  .sweep-card:hover::before,
+  .sweep-card:focus-within::before,
+  .sweep-solid:hover::before,
+  .sweep-solid:focus-visible::before {
+    transform: scaleX(1);
+  }
+
+  /* 1. Light ground, one label: nav items, menu rows, outline buttons. */
+  .sweep {
+    @apply rounded text-teal-800;
+  }
+
+  .sweep::before {
+    @apply bg-copper-500;
+  }
+
+  .sweep:hover,
+  .sweep:focus-visible,
+  .sweep[aria-expanded='true'] {
     @apply text-teal-950;
   }
 
-  .nav-sweep:hover::before,
-  .nav-sweep:focus-visible::before,
-  .nav-sweep[aria-expanded='true']::before {
-    transform: scaleX(1);
+  /* 2. Cards and tiles, which carry several text colours at once.
+        focus-within, not focus-visible: the affordance has to exist for someone
+        tabbing to a link inside the card, not only for a mouse. */
+  .sweep-card {
+    @apply rounded;
+  }
+
+  .sweep-card::before {
+    @apply bg-copper-500;
+  }
+
+  /* Descendants keep their own utility colours at rest and are overridden only
+     while the copper is present. :is() raises specificity above a Tailwind
+     utility, which is what makes this stick without !important. */
+  .sweep-card:hover,
+  .sweep-card:focus-within,
+  .sweep-card:hover :is(h2, h3, p, span, a, strong, li, time),
+  .sweep-card:focus-within :is(h2, h3, p, span, a, strong, li, time) {
+    color: theme('colors.teal.950');
+  }
+
+  /* 3. Filled primary buttons. White text throughout; the fill goes one step
+        darker than the accent so it never drops below AA. */
+  .sweep-solid {
+    @apply rounded-full bg-teal-800 text-white;
+  }
+
+  .sweep-solid::before {
+    @apply bg-copper-700;
   }
 
   /* Copper text link. Underline is always present — colour alone never marks a link. */

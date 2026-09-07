@@ -115,7 +115,9 @@ rendered on `/dev/tokens`.
 | `.rule-accent` / `.rule-accent-lg` | Hairline under `h2`, 3px under `h1` |
 | `.divider-accent` | Full-bleed band transition (top of the footer) |
 | `.badge-accent` / `.badge-accent-soft` | Department and experience badging |
-| `.card-accent` | Interactive cards — edge thickens on hover **and** `:focus-within` |
+| `.sweep` | Light ground, one label: nav items, menu rows, outline buttons |
+| `.sweep-card` | Cards and tiles; fires on `:focus-within` too |
+| `.sweep-solid` | Filled primary buttons |
 | `.link-accent` | Copper text links |
 
 **The one rule that gets broken:** copper's contrast depends on the band it sits on, and

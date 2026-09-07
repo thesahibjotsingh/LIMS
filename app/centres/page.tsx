@@ -63,8 +63,8 @@ export default function CentresPage() {
                   <Link
                     key={service.slug}
                     href={`/centres/${service.slug}`}
-                    className="card-accent flex min-h-[44px] flex-col justify-center rounded
-                               border border-teal-200 bg-white p-5 pl-7 shadow-card
+                    className="sweep-card flex min-h-[44px] flex-col justify-center
+                               border border-teal-200 bg-white p-5 shadow-card
                                transition-shadow ease-standard hover:shadow-raised"
                   >
                     <h3 className="text-step-1 font-semibold text-teal-800">

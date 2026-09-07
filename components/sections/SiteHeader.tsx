@@ -155,11 +155,13 @@ export function SiteHeader({ nav, emergencyPhone, name, city, tagline }: SiteHea
               <span>Emergency 24&times;7</span>
             </a>
 
+            {/* .sweep-solid fills to copper-700, not the copper-500 accent: white on
+                copper-500 is 2.95:1, so the accent tone would make this label unreadable
+                the moment the fill arrived. See the working in app/globals.css. */}
             <Link
               href="/appointments"
-              className="inline-flex min-h-[44px] items-center rounded-full bg-teal-800
-                         px-5 font-semibold text-white transition-colors ease-standard
-                         hover:bg-teal-700"
+              className="sweep-solid inline-flex min-h-[44px] items-center px-5
+                         font-semibold"
             >
               Book appointment
             </Link>
@@ -189,11 +191,11 @@ export function SiteHeader({ nav, emergencyPhone, name, city, tagline }: SiteHea
                 </li>
               ) : (
                 <li key={item.href}>
-                  {/* .nav-sweep carries the copper fill and the teal-950 hover text —
+                  {/* .sweep carries the copper fill and the teal-950 hover text —
                       see the recipe and its contrast working in app/globals.css. */}
                   <Link
                     href={item.href}
-                    className="nav-sweep flex min-h-[44px] items-center whitespace-nowrap
+                    className="sweep flex min-h-[44px] items-center whitespace-nowrap
                                px-3 text-step--1 font-semibold"
                   >
                     {item.label}

@@ -41,17 +41,15 @@ export default function HomePage() {
           <div className="flex flex-wrap gap-3">
             <Link
               href="/appointments"
-              className="inline-flex min-h-[44px] items-center rounded bg-teal-800 px-5
-                         font-semibold text-white transition-colors ease-standard
-                         hover:bg-teal-700"
+              className="sweep-solid inline-flex min-h-[44px] items-center px-5
+                         font-semibold"
             >
               Book an appointment
             </Link>
             <Link
               href="/doctors"
-              className="inline-flex min-h-[44px] items-center rounded border-2
-                         border-teal-800 px-5 font-semibold text-teal-800 transition-colors
-                         ease-standard hover:bg-teal-100"
+              className="sweep inline-flex min-h-[44px] items-center rounded-full border-2
+                         border-teal-800 px-5 font-semibold"
             >
               Find a doctor
             </Link>
@@ -66,9 +64,8 @@ export default function HomePage() {
           How can we help today?
         </h2>
         <span className="rule-accent mt-3" aria-hidden="true" />
-        {/* card-accent draws the copper edge and thickens it on hover AND on
-            focus-within, so the affordance exists for keyboard users too.
-            pl-7 clears the 4px edge; without it the label would sit on the copper. */}
+        {/* .sweep-card fills on hover AND on focus-within, so the affordance exists for
+            someone tabbing through as well as for a mouse. */}
         <Grid min="sm" className="mt-8">
           {[
             { label: 'Book an appointment', href: '/appointments' },
@@ -79,10 +76,9 @@ export default function HomePage() {
             <Link
               key={action.href}
               href={action.href}
-              className="card-accent flex min-h-[44px] items-center rounded border
-                         border-ink-200 bg-white p-5 pl-7 text-step-1 font-semibold
-                         text-teal-800 shadow-card transition-shadow ease-standard
-                         hover:shadow-raised"
+              className="sweep-card flex min-h-[44px] items-center border border-ink-200
+                         bg-white p-5 text-step-1 font-semibold text-teal-800 shadow-card
+                         transition-shadow ease-standard hover:shadow-raised"
             >
               {action.label}
             </Link>
@@ -106,8 +102,8 @@ export default function HomePage() {
             <Link
               key={centre.href}
               href={centre.href}
-              className="card-accent rounded border border-teal-200 bg-white p-6 pl-8
-                         shadow-card transition-shadow ease-standard hover:shadow-raised"
+              className="sweep-card border border-teal-200 bg-white p-6 shadow-card
+                         transition-shadow ease-standard hover:shadow-raised"
             >
               <h3 className="text-step-1">{centre.label}</h3>
             </Link>

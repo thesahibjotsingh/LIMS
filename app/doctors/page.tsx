@@ -69,9 +69,8 @@ export default function DoctorsPage() {
               {doctors.map((doctor) => (
                 <article
                   key={doctor.id}
-                  className="card-accent flex flex-col rounded border border-ink-200 bg-white
-                             p-5 pl-7 shadow-card transition-shadow ease-standard
-                             hover:shadow-raised"
+                  className="sweep-card flex flex-col border border-ink-200 bg-white p-5
+                             shadow-card transition-shadow ease-standard hover:shadow-raised"
                 >
                   <h3 className="text-step-1">
                     <Link
@@ -116,9 +115,8 @@ export default function DoctorsPage() {
 
                   <Link
                     href={`/doctors/${doctor.id}`}
-                    className="mt-5 inline-flex min-h-[44px] items-center self-start rounded
-                               border-2 border-teal-800 px-4 font-semibold text-teal-800
-                               transition-colors ease-standard hover:bg-teal-50"
+                    className="mt-5 inline-flex min-h-[44px] items-center self-start rounded-full
+                               border-2 border-current px-4 font-semibold text-teal-800"
                   >
                     View profile
                     <span className="sr-only"> of {doctor.name}</span>

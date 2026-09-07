@@ -7,7 +7,7 @@
 //
 // OPENS ON HOVER — and also on click, on Enter/Space, and on keyboard focus.
 //
-// The trigger and every row carry .nav-sweep, the left-to-right copper fill defined in
+// The trigger and every row carry .sweep, the left-to-right copper fill defined in
 // app/globals.css. Its text goes to teal-950 rather than staying teal-800: mid-sweep a
 // label straddles its resting ground and copper-500, and teal-800 is only 2.63:1 on the
 // copper half. teal-950 clears AA on both halves at once — 5.28:1 on copper-500, 15.57:1
@@ -147,7 +147,7 @@ export function NavDropdown({
         aria-expanded={open}
         aria-controls={panelId}
         onClick={() => (open ? closeNow() : openNow())}
-        className="nav-sweep flex min-h-[44px] items-center gap-1.5 whitespace-nowrap
+        className="sweep flex min-h-[44px] items-center gap-1.5 whitespace-nowrap
                    px-3 text-step--1 font-semibold"
       >
         {label}
@@ -185,7 +185,7 @@ export function NavDropdown({
                       surface rather than two hover languages. */}
                   <Link
                     href={item.href}
-                    className="nav-sweep flex min-h-[44px] items-center px-3 text-step--1"
+                    className="sweep flex min-h-[44px] items-center px-3 text-step--1"
                   >
                     {item.label}
                   </Link>
@@ -199,7 +199,7 @@ export function NavDropdown({
                       it reads as "everything" rather than as one more department. */}
                   <Link
                     href={overviewHref}
-                    className="nav-sweep mt-1 flex min-h-[44px] items-center border-t
+                    className="sweep mt-1 flex min-h-[44px] items-center border-t
                                border-ink-200 px-3 text-step--1 font-semibold
                                !text-copper-800 hover:!text-teal-950"
                   >
