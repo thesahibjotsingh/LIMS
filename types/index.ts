@@ -69,30 +69,41 @@ export interface Faq {
 /* Doctors                                                                     */
 /* -------------------------------------------------------------------------- */
 
+/**
+ * A consultant on the LIMS roster.
+ *
+ * Only `id`, `name` and `departmentSlug` are required. Everything else is optional
+ * because LIMS supplies the roster in stages: names, qualifications and registration
+ * numbers first, then portraits, OPD timings and biographies.
+ *
+ * The alternative — required fields filled with plausible defaults — is how invented
+ * years of experience and invented OPD timings end up on a live hospital site. An
+ * absent field renders as an absent section; it never renders as a guess.
+ */
 export interface Doctor {
   /** URL segment for app/doctors/[id] */
   id: string
   /** Full display name including salutation, e.g. "Dr. Harpreet Kaur Sandhu". */
   name: string
-  /** Post-nominals as one string — these run long in India and must not be truncated. */
-  qualifications: string
-  designation: string
   departmentSlug: string
+  /** Post-nominals as one string — these run long in India and must not be truncated. */
+  qualifications?: string
+  designation?: string
   /** Years in practice. Rendered as "18 years experience". */
-  experienceYears: number
-  /** State medical council registration. Public information, and a trust signal. */
+  experienceYears?: number
+  /** Medical council registration, verbatim as issued. Public information, and a trust signal. */
   registrationNumber?: string
-  languages: string[]
-  specialisations: string[]
-  about: string
-  education: CredentialEntry[]
-  positionsHeld: CredentialEntry[]
+  languages?: string[]
+  specialisations?: string[]
+  about?: string
+  education?: CredentialEntry[]
+  positionsHeld?: CredentialEntry[]
   publications?: string[]
   memberships?: string[]
-  portrait: ImageAsset
-  opdSchedule: OpdSession[]
-  videos: DoctorVideo[]
-  availability: Availability
+  portrait?: ImageAsset
+  opdSchedule?: OpdSession[]
+  videos?: DoctorVideo[]
+  availability?: Availability
 }
 
 export interface CredentialEntry {

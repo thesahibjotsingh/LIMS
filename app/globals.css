@@ -31,6 +31,10 @@
   html {
     -webkit-text-size-adjust: 100%;
     scroll-behavior: smooth;
+    /* The header is sticky, so an in-page anchor would otherwise scroll its target
+       underneath it. Roughly the two header rows; approximate is fine, too much is
+       harmless and too little hides the heading a patient just jumped to. */
+    scroll-padding-top: clamp(7rem, 6rem + 4vw, 9rem);
   }
 
   body {
@@ -97,14 +101,18 @@
      The contrast law repeats here because it is where it gets broken:
        copper-500 (#D68060)  2.95:1 on white  -> RULES, FILLS, BORDERS. Never text.
        ink-950 on copper-500 6.32:1           -> this is how copper carries text
-       copper-700 (#B35C34)  4.67:1 on white  -> text-safe ON WHITE ONLY. It drops to
-                                                 4.39:1 on teal-50 and 4.24:1 on
-                                                 copper-50 and fails AA on both bands.
+       copper-600 (#C86541)  3.89:1 on white  -> clears the 3:1 a state indicator needs
+                                                (WCAG 1.4.11) but NOT the 4.5:1 text
+                                                needs. Hover underlines, not words.
+       copper-700 (#B35C34)  4.67:1 on white ONLY — 4.39:1 on teal-50, 4.24:1 on
+                                                copper-50. Fails AA on both tinted bands.
        copper-800 (#9C4A28)  6.13:1 white / 5.76:1 teal-50 / 5.56:1 copper-50
                                               -> the copper that is safe on EVERY
-                                                 surface this platform uses. Default to
-                                                 it for text and only drop to 700 after
-                                                 checking the actual background.
+                                                 surface. Default to it for text.
+
+     THE COPPER NAV RIBBON inverts all of this. On a solid copper-500 band the brand
+     primary is unusable: teal-800 measures 2.63:1 there, worse than plain white's
+     2.95:1. teal-950 is 5.28:1 and is the only brand tone that may carry nav text.
        copper-500 on teal-900 3.89:1          -> dividers/large text on dark bands
      ------------------------------------------------------------------------- */
 
@@ -133,10 +141,10 @@
   }
 
   /* Section eyebrow / subheading.
-     copper-800, not the copper-700 the ramp comment suggests: the eyebrow appears on
-     white AND on the teal-50 and copper-50 bands, and copper-700 only clears 4.5:1 on
-     white. Picking the tone that survives every surface is what stops this from
-     silently failing the first time someone moves a section to a tinted band. */
+     copper-800, never copper-500: the eyebrow appears on white AND on the teal-50 and
+     copper-50 bands, so it needs a tone that clears 4.5:1 on all three. copper-800 does
+     (6.13 / 5.76 / 5.56); copper-700 clears only white. The accent tone itself manages
+     2.95:1 and fails outright. */
   .eyebrow {
     @apply block text-step--1 font-semibold uppercase tracking-[0.1em] text-copper-800;
   }
@@ -180,6 +188,21 @@
     @apply font-semibold text-copper-800 underline decoration-copper-500 decoration-2
            underline-offset-4 transition-colors ease-standard hover:text-copper-900
            hover:decoration-copper-700;
+  }
+}
+
+/* Dropdown panel entrance. Applied with Tailwind's motion-safe: prefix, so it is
+   already absent for anyone who asks for reduced motion — the guard below is the
+   second belt on the same trousers. 140ms and 4px: enough to read as "this appeared",
+   not enough to make a patient wait for a menu. */
+@keyframes dropdown {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 

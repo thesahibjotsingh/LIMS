@@ -22,6 +22,13 @@
 //                                            tinted bands. Prefer copper-800.
 //   copper-800 on white ........ 6.13:1  OK  5.76:1 on teal-50, 5.56:1 on copper-50 —
 //                                            the copper that is safe on every surface
+//
+// ON THE COPPER NAV RIBBON (a solid copper-500 band), the law inverts. Measured:
+//   white on copper-500 ........ 2.95:1  NO  the obvious choice, and it fails outright
+//   teal-800 on copper-500 ..... 2.63:1  NO  the brand primary is WORSE than white here
+//   teal-900 on copper-500 ..... 3.87:1  !!  large text / non-text only
+//   teal-950 on copper-500 ..... 5.28:1  OK  <- the only brand tone that carries nav text
+//   ink-950 on copper-500 ...... 6.32:1  OK  neutral alternative
 
 import type { Config } from 'tailwindcss'
 
@@ -41,16 +48,16 @@ const config: Config = {
           700: '#13707C', // hover/pressed for teal-800; 5.77:1, safe for text
           800: '#0F5B66', // * PRIMARY TEAL — body text, headings, primary buttons, nav
           900: '#0B4047', // footer background, dark bands
-          950: '#07282C', // deepest surface, overlays
+          950: '#07282C', // deepest surface; 5.28:1 on copper-500 — the nav ribbon text
         },
         copper: {
           50: '#FBF2EF', // warm tinted surface (patient stories)
           100: '#F6E1DA',
           200: '#EEC4B5',
-          300: '#E3A791',
+          300: '#E3A791', // on-dark accent
           400: '#DD9378',
-          500: '#D68060', // * ACCENT COPPER — filled blocks, rules, underlines
-          600: '#C86541', // hover for copper-500 fills
+          500: '#D68060', // * ACCENT COPPER — nav ribbon, filled blocks, rules
+          600: '#C86541', // 3.89:1 — state indicators on white; hover for copper fills
           700: '#B35C34', // 4.67:1 on white ONLY — fails on teal-50 / copper-50
           800: '#9C4A28', // 6.13:1 — the text-safe copper on every surface. Default.
           900: '#592918',
@@ -68,9 +75,9 @@ const config: Config = {
 
         // Semantic aliases so intent reads clearly in JSX.
         brand: {
-          DEFAULT: '#0F5B66',
+          DEFAULT: '#0F5B66', // Primary Teal
           secondary: '#168B99',
-          accent: '#D68060',
+          accent: '#D68060', // Accent Copper
         },
 
         // Clinical status colours. Each must ALWAYS be paired with text or an icon —

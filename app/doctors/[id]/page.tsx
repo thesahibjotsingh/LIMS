@@ -6,8 +6,10 @@
 // NEXT.JS 15: `params` is a Promise and must be awaited.
 // (On Next 14 this would be `params: { id: string }` with no await.)
 //
-// PHASE 0 SCOPE: route, metadata, static params, notFound handling, and the profile's
-// structural skeleton. Phase 3 adds the full profile plus the YouTube facade.
+// The roster is real, and LIMS has so far supplied names, qualifications, department
+// and registration numbers. Every other section on this page renders only when its data
+// exists. Nothing is defaulted: an invented OPD timing sends a patient to the hospital
+// on the wrong day, and an invented credential is worse than that.
 //
 // The video section is intentionally absent rather than stubbed with an <iframe>.
 // A raw YouTube iframe loads 500KB-1.5MB and sets third-party cookies on page load,
@@ -15,12 +17,14 @@
 // and DPDP. The facade (poster + play button, youtube-nocookie injected on click,
 // behind media consent) is the only permitted embed on this platform.
 
+import Link from 'next/link'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { Section } from '@/components/primitives/Section'
 import { Stack } from '@/components/primitives/Stack'
-import { SAMPLE_DOCTORS, getSampleDoctor } from '@/lib/sample-data'
-import { primaryLocation, siteConfig } from '@/lib/site-config'
+import { DOCTORS, getDoctor, registrationDisplay } from '@/lib/doctors'
+import { serviceName } from '@/lib/services'
+import { contact, primaryLocation, siteConfig } from '@/lib/site-config'
 
 export const revalidate = 3600
 
@@ -30,41 +34,52 @@ interface DoctorProfilePageProps {
 
 /** Pre-render every profile at build time; ISR refreshes them hourly. */
 export function generateStaticParams(): Array<{ id: string }> {
-  return SAMPLE_DOCTORS.map((doctor) => ({ id: doctor.id }))
+  return DOCTORS.map((doctor) => ({ id: doctor.id }))
 }
 
 export async function generateMetadata({
   params,
 }: DoctorProfilePageProps): Promise<Metadata> {
   const { id } = await params
-  const doctor = getSampleDoctor(id)
+  const doctor = getDoctor(id)
 
   if (!doctor) return { title: 'Doctor not found' }
 
+  const department = serviceName(doctor.departmentSlug)
+  const credentials = [doctor.qualifications, doctor.designation].filter(Boolean).join(', ')
+
   return {
-    title: `${doctor.name} — ${doctor.designation}`,
-    description: `${doctor.name}, ${doctor.qualifications}. ${doctor.designation} at ${siteConfig.shortName}, ${siteConfig.city}.`,
+    title: doctor.designation ? `${doctor.name} — ${doctor.designation}` : doctor.name,
+    description: [
+      credentials ? `${doctor.name}, ${credentials}.` : `${doctor.name}.`,
+      `${department} at ${siteConfig.shortName}, ${siteConfig.city}.`,
+    ].join(' '),
     alternates: { canonical: `/doctors/${doctor.id}` },
   }
 }
 
 export default async function DoctorProfilePage({ params }: DoctorProfilePageProps) {
   const { id } = await params
-  const doctor = getSampleDoctor(id)
+  const doctor = getDoctor(id)
 
   if (!doctor) notFound()
 
+  const department = serviceName(doctor.departmentSlug)
+
   // Physician structured data — a significant share of doctor discovery starts in search.
+  // Optional keys are spread in only when the value exists: an empty medicalSpecialty or
+  // a placeholder jobTitle is asserted to search engines as fact about a named person.
   const physicianJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Physician',
     name: doctor.name,
-    jobTitle: doctor.designation,
-    medicalSpecialty: doctor.specialisations,
-    knowsLanguage: doctor.languages,
-    worksFor: { '@type': 'MedicalOrganization', name: siteConfig.name },
+    medicalSpecialty: department,
+    ...(doctor.designation ? { jobTitle: doctor.designation } : {}),
+    ...(doctor.languages?.length ? { knowsLanguage: doctor.languages } : {}),
+    worksFor: { '@type': 'MedicalOrganization', name: siteConfig.name, url: siteConfig.url },
     address: {
       '@type': 'PostalAddress',
+      streetAddress: primaryLocation.addressLines.join(', '),
       addressLocality: primaryLocation.city,
       addressRegion: primaryLocation.state,
       addressCountry: 'IN',
@@ -75,73 +90,151 @@ export default async function DoctorProfilePage({ params }: DoctorProfilePagePro
     <>
       <Section tone="tint" labelledBy="doctor-heading">
         <Stack gap="md" className="max-w-prose">
-          <p className="eyebrow">{doctor.designation}</p>
+          <Link href={`/centres/${doctor.departmentSlug}`} className="eyebrow hover:underline">
+            {department}
+          </Link>
           <h1 id="doctor-heading" className="text-step-4">
             {doctor.name}
           </h1>
+
           {/* Post-nominals run long in India — never truncate or clamp this line. */}
-          <p className="text-step-0 text-ink-600">{doctor.qualifications}</p>
+          {doctor.qualifications ? (
+            <p className="text-step-0 text-ink-600">{doctor.qualifications}</p>
+          ) : null}
+
+          {doctor.designation ? (
+            <p className="text-step-0 text-ink-950">{doctor.designation}</p>
+          ) : null}
+
           <span className="rule-accent-lg" aria-hidden="true" />
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="badge-accent">{doctor.experienceYears} years&rsquo; experience</span>
-            <span className="text-step--1 text-ink-950">
-              Speaks {doctor.languages.join(', ')}
-            </span>
+
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+            {doctor.experienceYears ? (
+              <span className="badge-accent">
+                {doctor.experienceYears} years&rsquo; experience
+              </span>
+            ) : null}
+
+            {/* Verbatim, and labelled: this is what a patient checks against the council
+                register, so a reformatted number is a broken number. */}
+            {doctor.registrationNumber ? (
+              <span className="text-step--1 text-ink-950">
+                <span className="font-semibold">Registration no.</span>{' '}
+                <span className="tabular-nums">{registrationDisplay(doctor.registrationNumber)}</span>
+              </span>
+            ) : null}
           </div>
+
+          {doctor.languages?.length ? (
+            <p className="text-step--1 text-ink-950">Speaks {doctor.languages.join(', ')}</p>
+          ) : null}
         </Stack>
       </Section>
 
-      <Section labelledBy="about-heading" width="prose">
-        <h2 id="about-heading" className="text-step-3">
-          About
+      <Section labelledBy="appointment-heading" width="prose">
+        {doctor.about ? (
+          <>
+            <h2 className="text-step-3">About</h2>
+            <span className="rule-accent mt-3" aria-hidden="true" />
+            <p className="mt-4">{doctor.about}</p>
+          </>
+        ) : null}
+
+        {doctor.specialisations?.length ? (
+          <>
+            <h2 className="mt-10 text-step-3">Specialisations</h2>
+            <span className="rule-accent mt-3" aria-hidden="true" />
+            <ul className="mt-4 list-disc space-y-1 pl-5">
+              {doctor.specialisations.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+          </>
+        ) : null}
+
+        {doctor.opdSchedule?.length ? (
+          <>
+            <h2 className="mt-10 text-step-3">OPD schedule</h2>
+            <span className="rule-accent mt-3" aria-hidden="true" />
+            {/* A real <table>: screen-reader users navigate cell-by-cell with row and
+                column announcement, which only works on genuine table semantics. A grid
+                of divs here is unreadable. */}
+            <div className="mt-4 overflow-x-auto">
+              <table className="w-full border-collapse text-step--1">
+                <caption className="sr-only">
+                  Outpatient department timings for {doctor.name} at {primaryLocation.name}
+                </caption>
+                <thead>
+                  <tr className="border-b border-ink-200 text-left">
+                    <th scope="col" className="py-2 pr-4 font-semibold">
+                      Day
+                    </th>
+                    <th scope="col" className="py-2 pr-4 font-semibold">
+                      Timing
+                    </th>
+                    <th scope="col" className="py-2 font-semibold">
+                      Note
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {doctor.opdSchedule.map((session) => (
+                    <tr
+                      key={`${session.day}-${session.startTime}`}
+                      className="border-b border-ink-100"
+                    >
+                      <th scope="row" className="py-2 pr-4 font-normal capitalize">
+                        {session.day}
+                      </th>
+                      <td className="py-2 pr-4 tabular-nums">
+                        {session.startTime} &ndash; {session.endTime}
+                      </td>
+                      <td className="py-2 text-ink-600">{session.note ?? '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
+        ) : null}
+
+        {/*
+          Always rendered, and the reason this section is `labelledBy`. Until LIMS
+          supplies OPD timings this is the only actionable thing on the page, so it
+          cannot sit behind a conditional — a profile a patient cannot act on is worse
+          than no profile at all.
+        */}
+        <h2 id="appointment-heading" className="mt-10 text-step-3">
+          Book with {doctor.name}
         </h2>
         <span className="rule-accent mt-3" aria-hidden="true" />
-        <p className="mt-4">{doctor.about}</p>
-
-        <h2 className="mt-10 text-step-3">Specialisations</h2>
-        <span className="rule-accent mt-3" aria-hidden="true" />
-        <ul className="mt-4 list-disc space-y-1 pl-5">
-          {doctor.specialisations.map((item) => (
-            <li key={item}>{item}</li>
-          ))}
-        </ul>
-
-        <h2 className="mt-10 text-step-3">OPD schedule</h2>
-        <span className="rule-accent mt-3" aria-hidden="true" />
-        {/* A real <table>: screen-reader users navigate cell-by-cell with row and column
-            announcement, which only works on genuine table semantics. A grid of divs
-            here is unreadable. */}
-        <div className="mt-4 overflow-x-auto">
-          <table className="w-full border-collapse text-step--1">
-            <caption className="sr-only">
-              Outpatient department timings for {doctor.name} at {primaryLocation.name}
-            </caption>
-            <thead>
-              <tr className="border-b border-ink-200 text-left">
-                <th scope="col" className="py-2 pr-4 font-semibold">Day</th>
-                <th scope="col" className="py-2 pr-4 font-semibold">Timing</th>
-                <th scope="col" className="py-2 font-semibold">Note</th>
-              </tr>
-            </thead>
-            <tbody>
-              {doctor.opdSchedule.map((session) => (
-                <tr key={`${session.day}-${session.startTime}`} className="border-b border-ink-100">
-                  <th scope="row" className="py-2 pr-4 font-normal capitalize">
-                    {session.day}
-                  </th>
-                  <td className="py-2 pr-4 tabular-nums">
-                    {session.startTime} &ndash; {session.endTime}
-                  </td>
-                  <td className="py-2 text-ink-600">{session.note ?? '—'}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <p className="mt-4">
+          OPD timings for this consultant are not published yet. To book, call the
+          appointments line or request an appointment online.
+        </p>
+        <div className="mt-5 flex flex-wrap gap-3">
+          <a
+            href={`tel:${contact.secondary}`}
+            className="inline-flex min-h-[44px] items-center rounded bg-teal-800 px-5
+                       font-semibold text-white transition-colors ease-standard
+                       hover:bg-teal-700"
+          >
+            Call {contact.secondaryDisplay}
+          </a>
+          <Link
+            href="/appointments"
+            className="inline-flex min-h-[44px] items-center rounded border-2 border-teal-800
+                       px-5 font-semibold text-teal-800 transition-colors ease-standard
+                       hover:bg-teal-50"
+          >
+            Request an appointment
+          </Link>
         </div>
 
-        <p className="mt-10 rounded border border-teal-200 bg-teal-50 p-4 text-step--1">
-          <strong>Phase 0 placeholder.</strong> Portrait, education, positions, publications
-          and the consent-gated video section arrive in Phase 3.
+        <p className="mt-10">
+          <Link href="/doctors" className="link-accent">
+            Back to all doctors
+          </Link>
         </p>
       </Section>
 

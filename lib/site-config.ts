@@ -11,6 +11,7 @@
 // From Phase 2 this is likely to move behind a CMS. Keeping it in one typed module now
 // means that migration touches one file, not thirty components.
 
+import { servicesByCategory } from '@/lib/services'
 import type { Location, NavItem } from '@/types'
 
 export const siteConfig = {
@@ -19,9 +20,13 @@ export const siteConfig = {
   city: 'Hisar',
   /** The official tagline, as printed on LIMS stationery. */
   tagline: ['Compassion', 'Excellence', 'Care'] as const,
+  // Names only services on LIMS's own list. The previous wording advertised cardiac
+  // sciences and neurosciences, neither of which LIMS listed — on a hospital site that
+  // is not marketing copy, it is a patient arriving for a department that is not there.
   description:
-    'Multi-speciality hospital at Jindal Chowk, Hisar, Haryana — Centres of Excellence ' +
-    'in cardiac sciences, orthopaedics, neurosciences and more.',
+    'Multi-speciality hospital at Jindal Chowk, Hisar, Haryana — 24×7 emergency care, ' +
+    'surgery, orthopaedics, obstetrics and gynaecology, with diagnostics, imaging and ' +
+    'pathology on the same campus.',
   url: 'https://www.limshisar.com',
   urlDisplay: 'www.limshisar.com',
 } as const
@@ -67,28 +72,70 @@ export const primaryLocation: Location = {
 }
 
 /**
- * Primary navigation. Phase 1 turns "Centres of Excellence" into a mega-menu once the
- * real Centre list is confirmed — at more than ~8 entries a flat dropdown stops working.
+ * Primary navigation.
+ *
+ * An entry with `children` renders as a dropdown; without, as a plain link. The two
+ * dropdowns split LIMS's 26 services the way a patient reads them: Specialities is the
+ * 15 departments you consult or are admitted under, Services is the diagnostics and
+ * support around them. Both are generated from lib/services.ts, so a nav entry cannot
+ * exist without a page behind it.
  */
 export const primaryNav: NavItem[] = [
-  { label: 'Centres of Excellence', href: '/centres' },
+  {
+    label: 'Specialities',
+    href: '/centres',
+    children: servicesByCategory('clinical').map((service) => ({
+      label: service.name,
+      href: `/centres/${service.slug}`,
+    })),
+  },
   { label: 'Find a doctor', href: '/doctors' },
+  {
+    label: 'Services',
+    href: '/centres',
+    children: [...servicesByCategory('diagnostics'), ...servicesByCategory('support')].map(
+      (service) => ({ label: service.name, href: `/centres/${service.slug}` }),
+    ),
+  },
   { label: 'Health packages', href: '/health-packages' },
   { label: 'Patient care', href: '/patient-care' },
   { label: 'Health library', href: '/health-library' },
   { label: 'About LIMS', href: '/about' },
-  { label: 'Contact', href: '/contact' },
+  {
+    label: 'Contact Us',
+    href: '/contact',
+    children: [
+      { label: 'Locations & directions', href: '/contact#locations' },
+      { label: 'Book an appointment', href: '/appointments' },
+      { label: 'Insurance & billing', href: '/patient-care/insurance' },
+      { label: 'Visitor information', href: '/patient-care/visitors' },
+    ],
+  },
 ]
 
-/** TODO: replace with the real Centres, in the order LIMS wants them ranked. */
-export const centresNav: NavItem[] = [
-  { label: 'Cardiac Sciences', href: '/centres/cardiac-sciences' },
-  { label: 'Orthopaedics & Joint Replacement', href: '/centres/orthopaedics' },
-  { label: 'Neurosciences', href: '/centres/neurosciences' },
-  { label: 'Mother & Child Care', href: '/centres/mother-and-child' },
-  { label: 'Nephrology & Urology', href: '/centres/nephrology-urology' },
-  { label: 'Critical Care', href: '/centres/critical-care' },
-]
+/**
+ * Clinical departments, in LIMS's own order, derived from lib/services.ts.
+ *
+ * Hand-written nav lists are how a site ends up advertising a department it does not
+ * run and linking to a route that does not exist — which is exactly what the previous
+ * version of this constant did. Building it from the service catalogue means a nav
+ * entry cannot exist without a page behind it.
+ *
+ * Clinical only: the diagnostics and support services are real and have pages, but a
+ * patient scanning a nav for "where do I go" is not looking for Pharmacy. The full
+ * catalogue lives on /centres.
+ */
+export const clinicalNav: NavItem[] = servicesByCategory('clinical').map((service) => ({
+  label: service.name,
+  href: `/centres/${service.slug}`,
+}))
+
+/**
+ * Footer slice. Fifteen departments is a wall in a footer column, so it shows the first
+ * eight and links out. The cap is a layout decision — nothing is hidden, /centres has
+ * every service.
+ */
+export const centresNav: NavItem[] = clinicalNav.slice(0, 8)
 
 export const patientServicesNav: NavItem[] = [
   { label: 'Book an appointment', href: '/appointments' },

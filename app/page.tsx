@@ -16,7 +16,8 @@ import Link from 'next/link'
 import { Grid } from '@/components/primitives/Grid'
 import { Section } from '@/components/primitives/Section'
 import { Stack } from '@/components/primitives/Stack'
-import { centresNav, siteConfig } from '@/lib/site-config'
+import { SERVICES } from '@/lib/services'
+import { clinicalNav, siteConfig } from '@/lib/site-config'
 
 // Content changes weekly at most — static with hourly revalidation keeps TTFB low.
 export const revalidate = 3600
@@ -97,11 +98,11 @@ export default function HomePage() {
         </h2>
         <span className="rule-accent mt-3" aria-hidden="true" />
         <p className="mt-4 max-w-prose text-ink-950">
-          {/* TODO (Phase 1): replace with LIMS-approved introductory copy. */}
-          Specialist teams and dedicated facilities across our core clinical departments.
+          Specialist teams across our clinical departments, with diagnostics, imaging and
+          patient support services on the same campus.
         </p>
         <Grid className="mt-8">
-          {centresNav.map((centre) => (
+          {clinicalNav.map((centre) => (
             <Link
               key={centre.href}
               href={centre.href}
@@ -109,13 +110,15 @@ export default function HomePage() {
                          shadow-card transition-shadow ease-standard hover:shadow-raised"
             >
               <h3 className="text-step-1">{centre.label}</h3>
-              <p className="mt-2 text-step--1 text-ink-600">
-                {/* TODO (Phase 2): one-line summary from the Department record. */}
-                View specialists, procedures and OPD timings.
-              </p>
             </Link>
           ))}
         </Grid>
+
+        <p className="mt-8">
+          <Link href="/centres" className="link-accent">
+            All {SERVICES.length} services, including diagnostics and imaging
+          </Link>
+        </p>
       </Section>
 
       {/*

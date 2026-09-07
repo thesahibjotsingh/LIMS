@@ -36,10 +36,24 @@ Then open <http://localhost:3000>.
 
 | Route | Status |
 | --- | --- |
-| `/` | Phase 0 skeleton — hero, quick actions, Centres grid. Phase 1 fills it out. |
-| `/doctors` | Directory shell. Filters + search in Phase 3. |
-| `/doctors/[id]` | Doctor profile skeleton. Portrait, credentials, video facade in Phase 3. |
+| `/` | Home — hero, quick actions, clinical department grid. |
+| `/centres` | All 26 services, grouped into clinical / diagnostics / support. |
+| `/centres/[slug]` | One service, plus its consultants. 26 prerendered. |
+| `/doctors` | Directory, grouped by department. Filters + search in Phase 3. |
+| `/doctors/[id]` | Doctor profile. 4 prerendered. Portraits + OPD timings pending. |
 | `/dev/tokens` | **Live design-token reference.** Not linked in nav, `noindex`. |
+
+## Data
+
+`lib/services.ts` is the spine: the 26 services LIMS supplied, one slug each. Nav, home
+grid, footer, `/centres`, `/centres/[slug]` and the doctor roster all resolve against it,
+so a rename is one edit. `lib/doctors.ts` throws at module load if a doctor is filed
+under a slug that does not exist there — otherwise a renamed slug silently drops that
+doctor off their department page.
+
+The three-way `category` split (clinical / diagnostics / support) is **editorial, not
+LIMS's own structure** — 26 flat tiles ask a patient to tell "Neurosurgery" apart from
+"Color Doppler" unaided. Confirm it.
 
 `/dev/tokens` is the fastest way to confirm the theme compiled correctly — it renders
 every colour ramp, type step and component recipe on one page.
@@ -74,14 +88,17 @@ scripts/generate-icons.mjs
 
 ## Brand tokens
 
+Taken from official LIMS stationery. Both ramps are generated at a fixed hue from the
+anchor (teal H195.5, copper H12.6), so every step is a real relative of the brand colour.
+
 | Name | Token | Hex | On white |
 | --- | --- | --- | --- |
-| Primary Teal | `teal-800` | `#0F5B66` | 7.75:1 — AAA, safe for all text |
-| Secondary Cyan | `teal-600` | `#168B99` | 4.05:1 — large text / icons / borders only |
-| Accent Copper | `copper-500` | `#D68060` | 2.95:1 — **decorative only** |
-| Text-safe copper | `copper-700` | `#B35C34` | 4.67:1 — use when copper must be text |
+| Primary Deep Teal | `teal-800` | `#133E4D` | 11.51:1 — AAA, safe for all text |
+| Secondary Teal | `teal-600` | `#236C85` | 5.91:1 — icons, borders, focus ring, secondary text |
+| Accent Copper | `copper-500` | `#E07A5F` | 2.95:1 — **decorative only** |
+| Text-safe copper | `copper-700` | `#AE4529` | 5.70:1 — use when copper must be text |
 
-Use theme tokens (`bg-teal-800`), never arbitrary values (`bg-[#0F5B66]`). If a token is
+Use theme tokens (`bg-teal-800`), never arbitrary values (`bg-[#133E4D]`). If a token is
 missing, add it to `tailwind.config.ts` first.
 
 ### The copper accent system
@@ -106,14 +123,15 @@ this site alternates white / `teal-50` / `copper-50`.
 
 | | white | teal-50 | copper-50 |
 | --- | --- | --- | --- |
-| `copper-500` | 2.95:1 | — | — |
-| `copper-700` | 4.67:1 ✅ | 4.39:1 ❌ | 4.24:1 ❌ |
-| `copper-800` | 6.13:1 ✅ | 5.76:1 ✅ | 5.56:1 ✅ |
+| `copper-500` | 2.95:1 ❌ | — | — |
+| `copper-600` | 4.33:1 ⚠️ | 4.03:1 ⚠️ | 3.90:1 ⚠️ |
+| `copper-700` | 5.70:1 ✅ | 5.31:1 ✅ | 5.14:1 ✅ |
+| `copper-800` | 7.59:1 ✅ | 7.06:1 ✅ | 6.84:1 ✅ |
 
-So: **copper-500 is decorative only** (rules, fills, edges — never text), **copper-800 is
-the copper that carries text**, and copper-700 is safe on white alone. State indicators
-that must clear 3:1 (WCAG 1.4.11), like the nav hover underline, use copper-600 at 3.89:1
-rather than copper-500 at 2.95:1.
+So: **copper-500 is decorative only** (rules, fills, edges — never text) and **copper-700
+is the copper that carries text** on every surface this site uses. copper-600 clears the
+3:1 a state indicator needs (WCAG 1.4.11) but not the 4.5:1 text needs, so it is used
+for the nav hover underline and nothing verbal.
 
 ## Brand assets
 

@@ -54,7 +54,13 @@ export function SiteFooter({ centres, patientServices, primaryLocation }: SiteFo
             </address>
           </div>
 
-          <FooterNav title="Centres of Excellence" items={centres} label="Centres" />
+          <FooterNav
+            title="Clinical departments"
+            items={centres}
+            label="Clinical departments"
+            moreHref="/centres"
+            moreLabel="All services"
+          />
           <FooterNav title="Patient services" items={patientServices} label="Patient services" />
 
           <nav aria-label="Legal and privacy">
@@ -98,9 +104,12 @@ interface FooterNavProps {
   title: string
   items: NavItem[]
   label: string
+  /** Optional "see everything" link, for lists that are deliberately truncated. */
+  moreHref?: string
+  moreLabel?: string
 }
 
-function FooterNav({ title, items, label }: FooterNavProps) {
+function FooterNav({ title, items, label, moreHref, moreLabel }: FooterNavProps) {
   return (
     <nav aria-label={label}>
       <h2 className="text-step-0 font-semibold text-white">{title}</h2>
@@ -116,6 +125,17 @@ function FooterNav({ title, items, label }: FooterNavProps) {
             </Link>
           </li>
         ))}
+        {moreHref && moreLabel ? (
+          <li>
+            <Link
+              href={moreHref}
+              className="flex min-h-[44px] items-center text-step--1 font-semibold
+                         text-copper-300 underline underline-offset-4 hover:text-white"
+            >
+              {moreLabel}
+            </Link>
+          </li>
+        ) : null}
       </ul>
     </nav>
   )

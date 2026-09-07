@@ -13,7 +13,6 @@ import {
   primaryNav,
   siteConfig,
 } from '@/lib/site-config'
-import { EmergencyBar } from '@/components/sections/EmergencyBar'
 import { SiteHeader } from '@/components/sections/SiteHeader'
 import { SiteFooter } from '@/components/sections/SiteFooter'
 import './globals.css'
@@ -92,19 +91,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           Skip to main content
         </a>
 
-        {/* Labels, not just numbers, come from config — the role split between the two
-            published LIMS lines is still unconfirmed. See lib/site-config.ts. */}
-        <EmergencyBar
-          primaryNumber={contact.primary}
-          primaryNumberDisplay={contact.primaryDisplay}
-          primaryLabel="Emergency"
-          secondaryNumber={contact.secondary}
-          secondaryNumberDisplay={contact.secondaryDisplay}
-          secondaryLabel="Appointments"
-        />
-
+        {/* The standalone red emergency band is gone; the emergency number now lives in
+            the header as a filled copper button, and the header is sticky so it stays
+            reachable. The role split between the two published LIMS lines is still
+            unconfirmed — see lib/site-config.ts. */}
         <SiteHeader
           nav={primaryNav}
+          emergencyPhone={contact.primary}
+          emergencyPhoneDisplay={contact.primaryDisplay}
           appointmentPhone={contact.secondary}
           name={siteConfig.name}
           city={siteConfig.city}

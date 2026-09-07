@@ -16,15 +16,15 @@ export const metadata: Metadata = {
 }
 
 const tealRamp = [
-  ['50', '#EFFAFB'], ['100', '#D6F2F5'], ['200', '#ABE5ED'], ['300', '#6FD4E2'],
-  ['400', '#25BCD0'], ['500', '#1BA0B1'], ['600', '#168B99'], ['700', '#13707C'],
-  ['800', '#0F5B66'], ['900', '#0B4047'], ['950', '#07282C'],
+  ['50', '#F1F8FB'], ['100', '#DDEFF5'], ['200', '#BEDEE9'], ['300', '#8FC4D6'],
+  ['400', '#55A7C3'], ['500', '#3187A5'], ['600', '#236C85'], ['700', '#1A5468'],
+  ['800', '#133E4D'], ['900', '#0D2D38'], ['950', '#081C24'],
 ] as const
 
 const copperRamp = [
-  ['50', '#FBF2EF'], ['100', '#F6E1DA'], ['200', '#EEC4B5'], ['300', '#E3A791'],
-  ['400', '#DD9378'], ['500', '#D68060'], ['600', '#C86541'], ['700', '#B35C34'],
-  ['800', '#9C4A28'], ['900', '#592918'],
+  ['50', '#FBF1EF'], ['100', '#F7E2DC'], ['200', '#F0C7BC'], ['300', '#EAA997'],
+  ['400', '#E5917B'], ['500', '#E07A5F'], ['600', '#CC5333'], ['700', '#AE4529'],
+  ['800', '#92361E'], ['900', '#5B2415'],
 ] as const
 
 const inkRamp = [
@@ -52,12 +52,12 @@ export default function TokensPage() {
 
       <h2 className="mt-12 text-step-3">Brand anchors</h2>
       <div className="mt-4 grid gap-4 sm:grid-cols-3">
-        <Anchor name="Primary Teal" token="teal-800" hex="#0F5B66" ratio="7.75:1 · AAA"
-          note="Body text, headings, primary buttons. Safe everywhere." fg="text-white" bg="bg-teal-800" />
-        <Anchor name="Secondary Cyan" token="teal-600" hex="#168B99" ratio="4.05:1 · AA-large"
-          note="Icons, borders, focus rings, ≥24px headings. Not body copy." fg="text-white" bg="bg-teal-600" />
-        <Anchor name="Accent Copper" token="copper-500" hex="#D68060" ratio="2.95:1 · fails"
-          note="Decorative only. As a fill with ink-950 text it reaches 6.32:1. When copper must be text, use copper-800." fg="text-ink-950" bg="bg-copper-500" />
+        <Anchor name="Primary Deep Teal" token="teal-800" hex="#133E4D" ratio="11.51:1 · AAA"
+          note="Official LIMS primary. Body text, headings, buttons. Safe everywhere." fg="text-white" bg="bg-teal-800" />
+        <Anchor name="Secondary Teal" token="teal-600" hex="#236C85" ratio="5.91:1 · AA"
+          note="Icons, borders, focus ring, secondary text." fg="text-white" bg="bg-teal-600" />
+        <Anchor name="Accent Copper" token="copper-500" hex="#E07A5F" ratio="2.95:1 · fails"
+          note="Official LIMS accent. Decorative only. As a fill with ink-950 text it reaches 6.32:1. When copper must be text, use copper-700." fg="text-ink-950" bg="bg-copper-500" />
       </div>
 
       <h2 className="mt-12 text-step-3">Teal ramp</h2>
@@ -114,7 +114,7 @@ export default function TokensPage() {
       </p>
 
       <dl className="mt-6 space-y-6">
-        <Recipe name=".eyebrow" note="copper-800 — 6.13:1 on white, 5.76:1 on teal-50, 5.56:1 on copper-50">
+        <Recipe name=".eyebrow" note="copper-700 — 5.70:1 on white, 5.31:1 on teal-50, 5.14:1 on copper-50">
           <span className="eyebrow">Centres of Excellence</span>
         </Recipe>
 
@@ -127,7 +127,7 @@ export default function TokensPage() {
           <span className="divider-accent" aria-hidden="true" />
         </Recipe>
 
-        <Recipe name=".badge-accent / .badge-accent-soft" note="ink-950 on copper-500 = 6.32:1; copper-800 on copper-50 = 5.56:1">
+        <Recipe name=".badge-accent / .badge-accent-soft" note="ink-950 on copper-500 = 6.32:1; copper-700 on copper-50 = 5.14:1">
           <span className="badge-accent">24&times;7</span>
           <span className="badge-accent-soft ml-2">Cardiac sciences</span>
         </Recipe>
