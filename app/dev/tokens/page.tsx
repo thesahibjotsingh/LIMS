@@ -147,7 +147,7 @@ export default function TokensPage() {
 
         <Recipe
           name=".card-edge"
-          note="department and service cards. 4px copper edge at rest, 6px teal-800 on hover and focus-within (7.75:1 on white). 120ms so it reads as a switch, not a wave. Any .card-cta inside becomes a solid teal button"
+          note="department and service cards, two layers: a copper fill swept in over 260ms, and a left strip above it that goes 4px copper to 6px teal-800 in 120ms. Labels move to teal-950 (5.28:1 on the fill). Fires on focus-within too"
         >
           <a
             href="#tokens-heading"

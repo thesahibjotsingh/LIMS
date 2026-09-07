@@ -116,7 +116,7 @@ rendered on `/dev/tokens`.
 | `.divider-accent` | Full-bleed band transition (top of the footer) |
 | `.badge-accent` / `.badge-accent-soft` | Department and experience badging |
 | `.sweep` | Light ground, one label: nav items, menu rows, outline buttons |
-| `.card-edge` | Department and service cards — copper edge at rest, teal strip on hover / `:focus-within` |
+| `.card-edge` | Department and service cards — copper fill plus a teal left strip on hover / `:focus-within` |
 | `.sweep-solid` | Filled primary buttons |
 | `.link-accent` | Copper text links |
 

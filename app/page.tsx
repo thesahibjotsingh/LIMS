@@ -64,8 +64,9 @@ export default function HomePage() {
           How can we help today?
         </h2>
         <span className="rule-accent mt-3" aria-hidden="true" />
-        {/* .card-edge lights its left strip on hover AND on focus-within, so the
-            affordance exists for someone tabbing through as well as for a mouse. */}
+        {/* .card-edge fills copper and turns its left strip teal on hover AND on
+            focus-within, so the affordance exists for someone tabbing through as
+            well as for a mouse. */}
         <Grid min="sm" className="mt-8">
           {[
             { label: 'Book an appointment', href: '/appointments' },
