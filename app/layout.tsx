@@ -100,6 +100,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <SiteHeader
           nav={primaryNav}
           emergencyPhone={contact.primary}
+          emergencyPhoneDisplay={contact.primaryDisplay}
           name={siteConfig.name}
           city={siteConfig.city}
           tagline={siteConfig.tagline}

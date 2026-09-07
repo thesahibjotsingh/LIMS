@@ -38,6 +38,7 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
+import { EmergencyCallButton } from '@/components/sections/EmergencyCallButton'
 import { NavDropdown } from '@/components/sections/NavDropdown'
 import { NavLink } from '@/components/sections/NavLink'
 import type { NavItem } from '@/types'
@@ -46,6 +47,8 @@ export interface SiteHeaderProps {
   nav: NavItem[]
   /** E.164 for the emergency line. The digits are not printed on the button. */
   emergencyPhone: string
+  /** Human-formatted, for the desktop dialog. */
+  emergencyPhoneDisplay: string
   /** Institution name, set as text beside the mark. */
   name: string
   city: string
@@ -78,7 +81,14 @@ const PADDING_X = 'w-full px-6 lg:px-12'
  * work at narrow widths, where it keeps a wrapped row off the screen edge.
  */
 
-export function SiteHeader({ nav, emergencyPhone, name, city, tagline }: SiteHeaderProps) {
+export function SiteHeader({
+  nav,
+  emergencyPhone,
+  emergencyPhoneDisplay,
+  name,
+  city,
+  tagline,
+}: SiteHeaderProps) {
   return (
     <header className="sticky top-0 z-40 border-b border-ink-200 bg-white shadow-card">
       {/* ---- Tier 1 — lockup and actions, on white -------------------------- */}
@@ -166,19 +176,22 @@ export function SiteHeader({ nav, emergencyPhone, name, city, tagline }: SiteHea
               (WCAG 1.4.1), and it is the one control on the page that has to work for
               someone who is panicking.
 
-              The digits are no longer printed on the button. It is still a real tel:
-              link, so a tap dials and a desktop click hands off to the calling app, and
-              the number is still set out in full in the footer and on the contact page.
+              The digits are not printed on the button. On a phone it dials; on a
+              desktop, where a tel: link is at best a handoff prompt, it opens a dialog
+              that puts the number on screen in readable type. That behaviour lives in
+              EmergencyCallButton, which enhances a real tel: anchor rather than
+              replacing it — see the note at the top of that file.
             */}
-            <a
-              href={`tel:${emergencyPhone}`}
+            <EmergencyCallButton
+              phone={emergencyPhone}
+              phoneDisplay={emergencyPhoneDisplay}
               className="inline-flex min-h-[44px] items-center gap-2 rounded-full
                          bg-copper-700 px-5 font-semibold text-white transition-colors
                          ease-standard hover:bg-copper-800"
             >
               <PhoneIcon />
               <span>Emergency 24&times;7</span>
-            </a>
+            </EmergencyCallButton>
 
             {/* .sweep-solid fills to copper-700, not the copper-500 accent: white on
                 copper-500 is 2.95:1, so the accent tone would make this label unreadable
