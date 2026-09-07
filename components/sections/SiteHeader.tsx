@@ -7,22 +7,24 @@
 //
 //   [logo + name + tagline]   Specialities ▾ … Contact Us ▾   [Emergency] [Book]
 //
-// HOW FAR THE SINGLE ROW ACTUALLY GOES — measured, not guessed.
-//   lockup   ~306px  (88 logo + 208 two-line name/tagline + gap)
-//   nav      ~836px  (8 items at 12px, px-3, plus gaps)
+// THE ROW IS A THREE-REGION GRID, NOT A WRAPPING FLEX LINE.
+//   [lockup, auto] [nav, 1fr] [actions, auto]
+// The middle track absorbs every pixel the other two do not use, so the nav stays
+// optically centred at 1280 and at 1920 without a breakpoint per width. A wrapping flex
+// row cannot do that: it centres against the container, not against the space actually
+// left over, so the nav drifts as the lockup and the buttons change size.
+//
+// Budget at the tightest laptop width, xl/1280 (1248px usable after the gutter):
+//   lockup   ~282px  (88 logo + 184 name/tagline block + gap)
+//   nav      ~578px  (5 items at 12px, px-2.5, plus gaps)
 //   actions  ~328px  (emergency pill + book appointment)
-//   total   ~1470px
-// The page container caps at 80rem/1280, which cannot hold that, so the header opts
-// into `wide` (96rem) — 1504px of usable width once the gutter is off. The single row
-// therefore engages at 2xl (1536px) and the nav drops to its own centred row below it.
+//   gaps       32px
+//   total   ~1220px  — fits, with ~28px of slack
 //
-// Shrinking the type to force one row lower down was the alternative and is not worth
-// it: 8 items under 12px on a site read by people with failing eyesight is a worse
-// trade than a second row. The real lever is fewer top-level items — folding Health
-// packages, Health library and About LIMS into existing menus would bring the single
-// row down to about 1280px. That is a content decision, so it is not made here.
-//
-// Below 2xl everything else still holds: no ribbon, lockup left, actions right.
+// That slack exists because the nav went from eight items to five. It is thin, so two
+// things protect it: every nav label is `whitespace-nowrap` (an item may never break
+// mid-label), and below xl the grid collapses to two rows deliberately rather than
+// letting anything overflow or clip.
 //
 // The header is sticky. That is not decoration: the red emergency band that used to sit
 // above it was always on screen, and moving the emergency number into the header would
@@ -69,7 +71,15 @@ export function SiteHeader({
   return (
     <header className="sticky top-0 z-40 border-b border-ink-200 bg-white shadow-card">
       <Container width="wide">
-        <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 py-2">
+        {/*
+          Two rows below xl (lockup+actions, then nav) and one row from xl up. Grid
+          rather than flex-wrap so the middle track is a real 1fr and the nav centres
+          against the leftover space, not against the container.
+        */}
+        <div
+          className="grid grid-cols-1 items-center gap-x-4 gap-y-2 py-2
+                     xl:grid-cols-[auto_1fr_auto]"
+        >
           {/*
             The lockup, from the official LIMS stationery: the mark, the institution
             name, then the tagline beneath it.
@@ -80,7 +90,7 @@ export function SiteHeader({
           */}
           <Link
             href="/"
-            className="flex shrink-0 items-center gap-2.5"
+            className="flex min-w-0 items-center gap-2.5 justify-self-start"
             aria-label={`${name}, ${city} — home`}
           >
             {/*
@@ -108,7 +118,7 @@ export function SiteHeader({
                 lockup ~200px and keep the type at a readable size.
               */}
               <span
-                className="max-w-[13rem] text-[0.6875rem] font-semibold uppercase
+                className="max-w-[11.5rem] text-[0.6875rem] font-semibold uppercase
                            leading-[1.3] tracking-[0.05em] text-teal-800"
               >
                 {name}, {city}
@@ -147,20 +157,20 @@ export function SiteHeader({
             Distinct aria-label: the footer has its own <nav>, and screen-reader users
             navigate by landmark. "Navigation, navigation" tells them nothing.
           */}
-          <nav
-            aria-label="Primary"
-            className="order-last w-full 2xl:order-none 2xl:w-auto 2xl:flex-1"
-          >
+          <nav aria-label="Primary" className="order-last w-full xl:order-none xl:w-auto">
             <ul className="flex flex-wrap items-center justify-center gap-x-1">
-              {nav.map((item) =>
+              {nav.map((item, index) =>
                 item.children?.length ? (
                   <li key={item.label}>
                     <NavDropdown
                       label={item.label}
                       items={item.children}
-                      overviewHref={item.href}
-                      overviewLabel={`All ${item.label.toLowerCase()}`}
+                      overviewHref={item.overviewLabel ? item.href : undefined}
+                      overviewLabel={item.overviewLabel}
                       columns={item.children.length > 8 ? 2 : 1}
+                      // The last two triggers sit near the right edge of the row, where a
+                      // left-anchored panel would run off the viewport.
+                      alignRight={index >= nav.length - 2}
                     />
                   </li>
                 ) : (
@@ -169,8 +179,8 @@ export function SiteHeader({
                         see the recipe and its contrast working in app/globals.css. */}
                     <Link
                       href={item.href}
-                      className="nav-sweep flex min-h-[44px] items-center px-3
-                                 text-[0.75rem] font-semibold"
+                      className="nav-sweep flex min-h-[44px] items-center
+                                 whitespace-nowrap px-2.5 text-[0.75rem] font-semibold"
                     >
                       {item.label}
                     </Link>
@@ -180,7 +190,7 @@ export function SiteHeader({
             </ul>
           </nav>
 
-          <div className="flex shrink-0 items-center gap-2">
+          <div className="flex items-center gap-2 justify-self-end">
             {/*
               EMERGENCY.
               Filled copper-700, not the copper-500 accent: white on copper-500 is 2.95:1

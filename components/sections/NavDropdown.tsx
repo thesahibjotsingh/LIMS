@@ -47,6 +47,8 @@ export interface NavDropdownProps {
   overviewLabel?: string
   /** Two columns for long lists such as the 15 clinical departments. */
   columns?: 1 | 2
+  /** Anchor the panel to the trigger's right edge — for triggers near the row's end. */
+  alignRight?: boolean
 }
 
 export function NavDropdown({
@@ -55,6 +57,7 @@ export function NavDropdown({
   overviewHref,
   overviewLabel,
   columns = 1,
+  alignRight = false,
 }: NavDropdownProps) {
   const [open, setOpen] = useState(false)
   const panelId = useId()
@@ -142,8 +145,8 @@ export function NavDropdown({
         aria-expanded={open}
         aria-controls={panelId}
         onClick={() => (open ? closeNow() : openNow())}
-        className="nav-sweep flex min-h-[44px] items-center gap-1.5 px-3
-                   text-[0.75rem] font-semibold"
+        className="nav-sweep flex min-h-[44px] items-center gap-1.5 whitespace-nowrap
+                   px-2.5 text-[0.75rem] font-semibold"
       >
         {label}
         {/* Decorative: aria-expanded on the button already announces the state. */}
@@ -157,11 +160,15 @@ export function NavDropdown({
         pt-2 on the wrapper is the hover bridge: it covers the gap between the trigger
         and the panel, so the pointer never crosses dead space on its way down and the
         menu does not close under it.
+
+        alignRight flips the anchor for triggers near the end of the row, where a
+        left-anchored panel would run off the viewport. max-w on the inner panel is the
+        backstop for every other case.
       */}
       {open ? (
         <div
           id={panelId}
-          className="absolute left-0 top-full z-50 pt-2"
+          className={`absolute top-full z-50 pt-2 ${alignRight ? 'right-0' : 'left-0'}`}
           onMouseEnter={openNow}
           onMouseLeave={closeSoon}
         >

@@ -186,4 +186,11 @@ export interface NavItem {
   label: string
   href: string
   children?: NavItem[]
+  /**
+   * Label for the "see everything" row at the foot of a dropdown, e.g.
+   * "All specialities". Omit it and no such row renders — which is the right call when
+   * `href` points at a page that has not shipped yet, since an overview row pointing at
+   * a 404 is just one more dead link inside a menu.
+   */
+  overviewLabel?: string
 }

@@ -72,18 +72,34 @@ export const primaryLocation: Location = {
 }
 
 /**
- * Primary navigation.
+ * Primary navigation — five items, one per question a patient actually arrives with:
+ *
+ *   Specialities      what do you treat?
+ *   Find a doctor     who will see me?
+ *   Services          what tests and support do you run?
+ *   Patient care      what should I know before I come?
+ *   About & contact   where are you, and who are you?
+ *
+ * Health packages, Health library and About LIMS used to sit at the top level. Folding
+ * them in was not only a fitting exercise — eight items did force the header onto two
+ * rows, but all three are answers *within* one of the five questions rather than
+ * questions of their own. Someone after a health check is on a patient-care errand, not
+ * browsing a clinical department. The menu now says something true about how the site is
+ * used, which is the only reason a nav should be shaped one way over another.
  *
  * An entry with `children` renders as a dropdown; without, as a plain link. The two
- * dropdowns split LIMS's 26 services the way a patient reads them: Specialities is the
- * 15 departments you consult or are admitted under, Services is the diagnostics and
- * support around them. Both are generated from lib/services.ts, so a nav entry cannot
- * exist without a page behind it.
+ * service dropdowns split LIMS's 26 services the way a patient reads them, and both are
+ * generated from lib/services.ts, so a nav entry cannot exist without a page behind it.
+ *
+ * `overviewLabel` is set only where the parent `href` resolves to a page that exists.
+ * Patient care and About & contact point at routes that ship later, so they get no
+ * overview row rather than a dead one.
  */
 export const primaryNav: NavItem[] = [
   {
     label: 'Specialities',
     href: '/centres',
+    overviewLabel: 'All specialities',
     children: servicesByCategory('clinical').map((service) => ({
       label: service.name,
       href: `/centres/${service.slug}`,
@@ -93,22 +109,28 @@ export const primaryNav: NavItem[] = [
   {
     label: 'Services',
     href: '/centres',
+    overviewLabel: 'All services',
     children: [...servicesByCategory('diagnostics'), ...servicesByCategory('support')].map(
       (service) => ({ label: service.name, href: `/centres/${service.slug}` }),
     ),
   },
-  { label: 'Health packages', href: '/health-packages' },
-  { label: 'Patient care', href: '/patient-care' },
-  { label: 'Health library', href: '/health-library' },
-  { label: 'About LIMS', href: '/about' },
   {
-    label: 'Contact Us',
+    label: 'Patient care',
+    href: '/patient-care',
+    children: [
+      { label: 'Health check packages', href: '/health-packages' },
+      { label: 'Health library', href: '/health-library' },
+      { label: 'Visitor information', href: '/patient-care/visitors' },
+      { label: 'Insurance & billing', href: '/patient-care/insurance' },
+    ],
+  },
+  {
+    label: 'About & contact',
     href: '/contact',
     children: [
+      { label: 'About LIMS', href: '/about' },
       { label: 'Locations & directions', href: '/contact#locations' },
       { label: 'Book an appointment', href: '/appointments' },
-      { label: 'Insurance & billing', href: '/patient-care/insurance' },
-      { label: 'Visitor information', href: '/patient-care/visitors' },
     ],
   },
 ]
