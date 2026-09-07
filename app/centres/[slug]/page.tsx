@@ -128,8 +128,7 @@ export default async function ServicePage({ params }: ServicePageProps) {
 
                 <Link
                   href={`/doctors/${doctor.id}`}
-                  className="mt-5 inline-flex min-h-[44px] items-center self-start rounded-full
-                             border-2 border-current px-4 font-semibold text-teal-800"
+                  className="card-cta mt-5 inline-flex min-h-[44px] items-center self-start px-4"
                 >
                   View profile
                   <span className="sr-only"> of {doctor.name}</span>

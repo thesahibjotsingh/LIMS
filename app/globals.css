@@ -248,6 +248,19 @@
     @apply rounded;
   }
 
+  /* The copper edge. It is the card's resting identity — the thing that says LIMS
+     before anyone touches it — and the sweep is what answers when they do.
+
+     A real left border, not the absolutely-positioned overlay this used to be: a
+     border grows the box outward, so no card needs extra left padding to keep its
+     text off the copper. The doubled class is deliberate. It lifts specificity to
+     0-2-0, above the border-ink-200 utility every card also carries, which would
+     otherwise repaint all four sides including this one. */
+  .sweep-card.sweep-card {
+    border-left-width: 4px;
+    border-left-color: theme('colors.copper.500');
+  }
+
   .sweep-card::before {
     @apply bg-copper-500;
   }
@@ -260,6 +273,33 @@
   .sweep-card:hover :is(h2, h3, p, span, a, strong, li, time),
   .sweep-card:focus-within :is(h2, h3, p, span, a, strong, li, time) {
     color: theme('colors.teal.950');
+  }
+
+  /* A call to action sitting INSIDE a card that sweeps.
+     At rest it is an outline button on white: teal-800 on white is 7.75:1.
+     Once the card fills copper it inverts to a solid teal button — white on
+     teal-800 is 7.75:1, so the label is never the thing at risk.
+
+     The border is teal-950 rather than teal-800 on hover, and that is the whole
+     point of the rule: a teal-800 edge against the copper card measures 2.63:1,
+     under the 3:1 WCAG 1.4.11 asks of the boundary that identifies a control.
+     teal-950 gets it to 5.28:1, so the button still reads as a button once the
+     card behind it has changed colour.
+
+     Specificity note: this is 0-3-0, which beats the 0-2-1 descendant rule above
+     that pushes every other label in the card to teal-950. Without that margin the
+     button's white label would be overwritten. */
+  .card-cta {
+    @apply rounded-full border-2 border-teal-800 font-semibold text-teal-800;
+    transition:
+      background-color 140ms cubic-bezier(0.2, 0, 0, 1),
+      border-color 140ms cubic-bezier(0.2, 0, 0, 1),
+      color 140ms cubic-bezier(0.2, 0, 0, 1);
+  }
+
+  .sweep-card:hover .card-cta,
+  .sweep-card:focus-within .card-cta {
+    @apply border-teal-950 bg-teal-800 text-white;
   }
 
   /* 3. Filled primary buttons. White text throughout; the fill goes one step

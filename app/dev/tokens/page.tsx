@@ -147,7 +147,7 @@ export default function TokensPage() {
 
         <Recipe
           name=".sweep-card"
-          note="cards and tiles — forces every descendant to teal-950 while the copper is present, and fires on focus-within so it works from the keyboard"
+          note="cards and tiles. Copper left edge at rest; on hover the fill lands, every descendant goes teal-950, and any .card-cta inside inverts to a solid teal button. Fires on focus-within too"
         >
           <a
             href="#tokens-heading"
@@ -158,6 +158,9 @@ export default function TokensPage() {
               Cardiac Sciences
             </span>
             <span className="mt-1 block text-step--1 text-ink-600">2 consultants</span>
+            <span className="card-cta mt-4 inline-flex min-h-[44px] items-center px-4">
+              View profile
+            </span>
           </a>
         </Recipe>
 
