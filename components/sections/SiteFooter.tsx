@@ -44,12 +44,14 @@ export function SiteFooter({ centres, patientServices, primaryLocation }: SiteFo
                 {primaryLocation.city}, {primaryLocation.state}
                 {primaryLocation.pincode ? ` ${primaryLocation.pincode}` : ''}
               </span>
+              {/* href is E.164; the visible text is the formatted form. Keeping the two
+                  apart is what stops a space-separated number reaching a tel: URI. */}
               <a
                 href={`tel:${primaryLocation.phone}`}
                 className="mt-3 inline-flex min-h-[44px] items-center font-semibold
                            text-white underline-offset-4 hover:underline"
               >
-                {primaryLocation.phone}
+                {primaryLocation.phoneDisplay ?? primaryLocation.phone}
               </a>
             </address>
           </div>

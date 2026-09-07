@@ -8,9 +8,11 @@
 // OPENS ON HOVER — and also on click, on Enter/Space, and on keyboard focus.
 //
 // The trigger and every row carry .nav-sweep, the left-to-right copper fill defined in
-// app/globals.css. Its text goes to teal-950 rather than staying teal-800, because
-// mid-sweep a label straddles white and copper-500 and teal-800 is only 2.63:1 on the
-// copper half. See the working next to the recipe.
+// app/globals.css. Its text goes to teal-950 rather than staying teal-800: mid-sweep a
+// label straddles its resting ground and copper-500, and teal-800 is only 2.63:1 on the
+// copper half. teal-950 clears AA on both halves at once — 5.28:1 on copper-500, 15.57:1
+// on white inside the panels, 14.5:1 on the teal-50 ribbon. See the working next to the
+// recipe.
 //
 // Hover ALONE cannot be the whole mechanism, and this is not a preference:
 //   • a keyboard user has no pointer, so a hover-only menu is unreachable
@@ -146,7 +148,7 @@ export function NavDropdown({
         aria-controls={panelId}
         onClick={() => (open ? closeNow() : openNow())}
         className="nav-sweep flex min-h-[44px] items-center gap-1.5 whitespace-nowrap
-                   px-2.5 text-[0.75rem] font-semibold"
+                   px-3 text-step--1 font-semibold"
       >
         {label}
         {/* Decorative: aria-expanded on the button already announces the state. */}

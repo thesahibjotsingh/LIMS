@@ -35,8 +35,14 @@ export interface Location {
   /** Optional: LIMS's published contact details do not include a PIN code, and a
    *  guessed postal code on a hospital's structured data is worse than none. */
   pincode?: string
-  /** E.164 where possible, e.g. "+911662000000" — used for tel: links. */
+  /**
+   * E.164 ONLY, e.g. "+919254984121". This value goes straight into a tel: href, and
+   * spaces are not valid in a tel: URI — a display-formatted number here produces
+   * "tel:+91 92549 84121", which some dialers refuse.
+   */
   phone: string
+  /** Human-formatted for display, e.g. "+91 92549 84121". Falls back to phone. */
+  phoneDisplay?: string
   mapsUrl?: string
 }
 

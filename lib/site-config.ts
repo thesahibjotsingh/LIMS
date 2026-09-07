@@ -68,32 +68,25 @@ export const primaryLocation: Location = {
   state: 'Haryana',
   // pincode deliberately omitted — not on the official card, and inventing one puts a
   // wrong postal code into the site's structured data.
-  phone: contact.primaryDisplay,
+  phone: contact.primary,
+  phoneDisplay: contact.primaryDisplay,
 }
 
 /**
- * Primary navigation — five items, one per question a patient actually arrives with:
+ * Primary navigation — eight items on their own tier.
  *
- *   Specialities      what do you treat?
- *   Find a doctor     who will see me?
- *   Services          what tests and support do you run?
- *   Patient care      what should I know before I come?
- *   About & contact   where are you, and who are you?
- *
- * Health packages, Health library and About LIMS used to sit at the top level. Folding
- * them in was not only a fitting exercise — eight items did force the header onto two
- * rows, but all three are answers *within* one of the five questions rather than
- * questions of their own. Someone after a health check is on a patient-care errand, not
- * browsing a clinical department. The menu now says something true about how the site is
- * used, which is the only reason a nav should be shaped one way over another.
+ * Health packages, Health library and About LIMS are back at the top level. They were
+ * folded into dropdowns when the nav had to share one row with the lockup and the
+ * buttons; on a dedicated ribbon the width constraint is gone, and a top-level item a
+ * patient can see beats one they have to go looking for inside a menu.
  *
  * An entry with `children` renders as a dropdown; without, as a plain link. The two
  * service dropdowns split LIMS's 26 services the way a patient reads them, and both are
  * generated from lib/services.ts, so a nav entry cannot exist without a page behind it.
  *
  * `overviewLabel` is set only where the parent `href` resolves to a page that exists.
- * Patient care and About & contact point at routes that ship later, so they get no
- * overview row rather than a dead one.
+ * Contact Us points at a route that ships later, so it gets no overview row rather than
+ * a dead one.
  */
 export const primaryNav: NavItem[] = [
   {
@@ -114,23 +107,18 @@ export const primaryNav: NavItem[] = [
       (service) => ({ label: service.name, href: `/centres/${service.slug}` }),
     ),
   },
+  { label: 'Health packages', href: '/health-packages' },
+  { label: 'Patient care', href: '/patient-care' },
+  { label: 'Health library', href: '/health-library' },
+  { label: 'About LIMS', href: '/about' },
   {
-    label: 'Patient care',
-    href: '/patient-care',
-    children: [
-      { label: 'Health check packages', href: '/health-packages' },
-      { label: 'Health library', href: '/health-library' },
-      { label: 'Visitor information', href: '/patient-care/visitors' },
-      { label: 'Insurance & billing', href: '/patient-care/insurance' },
-    ],
-  },
-  {
-    label: 'About & contact',
+    label: 'Contact Us',
     href: '/contact',
     children: [
-      { label: 'About LIMS', href: '/about' },
       { label: 'Locations & directions', href: '/contact#locations' },
       { label: 'Book an appointment', href: '/appointments' },
+      { label: 'Insurance & billing', href: '/patient-care/insurance' },
+      { label: 'Visitor information', href: '/patient-care/visitors' },
     ],
   },
 ]
