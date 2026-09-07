@@ -133,6 +133,19 @@ export default function TokensPage() {
         </Recipe>
 
         <Recipe
+          name=".menu-row"
+          note="a row inside a dropdown panel. teal-100 lift plus a 6px teal-800 strip, no fill — the card language at menu scale. Labels keep their resting colour: teal-800 is 6.60:1 on the tint"
+        >
+          <a
+            href="#tokens-heading"
+            className="menu-row flex min-h-[44px] w-64 items-center pl-5 pr-3 text-step--1
+                       text-teal-800"
+          >
+            Ortho &amp; Joint Replacement
+          </a>
+        </Recipe>
+
+        <Recipe
           name=".sweep"
           note="light ground, one label — nav items, menu rows, outline buttons. teal-800 -> teal-950 as the copper lands (2.63:1 vs 5.28:1 on copper-500)"
         >

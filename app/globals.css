@@ -345,6 +345,53 @@
     transform: scaleX(1);
   }
 
+  /* -------------------------------------------------------------------------
+     .menu-row — a row inside a dropdown panel.
+     -------------------------------------------------------------------------
+     The same language as .card-edge, one step smaller:
+
+                     rest          hover / focus-visible
+       strip         none          6px teal-800
+       row body      transparent   teal-100
+       label         unchanged     unchanged
+
+     It replaces a copper fill for the reason the cards did. A menu is a list of
+     20-odd rows the cursor rakes across on its way to one of them; flooding each
+     in turn is noise, and a copper row also had to repaint its label to stay
+     readable. Here nothing repaints: teal-800 holds 6.60:1 on the tint and the
+     copper-800 of the "All …" row holds 5.22:1, so both keep their resting colour
+     and the row simply lifts.
+
+     teal-100, not teal-50, because .card-edge settled on teal-100 and a menu row
+     and a card should not disagree about what "hovered" looks like. On the white
+     panel it is 1.175 against 1.064 — the more visible of the two anyway.
+
+     The strip has a fixed 6px width and animates colour only. Cards grow 4px to
+     6px because they carry a resting copper edge that has to become a state; a
+     menu row has no resting edge, so there is nothing to grow from and a width
+     animation would just be a wipe. 120ms, matching the cards.
+     ------------------------------------------------------------------------- */
+  .menu-row {
+    @apply relative overflow-hidden rounded;
+    transition: background-color 120ms cubic-bezier(0.2, 0, 0, 1);
+  }
+
+  .menu-row::before {
+    content: '';
+    @apply absolute left-0 top-0 h-full w-1.5 bg-transparent;
+    transition: background-color 120ms cubic-bezier(0.2, 0, 0, 1);
+  }
+
+  .menu-row:hover,
+  .menu-row:focus-visible {
+    @apply bg-teal-100;
+  }
+
+  .menu-row:hover::before,
+  .menu-row:focus-visible::before {
+    @apply bg-teal-800;
+  }
+
   /* A call to action sitting INSIDE a card that sweeps.
      At rest it is an outline button on white: teal-800 on white is 7.75:1.
      Once the card fills copper it inverts to a solid teal button — white on

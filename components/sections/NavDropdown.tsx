@@ -8,11 +8,11 @@
 // OPENS ON HOVER — and also on click, on Enter/Space, and on keyboard focus.
 //
 // The trigger carries .nav-underline — a copper bar that grows left to right along its
-// bottom edge — and the rows inside the panel carry .sweep, the full copper fill. Two
-// different effects on purpose: the rows sit on white, where a fill reads, while the
-// trigger sits on the teal-50 ribbon, where a copper fill would swallow the copper
-// underline entirely. Row labels go teal-950 as their fill lands, because teal-800 is
-// only 2.63:1 on copper-500. See the working next to both recipes in app/globals.css.
+// bottom edge — and the rows inside the panel carry .menu-row: a teal-100 lift and a 6px
+// teal strip, the same language as the content cards, one step smaller. Neither uses a
+// fill. A menu is a list of 20-odd rows the cursor rakes across on the way to one of
+// them, and flooding each in turn is noise. Nothing repaints either: every row label
+// clears AA on the tint at its resting colour. See app/globals.css.
 //
 // Hover ALONE cannot be the whole mechanism, and this is not a preference:
 //   • a keyboard user has no pointer, so a hover-only menu is unreachable
@@ -195,11 +195,12 @@ export function NavDropdown({
             <ul className={columns === 2 ? 'grid w-[34rem] max-w-full sm:grid-cols-2' : 'w-64'}>
               {items.map((item) => (
                 <li key={item.href}>
-                  {/* Same copper sweep as the triggers, so the menu reads as one
-                      surface rather than two hover languages. */}
+                  {/* .menu-row is the card language at menu scale: a teal-100 lift and
+                      a 6px teal strip, no fill. pl-5 clears the strip. */}
                   <Link
                     href={item.href}
-                    className="sweep flex min-h-[44px] items-center px-3 text-step--1"
+                    className="menu-row flex min-h-[44px] items-center pl-5 pr-3
+                               text-step--1 text-teal-800"
                   >
                     {item.label}
                   </Link>
@@ -213,9 +214,9 @@ export function NavDropdown({
                       it reads as "everything" rather than as one more department. */}
                   <Link
                     href={overviewHref}
-                    className="sweep mt-1 flex min-h-[44px] items-center border-t
-                               border-ink-200 px-3 text-step--1 font-semibold
-                               !text-copper-800 hover:!text-teal-950"
+                    className="menu-row mt-1 flex min-h-[44px] items-center rounded-none
+                               border-t border-ink-200 pl-5 pr-3 text-step--1
+                               font-semibold text-copper-800"
                   >
                     {overviewLabel}
                   </Link>
