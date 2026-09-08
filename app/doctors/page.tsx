@@ -1,3 +1,4 @@
+export const runtime = 'edge';
 // app/doctors/page.tsx
 //
 // Search is URL state: /doctors?q=ortho. That was the recorded decision and this is it
@@ -221,6 +222,4 @@ export default async function DoctorsPage({ searchParams }: DoctorsPageProps) {
   )
 }
 
-export const runtime = 'edge';
 
-export const runtime = 'edge';
