@@ -69,10 +69,12 @@ export interface SiteHeaderProps {
 const LOGO_WIDTH = 220
 const LOGO_HEIGHT = 112
 
-// Intrinsic ratio of public/images/beacon.png (321x292). Declared so the browser
-// reserves the box on first paint — this sits above the fold on every route.
-const BEACON_WIDTH = 321
-const BEACON_HEIGHT = 292
+// Intrinsic ratio of public/images/beacon.png (150x109). Declared so the browser
+// reserves the box on first paint — this sits above the fold on every route, and a
+// stale ratio here lands directly in CLS. It read 321x292 until the asset was
+// replaced; these are re-measured from the file rather than assumed.
+const BEACON_WIDTH = 150
+const BEACON_HEIGHT = 109
 
 /**
  * Screen padding for both header tiers. Declared once so the nav can never drift out of
@@ -197,39 +199,33 @@ export function SiteHeader({
               phone={emergencyPhone}
               phoneDisplay={emergencyPhoneDisplay}
               className="inline-flex min-h-[44px] items-center gap-2 rounded-full
-                         bg-copper-700 py-1 pl-1.5 pr-4 font-semibold text-white
-                         transition-colors ease-standard hover:bg-copper-800"
+                         bg-beacon py-1 pl-2 pr-4 font-semibold text-white
+                         transition-colors ease-standard hover:bg-beacon-dark"
             >
               {/*
-                THE BEACON SITS ON A WHITE CHIP, and that is not decoration. Measured
-                against the copper-700 pill the artwork's red is 1.03:1 — it would be
-                invisible, two mid-dark warm tones on top of each other. On white it is
-                4.55:1, and the chip itself is 4.67:1 against the pill, so both the icon
-                and its container read.
-              */}
-              <span
-                aria-hidden="true"
-                className="inline-flex h-8 w-8 shrink-0 items-center justify-center
-                           rounded-full bg-white"
-              >
-                {/*
-                  priority, not lazy: this is above the fold on every route and it is
-                  the emergency control. Lazy-loading it means the one button someone
-                  may be reaching for in a hurry paints as an empty white circle first.
+                NO CHIP BEHIND THE BEACON, and that is the point of matching the fill.
+                The asset is a red disc with a white glyph inside it, so a pill in the
+                same red swallows the disc and leaves only the glyph — the graphic reads
+                as part of the button rather than as a sticker stuck on it.
 
-                  sizes tells Next how small it actually renders — without it the
-                  browser was fetching a 750px variant to display 22 pixels.
-                */}
-                <Image
-                  src="/images/beacon.png"
-                  alt=""
-                  width={BEACON_WIDTH}
-                  height={BEACON_HEIGHT}
-                  priority
-                  sizes="24px"
-                  className="h-5 w-auto"
-                />
-              </span>
+                The pill is one percent darker than the disc: #E91C26 against the
+                asset's #EB1C26. At 1.015:1 the seam is invisible, and it is what lifts
+                the white label from 4.44:1 — just under AA — to 4.51:1.
+
+                priority, not lazy: this is above the fold on every route and it is the
+                emergency control. Lazy-loading it means the one button someone may be
+                reaching for in a hurry paints as a gap first. sizes tells Next how
+                small it actually renders, so it stops fetching a 750px variant.
+              */}
+              <Image
+                src="/images/beacon.png"
+                alt=""
+                width={BEACON_WIDTH}
+                height={BEACON_HEIGHT}
+                priority
+                sizes="32px"
+                className="h-7 w-auto shrink-0"
+              />
 
               {/*
                 The visible label is "24×7" to match the compact mock. On its own that

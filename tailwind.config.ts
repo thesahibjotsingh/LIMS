@@ -84,6 +84,17 @@ const config: Config = {
         // never colour alone (WCAG 1.4.1). ~8% of Indian men are colour-blind, and on a
         // doctor directory that is a real failure rate, not a rounding error.
         emergency: '#B3261E', // white text on it = 6.5:1
+
+        // The emergency beacon pill. #EB1C26 is the red of the circle inside
+        // public/images/beacon.png, sampled from the file; this is 1% darker so a
+        // white label reaches 4.51:1 instead of the asset's own 4.44:1, which falls
+        // just short of AA. The two reds differ by 1.015:1 — imperceptible — so the
+        // asset's circle still disappears into the fill and only its white glyph
+        // shows, which is the whole point of matching it.
+        beacon: {
+          DEFAULT: '#E91C26', // white label 4.51:1
+          dark: '#C8161F', //    hover; darker, so white only improves
+        },
         caution: '#8A5A00', //   5.9:1 on white (bright amber cannot pass AA on white)
         success: '#1F6B3F', //   6.5:1 on white
       },
