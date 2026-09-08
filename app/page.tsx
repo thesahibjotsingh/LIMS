@@ -47,9 +47,9 @@ export default function HomePage() {
               Book an appointment
             </Link>
             {/*
-              Both hero CTAs are solid fills with no stroke. The secondary is a tonal
-              fill rather than an outline: teal-800 on teal-200 is 5.60:1, so the label
-              is never the thing at risk.
+              Both hero CTAs are solid fills with no stroke. The primary is copper —
+              the action colour — and the secondary is a calm teal tonal fill: teal-800
+              on teal-200 is 5.60:1, so the label is never the thing at risk.
 
               Worth recording, because it is the cost of dropping the ring. The button's
               EDGE against the teal-50 hero band is 1.30:1, under the 3:1 WCAG 1.4.11

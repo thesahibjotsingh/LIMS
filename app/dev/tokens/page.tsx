@@ -147,7 +147,7 @@ export default function TokensPage() {
 
         <Recipe
           name=".sweep"
-          note="light ground, one label — nav items, menu rows, outline buttons. teal-800 -> teal-950 as the copper lands (2.63:1 vs 5.28:1 on copper-500)"
+          note="SECONDARY buttons. Calm teal: lifts teal-100 on hover, label stays teal-800 (7.75:1 on white, 6.60:1 on the lift). Copper is reserved for primary actions"
         >
           <a
             href="#tokens-heading"
@@ -179,7 +179,7 @@ export default function TokensPage() {
 
         <Recipe
           name=".sweep-solid"
-          note="filled primary buttons. Fills to copper-700, not copper-500: white is 2.95:1 on the accent and 4.67:1 on copper-700, and no dark colour clears both halves of a teal-800 -> copper sweep"
+          note="PRIMARY buttons. copper-600 with an ink-950 label: 4.79:1 on the label and 3.89:1 at the edge, the only copper that clears both. Brightens to copper-500 on hover (6.32:1) — darkening would fail"
         >
           <a
             href="#tokens-heading"

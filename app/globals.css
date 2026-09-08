@@ -222,19 +222,20 @@
     transform: scaleX(1);
   }
 
-  /* 1. Light ground, one label: nav items, menu rows, outline buttons. */
+  /* 1. SECONDARY buttons on a light ground: outline CTAs, the search trigger, Close.
+        Teal, and calm. Copper now means "primary action", so a secondary control that
+        filled copper on hover would promote itself the moment you pointed at it.
+        It fills teal-100 instead — the same lift .menu-row and .card-edge use, so
+        every calm interactive surface on the site answers the same way.
+
+        The label never moves: teal-800 is 7.75:1 on white and 6.60:1 on teal-100,
+        so there is nothing to repaint. */
   .sweep {
     @apply rounded text-teal-800;
   }
 
   .sweep::before {
-    @apply bg-copper-500;
-  }
-
-  .sweep:hover,
-  .sweep:focus-visible,
-  .sweep[aria-expanded='true'] {
-    @apply text-teal-950;
+    @apply bg-teal-100;
   }
 
   /* -------------------------------------------------------------------------
@@ -435,15 +436,15 @@
     transform: scaleY(1);
   }
 
-  /* A call to action sitting INSIDE a card that sweeps.
-     At rest it is an outline button on white: teal-800 on white is 7.75:1.
-     Once the card fills copper it inverts to a solid teal button — white on
-     teal-800 is 7.75:1, so the label is never the thing at risk.
+  /* A call to action sitting INSIDE a card.
+     At rest it is a calm teal outline — a card is a container, and its button is
+     not competing for attention until you reach the card: teal-800 on white is
+     7.75:1.
 
-     The border stays teal-800 throughout. It needed a teal-950 override back when
-     the card filled copper, where a teal-800 edge measured 2.63:1 — under the 3:1
-     WCAG 1.4.11 asks of the boundary that identifies a control. On the teal-100
-     hover tint it is 6.60:1, so there is nothing left to compensate for. */
+     Once the card lights up it takes the PRIMARY treatment, copper-600 with an
+     ink-950 label at 4.79:1, the same as every other primary button on the site.
+     The border goes copper with the fill; the fill is then the boundary, at
+     3.89:1 against the card's teal-100 tint. */
   .card-cta {
     @apply rounded-full border-2 border-teal-800 font-semibold text-teal-800;
     transition:
@@ -454,17 +455,37 @@
 
   .card-edge:hover .card-cta,
   .card-edge:focus-within .card-cta {
-    @apply bg-teal-800 text-white;
+    @apply border-copper-600 bg-copper-600 text-ink-950;
   }
 
-  /* 3. Filled primary buttons. White text throughout; the fill goes one step
-        darker than the accent so it never drops below AA. */
+  /* 3. PRIMARY buttons. Copper, because copper is now the action colour.
+        -------------------------------------------------------------------------
+        copper-600 with an ink-950 label — the only copper that clears both of the
+        numbers that matter here:
+
+          fill        label: ink / white     edge vs white page
+          copper-500   6.32 / 2.95           2.95   <- edge fails
+          copper-600   4.79 / 3.89           3.89   <- both pass
+          copper-700   3.99 / 4.67           4.67   <- ink label fails
+          copper-800   3.04 / 6.13           6.13   <- ink label fails
+
+        copper-700 with a WHITE label also passes both, and is deliberately not used:
+        that is the emergency button. If the primary CTA took the same fill and the
+        same label colour, the one control that must be unmistakable would look like
+        every "Book appointment" beside it. copper-600 with a dark label reads as a
+        sibling of the emergency badge without impersonating it — different value,
+        opposite label colour.
+
+        The hover BRIGHTENS to copper-500 rather than darkening. Darkening is the
+        instinct, but ink-950 drops to 3.99:1 on copper-700 and fails, while it rises
+        to 6.32:1 on copper-500. The direction is chosen by the contrast, not by
+        convention. */
   .sweep-solid {
-    @apply rounded-full bg-teal-800 text-white;
+    @apply rounded-full bg-copper-600 text-ink-950;
   }
 
   .sweep-solid::before {
-    @apply bg-copper-700;
+    @apply bg-copper-500;
   }
 
   /* Copper text link. Underline is always present — colour alone never marks a link. */
