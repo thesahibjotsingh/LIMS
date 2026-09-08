@@ -225,6 +225,7 @@ export function SiteHeader({
                 <li key={item.label}>
                   <NavDropdown
                     label={item.label}
+                    href={item.href}
                     items={item.children}
                     overviewHref={item.overviewLabel ? item.href : undefined}
                     overviewLabel={item.overviewLabel}

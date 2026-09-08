@@ -366,10 +366,17 @@
     transition: transform 260ms cubic-bezier(0.2, 0, 0, 1);
   }
 
+  /* aria-expanded and aria-current sit on the two children of a split trigger — the
+     chevron button and the link — while the underline spans the wrapper around them.
+     The data-* attributes mirror that state onto the element that draws the bar.
+     :focus-within, not :focus-visible, for the same reason: focus lands on a child. */
   .nav-underline:hover::after,
   .nav-underline:focus-visible::after,
+  .nav-underline:focus-within::after,
   .nav-underline[aria-expanded='true']::after,
-  .nav-underline[aria-current='page']::after {
+  .nav-underline[aria-current='page']::after,
+  .nav-underline[data-open='true']::after,
+  .nav-underline[data-active='true']::after {
     transform: scaleX(1);
   }
 

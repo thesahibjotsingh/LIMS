@@ -5,7 +5,15 @@
 // The ONLY client component in the header. SiteHeader and the root layout stay server
 // components; this is a leaf, so the JS cost is the dropdown behaviour and nothing else.
 //
-// OPENS ON HOVER — and also on click, on Enter/Space, and on keyboard focus.
+// OPENS ON HOVER — and from the chevron button by click or Enter/Space.
+//
+// NOT on focus, which it used to do. That was harmless while the trigger was one button;
+// with a split control it means tabbing onto the label unfurls 15 panel links into the
+// tab path before the next nav item — three times over, so ~45 extra stops to cross a
+// ribbon of eight. A keyboard user opens the menu when they mean to, using the chevron.
+//
+// The label beside the chevron is a LINK to the section's index page, not part of the
+// button. See the note on the split control below for why one element cannot be both.
 //
 // The trigger carries .nav-underline — a copper bar that grows left to right along its
 // bottom edge — and the rows inside the panel carry .menu-row: a teal-100 lift and a 6px
@@ -44,6 +52,8 @@ const CLOSE_DELAY_MS = 120
 
 export interface NavDropdownProps {
   label: string
+  /** The section's own index page. Clicking the label goes here. */
+  href: string
   items: NavItem[]
   /** Optional link to the section's own index page, rendered as the last row. */
   overviewHref?: string
@@ -56,6 +66,7 @@ export interface NavDropdownProps {
 
 export function NavDropdown({
   label,
+  href,
   items,
   overviewHref,
   overviewLabel,
@@ -148,26 +159,51 @@ export function NavDropdown({
   return (
     <div
       ref={wrapperRef}
-      className="relative"
+      className="nav-underline relative"
+      data-open={open ? 'true' : undefined}
+      data-active={active ? 'true' : undefined}
       onMouseEnter={openNow}
       onMouseLeave={closeSoon}
-      onFocus={openNow}
       onBlur={onBlurCapture}
     >
-      <button
-        ref={triggerRef}
-        type="button"
-        aria-expanded={open}
-        aria-controls={panelId}
-        aria-current={active ? 'page' : undefined}
-        onClick={() => (open ? closeNow() : openNow())}
-        className="nav-underline flex min-h-[44px] items-center gap-1.5 whitespace-nowrap
-                   px-3 text-step--1 font-semibold"
-      >
-        {label}
-        {/* Decorative: aria-expanded on the button already announces the state. */}
-        <Chevron open={open} />
-      </button>
+      {/*
+        A SPLIT CONTROL: a link that navigates, and a chevron button that opens the menu.
+
+        One element cannot do both jobs. Make it a button and the section page is
+        unreachable by click, which is what it was. Make it a link and the menu is
+        unreachable on touch, where there is no hover to fall back on — and LIMS traffic
+        is majority mid-range Android, so that is not an edge case.
+
+        Split, every input gets a route to both:
+          pointer   hover opens the menu, clicking the label goes to the section
+          touch     tap the label to go to the section, tap the chevron for the menu
+          keyboard  Tab to the link and Enter, or Tab to the chevron and Enter/Space
+
+        The chevron is a real 44px target, not a decoration inside the link. It carries
+        its own accessible name because "▾" announces as nothing.
+      */}
+      <span className="flex items-stretch">
+        <Link
+          href={href}
+          aria-current={active ? 'page' : undefined}
+          className="flex min-h-[44px] items-center whitespace-nowrap py-0 pl-3 pr-1.5
+                     text-step--1 font-semibold text-teal-800"
+        >
+          {label}
+        </Link>
+
+        <button
+          ref={triggerRef}
+          type="button"
+          aria-expanded={open}
+          aria-controls={panelId}
+          aria-label={`${open ? 'Hide' : 'Show'} ${label} menu`}
+          onClick={() => (open ? closeNow() : openNow())}
+          className="flex min-h-[44px] items-center pl-0.5 pr-3 text-teal-800"
+        >
+          <Chevron open={open} />
+        </button>
+      </span>
 
       {/*
         Rendered only when open. Keeping it mounted and hidden would put 15 links into
