@@ -55,9 +55,11 @@ export function DoctorSearchPanel() {
             name="q"
             placeholder="Search for Doctors"
             autoComplete="off"
+            /* focus:ring-0 kills the forms plugin's blue box-shadow ring, which would
+               otherwise sit just inside this field's own teal focus border. */
             className="h-11 w-full rounded-full border-2 border-ink-200 bg-white pl-10 pr-4
                        text-step--1 text-ink-950 placeholder:text-ink-400
-                       focus:border-teal-600"
+                       focus:border-teal-600 focus:outline-none focus:ring-0"
           />
         </div>
 

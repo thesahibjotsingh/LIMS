@@ -319,13 +319,22 @@ export function SiteSearch() {
               onChange={(event) => setQuery(event.target.value)}
               onKeyDown={onFieldKeyDown}
               placeholder="Search doctors, specialities, services"
-              // No border and no focus outline: the wrapper carries both. The
-              // focus-visible variant is needed as well as focus, because the global
-              // rule in globals.css targets :focus-visible and would otherwise draw a
-              // second ring inside this one.
+              /*
+                No border, no outline and NO RING: the wrapper carries the single edge.
+                All three are needed, and they remove three different things.
+
+                  focus:outline-none / focus-visible:outline-none
+                    the outline from globals.css, which targets :focus-visible
+
+                  focus:ring-0
+                    the ring @tailwindcss/forms puts on every focused text input —
+                    --tw-ring-color: #2563eb painted through box-shadow, not outline.
+                    That was the blue frame inside the pill, and outline-none cannot
+                    touch it because it is not an outline.
+              */
               className="h-10 min-w-0 flex-1 border-0 bg-transparent px-2 text-step--1
                          text-ink-950 placeholder:text-ink-400 focus:outline-none
-                         focus-visible:outline-none"
+                         focus:ring-0 focus-visible:outline-none"
             />
 
             <button

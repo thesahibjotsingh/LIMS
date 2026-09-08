@@ -71,9 +71,11 @@ export default async function DoctorsPage({ searchParams }: DoctorsPageProps) {
           name="q"
           defaultValue={query}
           placeholder="Search for Doctors"
+          /* focus:ring-0 kills the forms plugin's blue box-shadow ring, which would
+             otherwise sit just inside this field's own teal focus border. */
           className="h-11 w-full rounded-full border-2 border-ink-200 bg-white px-4
                      text-step--1 text-ink-950 placeholder:text-ink-400
-                     focus:border-teal-600"
+                     focus:border-teal-600 focus:outline-none focus:ring-0"
         />
         <button
           type="submit"
