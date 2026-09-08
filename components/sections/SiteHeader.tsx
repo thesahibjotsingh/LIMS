@@ -69,6 +69,11 @@ export interface SiteHeaderProps {
 const LOGO_WIDTH = 220
 const LOGO_HEIGHT = 112
 
+// Intrinsic ratio of public/images/beacon.png (321x292). Declared so the browser
+// reserves the box on first paint — this sits above the fold on every route.
+const BEACON_WIDTH = 321
+const BEACON_HEIGHT = 292
+
 /**
  * Screen padding for both header tiers. Declared once so the nav can never drift out of
  * alignment with the lockup above it — the two are only aligned because they share this
@@ -192,11 +197,49 @@ export function SiteHeader({
               phone={emergencyPhone}
               phoneDisplay={emergencyPhoneDisplay}
               className="inline-flex min-h-[44px] items-center gap-2 rounded-full
-                         bg-copper-700 px-5 font-semibold text-white transition-colors
-                         ease-standard hover:bg-copper-800"
+                         bg-copper-700 py-1 pl-1.5 pr-4 font-semibold text-white
+                         transition-colors ease-standard hover:bg-copper-800"
             >
-              <PhoneIcon />
-              <span>Emergency 24&times;7</span>
+              {/*
+                THE BEACON SITS ON A WHITE CHIP, and that is not decoration. Measured
+                against the copper-700 pill the artwork's red is 1.03:1 — it would be
+                invisible, two mid-dark warm tones on top of each other. On white it is
+                4.55:1, and the chip itself is 4.67:1 against the pill, so both the icon
+                and its container read.
+              */}
+              <span
+                aria-hidden="true"
+                className="inline-flex h-8 w-8 shrink-0 items-center justify-center
+                           rounded-full bg-white"
+              >
+                {/*
+                  priority, not lazy: this is above the fold on every route and it is
+                  the emergency control. Lazy-loading it means the one button someone
+                  may be reaching for in a hurry paints as an empty white circle first.
+
+                  sizes tells Next how small it actually renders — without it the
+                  browser was fetching a 750px variant to display 22 pixels.
+                */}
+                <Image
+                  src="/images/beacon.png"
+                  alt=""
+                  width={BEACON_WIDTH}
+                  height={BEACON_HEIGHT}
+                  priority
+                  sizes="24px"
+                  className="h-5 w-auto"
+                />
+              </span>
+
+              {/*
+                The visible label is "24×7" to match the compact mock. On its own that
+                does not say what the button does — a beacon glyph is the only cue, and
+                icon-alone identification on the site's highest-stakes control is not
+                something to leave to inference. The word is kept for assistive tech, so
+                the accessible name is "Emergency 24×7" rather than "24×7".
+              */}
+              <span className="sr-only">Emergency</span>
+              <span aria-hidden="true">24&times;7</span>
             </EmergencyCallButton>
 
             {/* .sweep-solid fills to copper-700, not the copper-500 accent: white on
@@ -268,16 +311,3 @@ export function SiteHeader({
   )
 }
 
-function PhoneIcon() {
-  return (
-    <svg
-      aria-hidden="true"
-      focusable="false"
-      viewBox="0 0 20 20"
-      fill="currentColor"
-      className="h-4 w-4 shrink-0"
-    >
-      <path d="M2 3.5A1.5 1.5 0 0 1 3.5 2h1.6a1.5 1.5 0 0 1 1.46 1.14l.6 2.4a1.5 1.5 0 0 1-.42 1.44l-1.1 1.1a11.6 11.6 0 0 0 4.28 4.28l1.1-1.1a1.5 1.5 0 0 1 1.44-.42l2.4.6A1.5 1.5 0 0 1 18 12.9v1.6a1.5 1.5 0 0 1-1.5 1.5A14.5 14.5 0 0 1 2 3.5Z" />
-    </svg>
-  )
-}
