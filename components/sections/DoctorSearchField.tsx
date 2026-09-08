@@ -59,7 +59,7 @@ export function DoctorSearchField({ phrases }: DoctorSearchFieldProps) {
            edge. focus:ring-0 kills the forms plugin's blue box-shadow ring, which
            outline-none cannot touch because it is not an outline; the two
            outline-none rules cover globals.css, which targets :focus-visible. */
-        className="h-11 w-full rounded-full border-2 border-ink-200 bg-white pl-10 pr-4
+        className="h-12 w-full rounded-full border-2 border-ink-200 bg-white pl-10 pr-4
                    text-step--1 text-ink-950 placeholder:text-ink-400
                    focus:border-teal-600 focus:outline-none focus:ring-0
                    focus-visible:outline-none"

@@ -11,6 +11,18 @@
 // the one control someone might be reaching for in a panic is not a trade worth making
 // for an effect.
 //
+// "AGAINST THE ACTION GROUP" IS LITERAL: THE POSITIONING ROOT LIVES IN SiteHeader, NOT
+// HERE. This component's own wrapper deliberately carries no `relative` — the bar's
+// `absolute right-0` resolves against the nearest positioned ancestor, which is the
+// header's actions row (`relative` on that div in SiteHeader.tsx). Anchoring locally
+// instead, against a wrapper no wider than this trigger's own 48px, was the bug: on a
+// narrow phone with other items sharing the row, that wrapper can sit well short of the
+// header's right edge, so a bar expanding leftward from it runs out of room and its left
+// edge clips off-screen before reaching the header's own left padding. Anchored to the
+// actions row instead — which IS flush against the header's right edge, being the last
+// flex child in a `justify-between` row — the bar always has the full content width to
+// grow into, regardless of how many other buttons end up to its right.
+//
 // WIDTH, NOT TRANSFORM. Everywhere else in this codebase an animation is a transform,
 // because the compositor can run it off the main thread. Not here: scaleX would squash
 // the placeholder and the icon along with the box, and a search bar that unsquashes as
@@ -19,10 +31,11 @@
 // elements, and this is neither.
 //
 // A TRANSITION BETWEEN TWO STATES, NOT A KEYFRAME. The first version ran a keyframe to
-// `width: 100%`, and 100% resolved against the 44px wrapper rather than the bar's own
-// width — so it expanded to 44px and then snapped to full width when the animation
-// ended. That snap was the choppiness. A transition between two explicit widths cannot
-// have that bug, and it runs in both directions, so closing is now animated too.
+// `width: 100%`, and 100% resolved against the collapsed wrapper rather than the bar's
+// own width — so it expanded to the wrapper's own width and then snapped to full width
+// when the animation ended. That snap was the choppiness. A transition between two
+// explicit widths cannot have that bug, and it runs in both directions, so closing is
+// now animated too.
 //
 // The bar therefore stays MOUNTED and is inert while closed. A transition needs a
 // previous value to move from; an element mounted at its final width has nothing to
@@ -31,19 +44,19 @@
 // of every page.
 //
 // The trigger stays in flow too, covered by the bar rather than removed. Hiding it was
-// pulling a 44px item out of the action group on every open, which shifted the Emergency
+// pulling a 48px item out of the action group on every open, which shifted the Emergency
 // and Book appointment buttons sideways — the layout shift this was supposed to avoid.
 //
 // TWO TRAPS LIVE HERE. Both made the search unopenable, and neither is visible from
 // any single line of code, so they are written down.
 //
 // 1. THE COLLAPSED BAR SAT ON TOP OF THE TRIGGER AND ATE THE CLICK. It is absolutely
-//    positioned at right-0 and 44px wide while closed, which is exactly the trigger's
-//    box. `inert` stops it handling the click itself, but an inert subtree is not
+//    positioned at right-0 and the trigger's own width while closed, matching its box
+//    exactly. `inert` stops it handling the click itself, but an inert subtree is not
 //    hit-testable and the browser does not fall through to what is underneath:
 //    document.elementFromPoint() over the button returned null, so a real mouse click
 //    landed on nothing. The gate has to be pointer-events-none on the POSITIONING
-//    WRAPPER: putting it on the bar alone left the wrapper itself — same 44px box, same
+//    WRAPPER: putting it on the bar alone left the wrapper itself — same box, same
 //    z-50 — still swallowing the click. inert is not enough either; it stops the subtree
 //    handling events but does not let them through to what is beneath.
 //    Worth knowing that trigger.click() in a test dispatches straight at the element and
@@ -243,18 +256,18 @@ export function SiteSearch() {
   return (
     <div
       ref={wrapperRef}
-      className="relative flex items-center"
+      className="flex items-center"
       onBlur={open ? scheduleBlurCheck : undefined}
     >
       {/*
         Borderless. The hover fill from .sweep is the whole affordance — a ring around a
-        44px icon reads as a button that has been switched off next to two filled ones.
-        Still a 44px target: the padding does the work the border used to.
+        48px icon reads as a button that has been switched off next to two filled ones.
+        Still a 48px target: the padding does the work the border used to.
       */}
       {/*
         Borderless at rest, rich teal on interaction, and never removed from the layout.
         The expanded bar covers it, so it does not need hiding — and hiding it was
-        pulling a 44px item out of the action group, shifting the two buttons beside it
+        pulling a 48px item out of the action group, shifting the two buttons beside it
         on every open.
       */}
       <button
@@ -266,7 +279,7 @@ export function SiteSearch() {
         aria-label="Search this site"
         // Covered by the bar while open, so it must not be reachable or announced.
         inert={open}
-        className="btn-ghost inline-flex h-11 w-11 shrink-0 items-center justify-center"
+        className="btn-ghost inline-flex h-12 w-12 shrink-0 items-center justify-center"
       >
         <SearchIcon className="h-5 w-5" />
       </button>
@@ -278,7 +291,7 @@ export function SiteSearch() {
       */}
       {/*
         pointer-events GO ON THIS WRAPPER, not on the bar inside it. While closed this
-        div is 44px wide at right-0 — pixel-for-pixel the trigger's own box — and it sits
+        div is 48px wide at right-0 — pixel-for-pixel the trigger's own box — and it sits
         at z-50 above it. Left interactive it swallows every click aimed at the button,
         which is precisely how the search became unopenable.
       */}
@@ -307,7 +320,7 @@ export function SiteSearch() {
                       ${
                         open
                           ? 'w-[min(30rem,calc(100vw-3rem))] border-ink-200 opacity-100'
-                          : 'w-11 border-transparent opacity-0'
+                          : 'w-12 border-transparent opacity-0'
                       }`}
         >
             <span aria-hidden="true" className="shrink-0 text-teal-600">
@@ -344,7 +357,7 @@ export function SiteSearch() {
                     That was the blue frame inside the pill, and outline-none cannot
                     touch it because it is not an outline.
               */
-              className="h-10 min-w-0 flex-1 border-0 bg-transparent px-2 text-step--1
+              className="h-12 min-w-0 flex-1 border-0 bg-transparent px-2 text-step--1
                          text-ink-950 placeholder:text-ink-400 focus:outline-none
                          focus:ring-0 focus-visible:outline-none"
             />
@@ -353,7 +366,7 @@ export function SiteSearch() {
               type="button"
               onClick={() => closeSearch(true)}
               aria-label="Close search"
-              className="btn-ghost inline-flex h-9 w-9 shrink-0 items-center justify-center"
+              className="btn-ghost inline-flex h-12 w-12 shrink-0 items-center justify-center"
             >
               <CloseIcon />
             </button>

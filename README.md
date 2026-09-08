@@ -127,7 +127,7 @@ rendered on `/dev/tokens`.
 | `.btn-secondary` | Secondary buttons — teal-800 fill, white label, teal-700 on hover |
 | `.btn-ghost` | Utility icon buttons — borderless, teal-800 fill on hover |
 | `.menu-row` | Dropdown panel rows — teal-100 lift + 6px teal strip |
-| `.card-edge` | Department and service cards — copper strip at rest; teal strip + teal-100 tint on hover / `:focus-within` |
+| `.card-geo` | Department, service and consultant cards — asymmetric corners, copper-500 left edge at rest turning teal-800 on hover / `:focus-within`, with a matching teal-tinted shadow that deepens |
 | `.btn-primary` | Primary buttons — copper-600 + ink-950, inverting to teal-800 + white on hover |
 | `.link-accent` | Copper text links |
 

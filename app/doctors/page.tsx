@@ -25,7 +25,6 @@ export const runtime = 'edge';
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { Section } from '@/components/primitives/Section'
-import { Grid } from '@/components/primitives/Grid'
 import { DOCTORS, registrationDisplay, searchDoctors } from '@/lib/doctors'
 import { SERVICES } from '@/lib/services'
 
@@ -73,13 +72,13 @@ export default async function DoctorsPage({ searchParams }: DoctorsPageProps) {
           placeholder="Search for Doctors"
           /* focus:ring-0 kills the forms plugin's blue box-shadow ring, which would
              otherwise sit just inside this field's own teal focus border. */
-          className="h-11 w-full rounded-full border-2 border-ink-200 bg-white px-4
+          className="h-12 w-full rounded-full border-2 border-ink-200 bg-white px-4
                      text-step--1 text-ink-950 placeholder:text-ink-400
                      focus:border-teal-600 focus:outline-none focus:ring-0"
         />
         <button
           type="submit"
-          className="btn-primary inline-flex min-h-[44px] shrink-0 items-center px-5
+          className="btn-primary inline-flex min-h-[48px] shrink-0 items-center px-5
                      text-step--1 font-semibold"
         >
           Search
@@ -146,64 +145,74 @@ export default async function DoctorsPage({ searchParams }: DoctorsPageProps) {
             </h2>
             <span className="rule-accent mt-3" aria-hidden="true" />
 
-            <Grid className="mt-6">
+            <ul className="mt-6 flex flex-col gap-5">
               {doctors.map((doctor) => (
-                <article
-                  key={doctor.id}
-                  className="card-edge flex flex-col border border-ink-200 bg-white p-5
-                             shadow-card transition-shadow ease-standard hover:shadow-raised"
-                >
-                  <h3 className="text-step-1">
+                <li key={doctor.id}>
+                  <article className="card-geo flex flex-col gap-4 p-6">
+                    <h3 className="text-step-1">
+                      <Link
+                        href={`/doctors/${doctor.id}`}
+                        className="text-teal-800 underline-offset-4 hover:underline"
+                      >
+                        {doctor.name}
+                      </Link>
+                    </h3>
+
+                    {doctor.designation ? (
+                      <p className="-mt-2 text-step-0">{doctor.designation}</p>
+                    ) : null}
+
+                    {/* Structured facts as a definition list rather than a stack of
+                        unrelated paragraphs — qualifications and the registration
+                        number are name/value pairs, not prose. The registration number
+                        is the field a patient uses to verify a doctor against the
+                        council register: rendered verbatim, and labelled, since a bare
+                        number means nothing on its own. */}
+                    {doctor.qualifications || doctor.registrationNumber ? (
+                      <dl className="flex flex-wrap gap-x-6 gap-y-1 text-step--1">
+                        {doctor.qualifications ? (
+                          <div>
+                            <dt className="sr-only">Qualifications</dt>
+                            <dd className="text-ink-600">{doctor.qualifications}</dd>
+                          </div>
+                        ) : null}
+                        {doctor.registrationNumber ? (
+                          <div>
+                            <dt className="inline font-semibold text-ink-600">Reg. no. </dt>
+                            <dd className="inline tabular-nums text-ink-600">
+                              {registrationDisplay(doctor.registrationNumber)}
+                            </dd>
+                          </div>
+                        ) : null}
+                      </dl>
+                    ) : null}
+
+                    {/* Availability: dot AND text. Colour alone excludes colour-blind
+                        users, which on a directory is a real failure rate (WCAG 1.4.1).
+                        Omitted entirely until LIMS supplies real availability — a
+                        default of "available" would send patients to a doctor who is
+                        not in. */}
+                    {doctor.availability ? (
+                      <p className="inline-flex items-center gap-2 text-step--1">
+                        <span
+                          aria-hidden="true"
+                          className="h-2 w-2 shrink-0 rounded-full bg-success"
+                        />
+                        <span className="text-ink-950">{doctor.availability.label}</span>
+                      </p>
+                    ) : null}
+
                     <Link
                       href={`/doctors/${doctor.id}`}
-                      className="text-teal-800 underline-offset-4 hover:underline"
+                      className="card-cta inline-flex min-h-[48px] items-center self-start px-4"
                     >
-                      {doctor.name}
+                      View profile
+                      <span className="sr-only"> of {doctor.name}</span>
                     </Link>
-                  </h3>
-
-                  {doctor.qualifications ? (
-                    <p className="mt-1 text-step--1 text-ink-600">{doctor.qualifications}</p>
-                  ) : null}
-
-                  {doctor.designation ? (
-                    <p className="mt-2 text-step-0">{doctor.designation}</p>
-                  ) : null}
-
-                  {/* The registration number is the field a patient uses to verify a
-                      doctor against the council register. Rendered verbatim, and
-                      labelled — a bare number means nothing on its own. */}
-                  {doctor.registrationNumber ? (
-                    <p className="mt-3 text-step--1 text-ink-600">
-                      <span className="font-semibold">Reg. no.</span>{' '}
-                      <span className="tabular-nums">{registrationDisplay(doctor.registrationNumber)}</span>
-                    </p>
-                  ) : null}
-
-                  {/* Availability: dot AND text. Colour alone excludes colour-blind users,
-                      which on a directory is a real failure rate (WCAG 1.4.1).
-                      Omitted entirely until LIMS supplies real availability — a default
-                      of "available" would send patients to a doctor who is not in. */}
-                  {doctor.availability ? (
-                    <p className="mt-4 inline-flex items-center gap-2 text-step--1">
-                      <span
-                        aria-hidden="true"
-                        className="h-2 w-2 shrink-0 rounded-full bg-success"
-                      />
-                      <span className="text-ink-950">{doctor.availability.label}</span>
-                    </p>
-                  ) : null}
-
-                  <Link
-                    href={`/doctors/${doctor.id}`}
-                    className="card-cta mt-5 inline-flex min-h-[44px] items-center self-start px-4"
-                  >
-                    View profile
-                    <span className="sr-only"> of {doctor.name}</span>
-                  </Link>
-                </article>
+                  </article>
+                </li>
               ))}
-            </Grid>
+            </ul>
           </section>
         )
       })}

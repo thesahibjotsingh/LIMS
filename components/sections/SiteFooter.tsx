@@ -48,7 +48,7 @@ export function SiteFooter({ centres, patientServices, primaryLocation }: SiteFo
                   apart is what stops a space-separated number reaching a tel: URI. */}
               <a
                 href={`tel:${primaryLocation.phone}`}
-                className="mt-3 inline-flex min-h-[44px] items-center font-semibold
+                className="mt-3 inline-flex min-h-[48px] items-center font-semibold
                            text-white underline-offset-4 hover:underline"
               >
                 {primaryLocation.phoneDisplay ?? primaryLocation.phone}
@@ -79,7 +79,7 @@ export function SiteFooter({ centres, patientServices, primaryLocation }: SiteFo
                 <li key={item.href}>
                   <Link
                     href={item.href}
-                    className="flex min-h-[44px] items-center text-step--1 text-teal-100
+                    className="flex min-h-[48px] items-center text-step--1 text-teal-100
                                underline-offset-4 hover:text-white hover:underline"
                   >
                     {item.label}
@@ -120,7 +120,7 @@ function FooterNav({ title, items, label, moreHref, moreLabel }: FooterNavProps)
           <li key={item.href}>
             <Link
               href={item.href}
-              className="flex min-h-[44px] items-center text-step--1 text-teal-100
+              className="flex min-h-[48px] items-center text-step--1 text-teal-100
                          underline-offset-4 hover:text-white hover:underline"
             >
               {item.label}
@@ -131,7 +131,7 @@ function FooterNav({ title, items, label, moreHref, moreLabel }: FooterNavProps)
           <li>
             <Link
               href={moreHref}
-              className="flex min-h-[44px] items-center text-step--1 font-semibold
+              className="flex min-h-[48px] items-center text-step--1 font-semibold
                          text-copper-300 underline underline-offset-4 hover:text-white"
             >
               {moreLabel}

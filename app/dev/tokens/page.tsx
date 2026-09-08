@@ -138,7 +138,7 @@ export default function TokensPage() {
         >
           <a
             href="#tokens-heading"
-            className="menu-row flex min-h-[44px] w-64 items-center pl-5 pr-3 text-step--1
+            className="menu-row flex min-h-[48px] w-64 items-center pl-5 pr-3 text-step--1
                        text-teal-800"
           >
             Ortho &amp; Joint Replacement
@@ -151,7 +151,7 @@ export default function TokensPage() {
         >
           <a
             href="#tokens-heading"
-            className="btn-secondary inline-flex min-h-[44px] items-center px-4 font-semibold"
+            className="btn-secondary inline-flex min-h-[48px] items-center px-4 font-semibold"
           >
             Find a doctor
           </a>
@@ -163,7 +163,7 @@ export default function TokensPage() {
         >
           <a
             href="#tokens-heading"
-            className="btn-ghost inline-flex h-11 w-11 items-center justify-center"
+            className="btn-ghost inline-flex h-12 w-12 items-center justify-center"
             aria-label="Example utility button"
           >
             <svg
@@ -182,19 +182,15 @@ export default function TokensPage() {
         </Recipe>
 
         <Recipe
-          name=".card-edge"
-          note="department and service cards. 4px copper strip at rest; on hover and focus-within a 6px teal-800 strip grows up over it (180ms) and the body fades to teal-100 (100ms). No fill, so labels never repaint — teal-800 holds 6.60:1 on the tint"
+          name=".card-geo"
+          note="department, service and consultant cards. Asymmetric corners (1rem top-left/bottom-right, 0.375rem the other two) identify the card at rest; on hover and focus-within the copper-500 left edge goes teal-800 and the teal-tinted shadow widens and deepens. Labels never repaint — no fill to stay legible against"
         >
-          <a
-            href="#tokens-heading"
-            className="card-edge block border border-ink-200 bg-white p-5 shadow-card
-                       transition-shadow ease-standard hover:shadow-raised"
-          >
+          <a href="#tokens-heading" className="card-geo block p-5">
             <span className="block text-step-1 font-semibold text-teal-800">
               Cardiac Sciences
             </span>
             <span className="mt-1 block text-step--1 text-ink-600">2 consultants</span>
-            <span className="card-cta mt-4 inline-flex min-h-[44px] items-center px-4">
+            <span className="card-cta mt-4 inline-flex min-h-[48px] items-center px-4">
               View profile
             </span>
           </a>
@@ -206,7 +202,7 @@ export default function TokensPage() {
         >
           <a
             href="#tokens-heading"
-            className="btn-primary inline-flex min-h-[44px] items-center px-5 font-semibold"
+            className="btn-primary inline-flex min-h-[48px] items-center px-5 font-semibold"
           >
             Book an appointment
           </a>
@@ -221,13 +217,13 @@ export default function TokensPage() {
 
       <h2 className="mt-12 text-step-3">Component recipes</h2>
       <div className="mt-4 flex flex-wrap items-center gap-3">
-        <button type="button" className="min-h-[44px] rounded bg-teal-800 px-5 font-semibold text-white hover:bg-teal-700">
+        <button type="button" className="min-h-[48px] rounded bg-teal-800 px-5 font-semibold text-white hover:bg-teal-700">
           Primary
         </button>
-        <button type="button" className="min-h-[44px] rounded border-2 border-teal-800 px-5 font-semibold text-teal-800 hover:bg-teal-50">
+        <button type="button" className="min-h-[48px] rounded border-2 border-teal-800 px-5 font-semibold text-teal-800 hover:bg-teal-50">
           Secondary
         </button>
-        <button type="button" className="min-h-[44px] rounded bg-copper-500 px-5 font-semibold text-ink-950 hover:bg-copper-600">
+        <button type="button" className="min-h-[48px] rounded bg-copper-500 px-5 font-semibold text-ink-950 hover:bg-copper-600">
           Accent CTA
         </button>
         <a href="#tokens-heading" className="text-teal-800 underline decoration-teal-600/40 underline-offset-2 hover:decoration-teal-600">

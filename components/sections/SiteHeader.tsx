@@ -42,6 +42,7 @@ import { DoctorSearchPanel } from '@/components/sections/DoctorSearchPanel'
 import { EmergencyCallButton } from '@/components/sections/EmergencyCallButton'
 import { SiteSearch } from '@/components/sections/SiteSearch'
 import { NavDropdown } from '@/components/sections/NavDropdown'
+import { NavDrawer } from '@/components/sections/NavDrawer'
 import { NavLink } from '@/components/sections/NavLink'
 import type { NavItem } from '@/types'
 
@@ -176,7 +177,24 @@ export function SiteHeader({
             </span>
           </Link>
 
-          <div className="flex items-center gap-2 sm:gap-3">
+          {/* `relative`: the positioning root for SiteSearch's expanding bar. See the
+              note at the top of SiteSearch.tsx for why that anchor lives here instead
+              of on the trigger's own wrapper. */}
+          <div className="relative flex items-center gap-2 sm:gap-3">
+            {/*
+              THE DRAWER TRIGGER LIVES HERE, NOT IN ITS OWN ROW BELOW TIER 2. It
+              used to sit alone as a full-width "Menu" bar, which worked but cost
+              an entire extra row of height on every mobile page for one button.
+              Folding it into the same action group as search, Emergency and Book
+              appointment gets the identical trigger in no extra height — the
+              trade is that this row now carries a fifth 48px item, which is why
+              "Book appointment" below drops to a single word under `sm`: at
+              375px the four fixed-width items (this trigger, search, Emergency)
+              leave too little room for the full label to fit on one line, and a
+              two-line pill reads as broken rather than considered.
+            */}
+            <NavDrawer nav={nav} />
+
             {/* Site-wide search. First in the action group so it reads as a utility
                 rather than competing with the two calls to action beside it. */}
             <SiteSearch />
@@ -198,7 +216,7 @@ export function SiteHeader({
             <EmergencyCallButton
               phone={emergencyPhone}
               phoneDisplay={emergencyPhoneDisplay}
-              className="inline-flex min-h-[44px] items-center gap-2 rounded-full
+              className="inline-flex min-h-[48px] items-center gap-2 rounded-full
                          bg-beacon py-1 pl-2 pr-4 font-semibold text-white
                          transition-colors ease-standard hover:bg-beacon-dark"
             >
@@ -245,27 +263,40 @@ export function SiteHeader({
                 each. The working is in app/globals.css. */}
             <Link
               href="/appointments"
-              className="btn-primary inline-flex min-h-[44px] items-center px-5
+              className="btn-primary inline-flex min-h-[48px] items-center px-5
                          font-semibold"
             >
-              Book appointment
+              {/* Full label from `sm` up, where the row has room for it — see the
+                  note above NavDrawer for why the base case is one word. Both
+                  spans name the identical action, so nothing changes for anyone
+                  who resizes or zooms across the breakpoint mid-visit. */}
+              <span className="sm:hidden">Book</span>
+              <span className="hidden sm:inline">Book appointment</span>
             </Link>
           </div>
         </div>
       </div>
 
-      {/* ---- Tier 2 — the navigation ribbon --------------------------------- */}
+      {/* ---- Tier 2 — the desktop navigation ribbon ------------------------- */}
       {/* Distinct aria-label: the footer has its own <nav>, and screen-reader users
-          navigate by landmark. "Navigation, navigation" tells them nothing. */}
-      <nav aria-label="Primary" className="border-t border-ink-200 bg-teal-50">
+          navigate by landmark. "Navigation, navigation" tells them nothing.
+
+          DESKTOP ONLY. Eight items, three of them fifteen-deep, wrap onto three or
+          four lines on a 360-412px phone — the majority of LIMS traffic — and push
+          the hero below the fold before a patient has scrolled at all. Below `lg`
+          this entire tier is `hidden` rather than emptied out: the ribbon's own
+          content already collapses to nothing there, but leaving the <nav> itself
+          visible would still paint its border-t and teal-50 band as an empty strip
+          with nothing in it. NavDrawer, mounted in tier 1's action group now, holds
+          the identical `nav` data behind a trigger there instead; see its own file
+          for why an accordion rather than a second copy of NavDropdown's hover
+          panels. */}
+      <nav aria-label="Primary" className="hidden border-t border-ink-200 bg-teal-50 lg:block">
         <div className={PADDING_X}>
           {/* Centred, not left-aligned under the logo. With tier 1 running lockup-left
               and actions-right across the full screen, a centred ribbon is the axis that
               holds the two ends together; left-aligning it puts every item on one side
-              and leaves the right half of a wide header empty.
-
-              justify-center also does the right thing when the row wraps at narrow
-              widths — each line centres on its own rather than leaving a ragged tail. */}
+              and leaves the right half of a wide header empty. */}
           <ul className="flex flex-wrap items-center justify-center gap-x-1">
             {nav.map((item, index) =>
               item.children?.length || item.panel ? (
@@ -295,7 +326,7 @@ export function SiteHeader({
                   <NavLink
                     href={item.href}
                     label={item.label}
-                    className="flex min-h-[44px] items-center whitespace-nowrap px-3
+                    className="flex min-h-[48px] items-center whitespace-nowrap px-3
                                text-step--1 font-semibold"
                   />
                 </li>

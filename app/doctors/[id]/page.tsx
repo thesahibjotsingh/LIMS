@@ -220,13 +220,13 @@ export default async function DoctorProfilePage({ params }: DoctorProfilePagePro
         <div className="mt-5 flex flex-wrap gap-3">
           <a
             href={`tel:${contact.secondary}`}
-            className="btn-primary inline-flex min-h-[44px] items-center px-5 font-semibold"
+            className="btn-primary inline-flex min-h-[48px] items-center px-5 font-semibold"
           >
             Call {contact.secondaryDisplay}
           </a>
           <Link
             href="/appointments"
-            className="btn-secondary inline-flex min-h-[44px] items-center px-5
+            className="btn-secondary inline-flex min-h-[48px] items-center px-5
                        font-semibold"
           >
             Request an appointment

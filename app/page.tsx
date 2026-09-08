@@ -41,7 +41,7 @@ export default function HomePage() {
           <div className="flex flex-wrap gap-3">
             <Link
               href="/appointments"
-              className="btn-primary inline-flex min-h-[44px] items-center px-5
+              className="btn-primary inline-flex min-h-[48px] items-center px-5
                          font-semibold"
             >
               Book an appointment
@@ -57,7 +57,7 @@ export default function HomePage() {
             */}
             <Link
               href="/doctors"
-              className="btn-secondary inline-flex min-h-[44px] items-center px-5
+              className="btn-secondary inline-flex min-h-[48px] items-center px-5
                          font-semibold"
             >
               Find a doctor
@@ -73,7 +73,7 @@ export default function HomePage() {
           How can we help today?
         </h2>
         <span className="rule-accent mt-3" aria-hidden="true" />
-        {/* .card-edge turns its left strip teal and tints the body on hover AND on
+        {/* .card-geo turns its left edge teal and its shadow deeper on hover AND on
             focus-within, so the affordance exists for someone tabbing through as
             well as for a mouse. */}
         <Grid min="sm" className="mt-8">
@@ -86,9 +86,8 @@ export default function HomePage() {
             <Link
               key={action.href}
               href={action.href}
-              className="card-edge flex min-h-[44px] items-center border border-ink-200
-                         bg-white p-5 text-step-1 font-semibold text-teal-800 shadow-card
-                         transition-shadow ease-standard hover:shadow-raised"
+              className="card-geo flex min-h-[48px] items-center p-5 text-step-1
+                         font-semibold text-teal-800"
             >
               {action.label}
             </Link>
@@ -109,12 +108,7 @@ export default function HomePage() {
         </p>
         <Grid className="mt-8">
           {clinicalNav.map((centre) => (
-            <Link
-              key={centre.href}
-              href={centre.href}
-              className="card-edge border border-teal-200 bg-white p-6 shadow-card
-                         transition-shadow ease-standard hover:shadow-raised"
-            >
+            <Link key={centre.href} href={centre.href} className="card-geo p-6">
               <h3 className="text-step-1">{centre.label}</h3>
             </Link>
           ))}

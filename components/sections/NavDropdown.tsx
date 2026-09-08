@@ -215,7 +215,7 @@ export function NavDropdown({
         <Link
           href={href}
           aria-current={active ? 'page' : undefined}
-          className="flex min-h-[44px] items-center whitespace-nowrap py-0 pl-3 pr-1.5
+          className="flex min-h-[48px] items-center whitespace-nowrap py-0 pl-3 pr-1.5
                      text-step--1 font-semibold text-teal-800"
         >
           {label}
@@ -228,7 +228,8 @@ export function NavDropdown({
           aria-controls={panelId}
           aria-label={`${open ? 'Hide' : 'Show'} ${label} menu`}
           onClick={() => (open ? closeNow() : openNow())}
-          className="flex min-h-[44px] items-center pl-0.5 pr-3 text-teal-800"
+          className="flex min-h-[48px] min-w-[48px] items-center justify-center
+                     pl-0.5 pr-3 text-teal-800"
         >
           <Chevron open={open} />
         </button>
@@ -283,7 +284,7 @@ export function NavDropdown({
                       a 6px teal strip, no fill. pl-5 clears the strip. */}
                   <Link
                     href={item.href}
-                    className="menu-row flex min-h-[44px] items-center pl-5 pr-3
+                    className="menu-row flex min-h-[48px] items-center pl-5 pr-3
                                text-step--1 text-teal-800"
                   >
                     {item.label}
@@ -298,7 +299,7 @@ export function NavDropdown({
                       it reads as "everything" rather than as one more department. */}
                   <Link
                     href={overviewHref}
-                    className="menu-row mt-1 flex min-h-[44px] items-center rounded-none
+                    className="menu-row mt-1 flex min-h-[48px] items-center rounded-none
                                border-t border-ink-200 pl-5 pr-3 text-step--1
                                font-semibold text-copper-800"
                   >

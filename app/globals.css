@@ -312,92 +312,82 @@
   }
 
   /* -------------------------------------------------------------------------
-     .card-edge — department and service cards. Strip and tint, no fill.
+     .card-geo — department, service and consultant cards.
      -------------------------------------------------------------------------
-                     rest              hover / focus-within
-       strip         4px copper-500    6px teal-800   (120ms)
-       card body     white             teal-100       (120ms)
-       label         teal-800          teal-800       — unchanged
+     Replaces the earlier strip-and-tint .card-edge. That recipe animated two
+     absolutely-positioned strips against a uniform `rounded` corner; it does not
+     survive contact with an asymmetric corner (a strip growing up the left edge
+     reads as a bug once the top-left corner it grows toward is cut on the diagonal
+     instead of rounded). So the state moved from an animated strip to the two
+     things that DO make sense on a cut corner: the resting border and the card's
+     own elevation.
 
-     THE LABEL ROW IS THE POINT. The copper fill this replaces forced four colours
-     to repaint on every hover just to stay readable: teal-800 drops to 2.63:1 on
-     copper-500, ink-600 to 2.41:1, and the button's border needed its own rule.
-     A hover state that has to fight the palette to stay legible is doing too much.
-     On teal-100 nothing moves — teal-800 holds 6.60:1 and ink-600 6.06:1 — so the
-     :is() descendant override and the button's teal-950 border rule are both gone,
-     along with the isolate/-z-10 stacking they needed.
+                     rest                          hover / focus-within
+       corners       rounded top-left + bottom-      unchanged — identity, not state
+                     right (1rem); tight top-right
+                     + bottom-left (0.375rem)
+       accent bar    inset copper-500 (identity)     inset teal-800 (state)
+       elevation     tight, low-opacity teal shadow  wider, deeper teal shadow
 
-     WHY teal-100 AND NOT teal-50. teal-50 is the tint used by Section tone="tint",
-     and the home page's Centres grid sits on exactly that. A teal-50 hover there
-     measures 1.000 against its own ground — not subtle, absent. teal-100 is one
-     step up and reads on both: 1.175 against white, 1.104 against the teal-50
-     section. Deliberately quiet either way; the strip carries the state and the
-     tint only confirms it.
+     THE ACCENT IS AN INSET BAR, NOT A BORDER — A REVISION, AND WHY. The first cut
+     of this recipe ran the accent as a real `border-left`, sharing the left edge
+     with whichever corner the 1rem radius fell on. A border curves together with
+     its own corner radius by default, so for a 1rem corner and a 4px-wide border
+     that curve consumes the whole radius: the accent pinches into a hook at the
+     top of the card instead of reading as a clean vertical rule beside the
+     heading, on every card whose large corner sits top-left. Shrinking the
+     corner would have fixed it but cost the geometry the asymmetry exists for.
 
-     THE STRIP HAS AN ORIGIN. Two layers rather than a colour swap:
-       ::before  the copper strip, always present, 4px -> 6px
-       ::after   the teal strip, scaleY(0) -> scaleY(1) from origin-bottom
-     The teal grows UP over the copper instead of replacing it in a fade. A fade
-     has no source, so the eye reads it as a state swap and it appears from
-     nowhere; a transform has a direction, so the copper identity is visibly
-     replaced rather than exchanged. It is also the cheaper of the two — transform
-     on a 6px element is compositor work, a colour change is a repaint.
+     Floating the bar clear of both corners removes the interaction entirely
+     instead of tuning around it: inset from the top and bottom edges, it never
+     touches a radius to curve against, at any corner pairing a future card might
+     use. Capped ends (rounded-full) borrow the same capsule language
+     `.rule-accent` already uses for its own accent marks elsewhere on the page,
+     so the two read as one family rather than two unrelated accent shapes.
 
-     Only the strip moves. The tint stays a 100ms fade and is settled before the
-     strip finishes: two directional animations at once fight each other, and the
-     eye can follow one origin per interaction. It is the same reason the copper
-     fill went — a tint sweeping sideways while a strip grows upward is two
-     gestures asking to be watched at the same time.
+     WHY THE STATE IS A COLOUR SWAP ON THE SAME BAR, NOT A NEW ELEMENT. WCAG
+     1.4.11 asks 3:1 for a state indicator; teal-800 on white is 7.75:1. copper-500
+     at rest does not need to clear that bar, because at rest it is identity, not
+     state — the same reasoning the strip-based .card-edge and border-based first
+     draft both used, carried over unchanged since only the shape moved.
 
-     Both strips are absolutely positioned rather than real borders, for one
-     reason: widening a border reflows the card's content 2px to the right on every
-     hover. Out of flow, the width change costs nothing and nothing else moves.
+     WHY THE SHADOW MOVES TOO, NOT JUST THE BAR. A single accent bar recolouring is
+     easy to miss in peripheral vision. Pairing it with a simultaneous, same-hue
+     elevation change (tighter/lower-opacity at rest, wider/higher-opacity on
+     state) gives the eye two correlated signals instead of one faint one.
 
-     Contrast on the strip: teal-800 on white is 7.75:1 and on teal-100 6.60:1,
-     both far past the 3:1 WCAG 1.4.11 asks of a state indicator — and stronger, in
-     contrast terms, than the copper fill managed at 2.95:1. The resting copper is
-     2.95:1 and does not need to clear that bar: at rest it is identity, not state.
+     THE SHADOW IS TEAL, NOT A GENERIC GREY. rgba(15,91,102,...) is teal-800's own
+     RGB — the card's elevation reads as "this surface lifted," in the brand's own
+     hue, rather than borrowing a neutral shadow that could belong to any site.
 
-     120ms, against the 260ms the buttons use. A card should read as a switch
-     throwing rather than a wave arriving; the eye should not catch it in between.
-     Still a transition rather than an instant swap, so it does not look like a
-     rendering glitch, and still behind the reduced-motion guard below.
-     ------------------------------------------------------------------------- */
-  .card-edge {
-    @apply relative overflow-hidden rounded;
-    transition: background-color 100ms cubic-bezier(0.2, 0, 0, 1);
+     140ms, matched to the buttons' state-transition timing. Behind the
+     reduced-motion guard below, as ever. */
+  .card-geo {
+    @apply relative rounded-tl-3xl rounded-br-3xl rounded-tr-md rounded-bl-md
+           bg-white transition-shadow ease-standard;
+    transition-duration: 140ms;
+    box-shadow:
+      0 1px 2px rgba(15, 91, 102, 0.05),
+      0 8px 20px rgba(15, 91, 102, 0.08);
   }
 
-  /* 0-2-0, which outranks the bg-white utility the cards carry in their markup. */
-  .card-edge:hover,
-  .card-edge:focus-within {
-    background-color: theme('colors.teal.100');
-  }
-
-  /* The resting copper identity. Widens under the teal so the finished strip is
-     6px rather than a 6px teal band sitting on a 4px copper one. */
-  .card-edge::before {
+  .card-geo::before {
     content: '';
-    @apply absolute left-0 top-0 h-full w-1 bg-copper-500;
-    transition: width 120ms cubic-bezier(0.2, 0, 0, 1);
+    @apply absolute bottom-3 left-2 top-3 w-1 rounded-full bg-copper-500
+           transition-colors ease-standard;
+    transition-duration: 140ms;
   }
 
-  /* The teal, growing up over it. */
-  .card-edge::after {
-    content: '';
-    @apply absolute bottom-0 left-0 h-full w-1.5 origin-bottom bg-teal-800;
-    transform: scaleY(0);
-    transition: transform 180ms cubic-bezier(0.2, 0, 0, 1);
+  .card-geo:hover::before,
+  .card-geo:focus-within::before {
+    @apply bg-teal-800;
   }
 
-  .card-edge:hover::before,
-  .card-edge:focus-within::before {
-    @apply w-1.5;
-  }
-
-  .card-edge:hover::after,
-  .card-edge:focus-within::after {
-    transform: scaleY(1);
+  .card-geo:hover,
+  .card-geo:focus-within {
+    box-shadow:
+      0 2px 4px rgba(15, 91, 102, 0.08),
+      0 16px 32px rgba(15, 91, 102, 0.14);
   }
 
   /* -------------------------------------------------------------------------
@@ -457,7 +447,7 @@
   /* -------------------------------------------------------------------------
      .menu-row — a row inside a dropdown panel.
      -------------------------------------------------------------------------
-     The same language as .card-edge, one step smaller:
+     A teal-strip lift, one step smaller than a card:
 
                      rest          hover / focus-visible
        strip         none          6px teal-800
@@ -471,9 +461,10 @@
      copper-800 of the "All …" row holds 5.22:1, so both keep their resting colour
      and the row simply lifts.
 
-     teal-100, not teal-50, because .card-edge settled on teal-100 and a menu row
-     and a card should not disagree about what "hovered" looks like. On the white
-     panel it is 1.175 against 1.064 — the more visible of the two anyway.
+     teal-100, not teal-50: on the white panel it measures 1.175 against 1.064 for
+     teal-50 — the more visible of the two, and the same tint .card-geo's own
+     hover shadow leans toward, so a menu row and a card still agree on what
+     "hovered" looks like even though neither tints its body anymore.
 
      The strip grows from the bottom — scaleY(0) to scaleY(1), origin-bottom, the
      same gesture the cards use. A colour fade has no source, so it reads as a
@@ -526,8 +517,8 @@
       color 140ms cubic-bezier(0.2, 0, 0, 1);
   }
 
-  .card-edge:hover .card-cta,
-  .card-edge:focus-within .card-cta {
+  .card-geo:hover .card-cta,
+  .card-geo:focus-within .card-cta {
     @apply border-copper-600 bg-copper-600 text-ink-950;
   }
 
@@ -602,6 +593,80 @@
     @apply font-semibold text-copper-800 underline decoration-copper-500 decoration-2
            underline-offset-4 transition-colors ease-standard hover:text-copper-900
            hover:decoration-copper-700;
+  }
+
+  /* -------------------------------------------------------------------------
+     .nav-drawer — the mobile counterpart to the desktop nav ribbon.
+     -------------------------------------------------------------------------
+     A native <dialog> with showModal(), the same choice EmergencyCallButton made
+     and for the same reasons: the background goes inert, focus is trapped inside,
+     Escape closes it, and focus returns to the trigger on close — all implemented
+     by the browser rather than by hand. The difference here is layout, not
+     mechanism: EmergencyCallButton's dialog is a centred box; this one IS the
+     panel, pinned to the right edge and full height, with the browser's own
+     ::backdrop covering the rest of the screen.
+
+     BACKDROP-CLICK-TO-CLOSE STILL WORKS THE SAME WAY. Clicking ::backdrop fires a
+     click event whose target is the <dialog> element itself — not a descendant —
+     because the backdrop is not part of the element it draws behind. Comparing
+     event.target to event.currentTarget in the click handler (see NavDrawer.tsx)
+     catches exactly that case, the same comparison EmergencyCallButton already
+     uses, and nothing inside the panel's own content can trigger it, because a
+     click there targets whichever child was actually clicked.
+
+     THE SLIDE USES `translate`, NOT `transform`. As its own CSS property it can
+     transition in isolation without fighting anything else that might animate
+     transform, and — paired with @starting-style — it lets a native <dialog>
+     animate its entrance the same frame it moves into the top layer, with no
+     JS-driven class toggle or rAF needed to fake a "previous value" the way
+     SiteSearch's width expansion has to. A browser without @starting-style
+     support simply skips the transition and the drawer appears instantly, which
+     is a degraded animation, not a broken drawer.
+
+     100dvh, not 100vh: on a phone the address bar resizes the viewport as it
+     hides and shows, and 100vh is measured against the LARGER of the two states
+     — the drawer would render taller than the visible area behind a collapsed
+     bar and get clipped by the true viewport the moment the bar reappears. dvh
+     tracks the address bar instead of ignoring it. */
+  .nav-drawer {
+    @apply fixed inset-y-0 right-0 m-0 h-dvh w-[min(22rem,85vw)] max-w-full
+           border-0 bg-white p-0 shadow-raised;
+    translate: 100% 0;
+    transition: translate 220ms cubic-bezier(0.2, 0, 0, 1);
+  }
+
+  /* display defaults to none on a <dialog> without the [open] attribute — that is
+     the mechanism showModal() relies on, so it is set here rather than as a plain
+     Tailwind `flex` on the element, which would apply unconditionally and defeat
+     it: the drawer would render (and lay out, and take pointer events) even while
+     closed, off-screen only because of the translate below it. */
+  .nav-drawer[open] {
+    @apply flex flex-col;
+    translate: 0 0;
+  }
+
+  @starting-style {
+    .nav-drawer[open] {
+      translate: 100% 0;
+    }
+  }
+
+  .nav-drawer::backdrop {
+    background-color: rgba(11, 20, 22, 0.5);
+    backdrop-filter: blur(4px);
+  }
+
+  /* A row inside the drawer: the same 48px-minimum, generous-padding target as
+     every other tap target on the platform, full width so there is no dead
+     margin between two adjacent rows for a thumb to miss. */
+  .drawer-row {
+    @apply flex min-h-[48px] w-full items-center justify-between gap-3 px-5
+           py-3 text-step-0 font-semibold text-teal-800;
+  }
+
+  .drawer-row:hover,
+  .drawer-row:focus-visible {
+    @apply bg-teal-50;
   }
 }
 

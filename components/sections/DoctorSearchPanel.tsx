@@ -69,7 +69,7 @@ export function DoctorSearchPanel() {
 
         <button
           type="submit"
-          className="btn-primary inline-flex min-h-[44px] shrink-0 items-center gap-2 px-5
+          className="btn-primary inline-flex min-h-[48px] shrink-0 items-center gap-2 px-5
                      text-step--1 font-semibold"
         >
           <SearchIcon />
@@ -85,7 +85,7 @@ export function DoctorSearchPanel() {
       <div className="flex flex-wrap items-center gap-x-2 gap-y-1 lg:border-l lg:border-ink-200 lg:pl-8">
         <Link
           href="/appointments"
-          className="menu-row flex min-h-[44px] items-center gap-2 whitespace-nowrap pl-5
+          className="menu-row flex min-h-[48px] items-center gap-2 whitespace-nowrap pl-5
                      pr-3 text-step--1 font-semibold text-teal-800"
         >
           <CalendarIcon />
@@ -94,7 +94,7 @@ export function DoctorSearchPanel() {
 
         <Link
           href="/doctors"
-          className="menu-row flex min-h-[44px] items-center whitespace-nowrap pl-5 pr-3
+          className="menu-row flex min-h-[48px] items-center whitespace-nowrap pl-5 pr-3
                      text-step--1 font-semibold text-copper-800"
         >
           Browse all doctors

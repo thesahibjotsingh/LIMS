@@ -134,7 +134,7 @@ export function EmergencyCallButton({
               // eslint-disable-next-line jsx-a11y/no-autofocus
               autoFocus
               href={`tel:${phone}`}
-              className="btn-primary inline-flex min-h-[44px] items-center px-5
+              className="btn-primary inline-flex min-h-[48px] items-center px-5
                          font-semibold"
             >
               Call {phoneDisplay}
@@ -142,7 +142,7 @@ export function EmergencyCallButton({
             <button
               type="button"
               onClick={close}
-              className="btn-secondary inline-flex min-h-[44px] items-center px-5
+              className="btn-secondary inline-flex min-h-[48px] items-center px-5
                          font-semibold"
             >
               Close

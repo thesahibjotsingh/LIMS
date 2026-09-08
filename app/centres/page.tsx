@@ -69,9 +69,7 @@ export default function CentresPage() {
                   <Link
                     key={service.slug}
                     href={serviceHref(service)}
-                    className="card-edge flex min-h-[44px] flex-col justify-center
-                               border border-teal-200 bg-white p-5 shadow-card
-                               transition-shadow ease-standard hover:shadow-raised"
+                    className="card-geo flex min-h-[48px] flex-col justify-center p-5"
                   >
                     <h3 className="text-step-1 font-semibold text-teal-800">
                       {service.name}
