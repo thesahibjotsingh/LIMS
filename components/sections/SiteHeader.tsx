@@ -40,6 +40,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { DoctorSearchPanel } from '@/components/sections/DoctorSearchPanel'
 import { EmergencyCallButton } from '@/components/sections/EmergencyCallButton'
+import { SiteSearch } from '@/components/sections/SiteSearch'
 import { NavDropdown } from '@/components/sections/NavDropdown'
 import { NavLink } from '@/components/sections/NavLink'
 import type { NavItem } from '@/types'
@@ -169,6 +170,10 @@ export function SiteHeader({
           </Link>
 
           <div className="flex items-center gap-2 sm:gap-3">
+            {/* Site-wide search. First in the action group so it reads as a utility
+                rather than competing with the two calls to action beside it. */}
+            <SiteSearch />
+
             {/*
               EMERGENCY.
               Filled copper-700, not the copper-500 accent: white on copper-500 is 2.95:1
