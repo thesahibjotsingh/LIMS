@@ -46,10 +46,25 @@ export default function HomePage() {
             >
               Book an appointment
             </Link>
+            {/*
+              Both hero CTAs are solid fills with no stroke. The secondary is a tonal
+              fill rather than an outline: teal-800 on teal-200 is 5.60:1, so the label
+              is never the thing at risk.
+
+              Worth recording, because it is the cost of dropping the ring. The button's
+              EDGE against the teal-50 hero band is 1.30:1, under the 3:1 WCAG 1.4.11
+              asks of a control's boundary. No light tonal fill clears that bar on this
+              band — white is 1.06, teal-100 is 1.10, and teal-300 reaches 1.62 only by
+              pushing the label down to 4.50, right on the AA threshold. The border was
+              what carried the boundary, so removing it moves the whole burden onto the
+              label. If the edge has to clear 3:1, the fill has to go dark: teal-700 with
+              white text is 5.43:1 against the band, at the cost of the visual hierarchy
+              between the two buttons.
+            */}
             <Link
               href="/doctors"
-              className="sweep inline-flex min-h-[44px] items-center rounded-full border-2
-                         border-teal-800 px-5 font-semibold"
+              className="sweep inline-flex min-h-[44px] items-center rounded-full
+                         bg-teal-200 px-5 font-semibold"
             >
               Find a doctor
             </Link>
