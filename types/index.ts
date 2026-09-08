@@ -199,4 +199,9 @@ export interface NavItem {
    * a 404 is just one more dead link inside a menu.
    */
   overviewLabel?: string
+  /**
+   * Renders custom content in this entry's dropdown instead of a list of links.
+   * Named rather than boolean so a second panel type does not need a second flag.
+   */
+  panel?: 'doctor-search'
 }

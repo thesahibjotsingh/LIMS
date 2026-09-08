@@ -99,7 +99,8 @@ export const primaryNav: NavItem[] = [
       href: serviceHref(service),
     })),
   },
-  { label: 'Find a doctor', href: '/doctors' },
+  // The label still goes straight to the directory; the chevron opens a search field.
+  { label: 'Find a doctor', href: '/doctors', panel: 'doctor-search' },
   {
     label: 'Services',
     href: getCategory('diagnostics').basePath,

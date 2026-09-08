@@ -54,7 +54,13 @@ export interface NavDropdownProps {
   label: string
   /** The section's own index page. Clicking the label goes here. */
   href: string
-  items: NavItem[]
+  /**
+   * Arbitrary panel content, rendered instead of `items`. Passed as a node from the
+   * server component that owns the header, so a panel like the doctor search stays a
+   * server component and ships no JS of its own — only this disclosure does.
+   */
+  panel?: React.ReactNode
+  items?: NavItem[]
   /** Optional link to the section's own index page, rendered as the last row. */
   overviewHref?: string
   overviewLabel?: string
@@ -67,7 +73,8 @@ export interface NavDropdownProps {
 export function NavDropdown({
   label,
   href,
-  items,
+  panel,
+  items = [],
   overviewHref,
   overviewLabel,
   columns = 1,
@@ -228,6 +235,7 @@ export function NavDropdown({
             className="max-w-[calc(100vw-2rem)] rounded-lg border border-ink-200 bg-white
                        p-2 shadow-raised motion-safe:animate-[dropdown_140ms_ease-out]"
           >
+            {panel ?? (
             <ul className={columns === 2 ? 'grid w-[34rem] max-w-full sm:grid-cols-2' : 'w-64'}>
               {items.map((item) => (
                 <li key={item.href}>
@@ -259,6 +267,7 @@ export function NavDropdown({
                 </li>
               ) : null}
             </ul>
+            )}
           </div>
         </div>
       ) : null}

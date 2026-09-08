@@ -20,7 +20,7 @@
 //
 // Phase 3 moves this behind the CMS or HIS loader. The shape stays the same.
 
-import { getService } from '@/lib/services'
+import { getService, serviceName } from '@/lib/services'
 import type { Doctor } from '@/types'
 
 export const DOCTORS: Doctor[] = [
@@ -84,6 +84,37 @@ export function getDoctor(id: string): Doctor | undefined {
 
 export function getDoctorsByDepartment(slug: string): Doctor[] {
   return DOCTORS.filter((doctor) => doctor.departmentSlug === slug)
+}
+
+/**
+ * Free-text search over the roster.
+ *
+ * Matches on every field a patient might actually type: the name, the
+ * qualifications, the designation, and the DEPARTMENT NAME — someone searching
+ * "ortho" is looking for Dr Harshal Godara even though that word appears nowhere
+ * on his record, and a search that cannot make that jump feels broken.
+ *
+ * Deliberately not fuzzy. On a roster this size a typo tolerance would match
+ * everything, and matching the wrong consultant is worse than matching none:
+ * "no results" is a state a patient can act on, a wrong doctor is not.
+ *
+ * An empty or whitespace-only query returns the whole roster rather than nothing,
+ * so ?q= reads as "no filter" instead of "no doctors".
+ */
+export function searchDoctors(query: string): Doctor[] {
+  const needle = query.trim().toLowerCase()
+  if (!needle) return DOCTORS
+
+  return DOCTORS.filter((doctor) =>
+    [
+      doctor.name,
+      doctor.qualifications,
+      doctor.designation,
+      serviceName(doctor.departmentSlug),
+    ]
+      .filter(Boolean)
+      .some((field) => (field as string).toLowerCase().includes(needle)),
+  )
 }
 
 /** Service slugs that currently have at least one named consultant. */

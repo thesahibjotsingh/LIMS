@@ -38,6 +38,7 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
+import { DoctorSearchPanel } from '@/components/sections/DoctorSearchPanel'
 import { EmergencyCallButton } from '@/components/sections/EmergencyCallButton'
 import { NavDropdown } from '@/components/sections/NavDropdown'
 import { NavLink } from '@/components/sections/NavLink'
@@ -221,15 +222,17 @@ export function SiteHeader({
               widths — each line centres on its own rather than leaving a ragged tail. */}
           <ul className="flex flex-wrap items-center justify-center gap-x-1">
             {nav.map((item, index) =>
-              item.children?.length ? (
+              item.children?.length || item.panel ? (
                 <li key={item.label}>
                   <NavDropdown
                     label={item.label}
                     href={item.href}
+                    // A named panel renders custom content; otherwise the children list.
+                    panel={item.panel === 'doctor-search' ? <DoctorSearchPanel /> : undefined}
                     items={item.children}
                     overviewHref={item.overviewLabel ? item.href : undefined}
                     overviewLabel={item.overviewLabel}
-                    columns={item.children.length > 8 ? 2 : 1}
+                    columns={(item.children?.length ?? 0) > 8 ? 2 : 1}
                     // The last two triggers sit near the right edge of the ribbon, where
                     // a left-anchored panel would run off the viewport.
                     alignRight={index >= nav.length - 2}

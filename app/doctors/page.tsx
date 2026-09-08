@@ -1,17 +1,22 @@
 // app/doctors/page.tsx
 //
-// PHASE 0 SCOPE: the directory route exists, renders from typed data, and is fully
-// keyboard-operable. Filters, search and the real DoctorCard land in Phase 3.
+// Search is URL state: /doctors?q=ortho. That was the recorded decision and this is it
+// applied — results are shareable, the Back button behaves, and the first paint is
+// already-filtered HTML rather than an empty list hydrating on a slow connection. The
+// header's search field is a plain GET form pointing here, so it works before hydration.
 //
-// Design decisions already locked in for Phase 3, recorded here so they are not
-// re-litigated:
-//   • Filters are URL state (?dept=general-surgery) so results are shareable and the
-//     back button behaves. This is safe because a department is not personal data —
-//     a patient identifier must never appear in a URL (see references/privacy-dpdp.md).
-//   • Filtering happens in a Server Component reading searchParams, so the first paint
-//     is already-filtered HTML rather than an empty list hydrating on a slow connection.
-//   • Pagination, not infinite scroll: infinite scroll breaks keyboard users, strands
-//     the footer, and loses your place on back-navigation.
+// A query string is safe here because a speciality is not personal data. A patient
+// identifier must never appear in a URL (see the DPDP notes), which is why this searches
+// the roster and never the patient.
+//
+// Reading searchParams makes this route dynamic rather than prerendered. That is the
+// cost of server-side filtering and it is the right side of the trade at this size: the
+// alternative is shipping the roster to the client and filtering there, which loses the
+// shareable URL and the pre-filtered first paint.
+//
+// Still to come: department filters alongside the text query, and pagination — not
+// infinite scroll, which breaks keyboard users, strands the footer, and loses your place
+// on back-navigation.
 //
 // The roster is real. Every optional field below is guarded rather than defaulted —
 // see the note at the top of lib/doctors.ts.
@@ -20,10 +25,8 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import { Section } from '@/components/primitives/Section'
 import { Grid } from '@/components/primitives/Grid'
-import { DOCTORS, getDoctorsByDepartment, registrationDisplay } from '@/lib/doctors'
+import { DOCTORS, registrationDisplay, searchDoctors } from '@/lib/doctors'
 import { SERVICES } from '@/lib/services'
-
-export const revalidate = 3600
 
 export const metadata: Metadata = {
   title: 'Find a doctor',
@@ -32,7 +35,15 @@ export const metadata: Metadata = {
     'and critical care, obstetrics and gynaecology, general surgery and orthopaedics.',
 }
 
-export default function DoctorsPage() {
+interface DoctorsPageProps {
+  searchParams: Promise<{ q?: string }>
+}
+
+export default async function DoctorsPage({ searchParams }: DoctorsPageProps) {
+  const { q } = await searchParams
+  const query = q?.trim() ?? ''
+  const results = searchDoctors(query)
+
   return (
     <Section labelledBy="doctors-heading">
       <p className="eyebrow">Consultants</p>
@@ -41,19 +52,86 @@ export default function DoctorsPage() {
       </h1>
       <span className="rule-accent-lg mt-3" aria-hidden="true" />
 
-      {/* Live region: screen-reader users are told the result count changed when Phase 3
-          wires up filtering. Sighted users read the same sentence. */}
+      {/* The same form as the header panel, repeated on the page itself. Someone who
+          landed here from a link should not have to reopen a menu to search again, and
+          it carries the current query so refining a search starts from what you typed. */}
+      <form
+        action="/doctors"
+        method="get"
+        role="search"
+        className="mt-6 flex max-w-xl items-stretch gap-2"
+      >
+        <label htmlFor="doctors-page-search" className="sr-only">
+          Search for doctors by name, speciality or qualification
+        </label>
+        <input
+          id="doctors-page-search"
+          type="search"
+          name="q"
+          defaultValue={query}
+          placeholder="Search for Doctors"
+          className="h-11 w-full rounded-full border-2 border-ink-200 bg-white px-4
+                     text-step--1 text-ink-950 placeholder:text-ink-400
+                     focus:border-teal-600"
+        />
+        <button
+          type="submit"
+          className="sweep-solid inline-flex min-h-[44px] shrink-0 items-center px-5
+                     text-step--1 font-semibold"
+        >
+          Search
+        </button>
+      </form>
+
+      {/* Live region: the count is what tells a screen-reader user their search did
+          something, since the results themselves are further down the page. */}
       <p aria-live="polite" aria-atomic="true" className="mt-4 text-step--1 text-ink-600">
-        {DOCTORS.length} {DOCTORS.length === 1 ? 'doctor' : 'doctors'} listed
+        {query ? (
+          <>
+            {results.length} {results.length === 1 ? 'doctor' : 'doctors'} matching{' '}
+            <strong className="text-ink-950">&ldquo;{query}&rdquo;</strong>
+            {' · '}
+            <Link href="/doctors" className="link-accent">
+              Clear search
+            </Link>
+          </>
+        ) : (
+          <>
+            {results.length} {results.length === 1 ? 'doctor' : 'doctors'} listed
+          </>
+        )}
       </p>
+
+      {/* A dead end is a bad end. When nothing matches, offer the two things that do
+          work: the full roster, and a phone number answered by a person. */}
+      {query && results.length === 0 ? (
+        <div className="mt-8 max-w-prose rounded border border-teal-200 bg-teal-50 p-5">
+          <p className="text-step-0 text-ink-950">
+            No consultant matches &ldquo;{query}&rdquo;. The roster is small and still
+            growing, so the doctor you want may not be listed yet.
+          </p>
+          <p className="mt-3 text-step--1">
+            <Link href="/doctors" className="link-accent">
+              See all {DOCTORS.length} doctors
+            </Link>{' '}
+            or{' '}
+            <Link href="/centres" className="link-accent">
+              browse by service
+            </Link>
+            .
+          </p>
+        </div>
+      ) : null}
 
       {/* Grouped by department rather than one flat list. With four consultants across
           four departments a flat list tells a patient nothing about where to go, and
           the department is the thing they actually arrive knowing. */}
       {/* Iterate the service catalogue, not the roster, so departments always appear
-          in LIMS's own order rather than in whatever order doctors were added. */}
+          in LIMS's own order rather than in whatever order doctors were added. The
+          grouping applies to the search results, so a query narrows the sections rather
+          than flattening them into one list. */}
       {SERVICES.map((service) => {
-        const doctors = getDoctorsByDepartment(service.slug)
+        const doctors = results.filter((doctor) => doctor.departmentSlug === service.slug)
         if (doctors.length === 0) return null
 
         const headingId = `department-${service.slug}`
