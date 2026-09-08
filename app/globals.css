@@ -326,47 +326,69 @@
        corners       rounded top-left + bottom-      unchanged — identity, not state
                      right (1rem); tight top-right
                      + bottom-left (0.375rem)
-       accent bar    inset copper-500 (identity)     inset teal-800 (state)
-       card body     white                           teal-100
+       accent bar    full-height copper-500          teal-800 grows up over it,
+                     (identity, always present)      bottom to top (180ms)
+       card body     white                           teal-100 + a dotted texture
        elevation     tight, low-opacity teal shadow  wider, deeper teal shadow
 
-     THE ACCENT IS AN INSET BAR, NOT A BORDER — A REVISION, AND WHY. The first cut
-     of this recipe ran the accent as a real `border-left`, sharing the left edge
-     with whichever corner the 1rem radius fell on. A border curves together with
-     its own corner radius by default, so for a 1rem corner and a 4px-wide border
-     that curve consumes the whole radius: the accent pinches into a hook at the
-     top of the card instead of reading as a clean vertical rule beside the
-     heading, on every card whose large corner sits top-left. Shrinking the
-     corner would have fixed it but cost the geometry the asymmetry exists for.
+     THE BAR IS TWO LAYERS AGAIN, NOT A COLOUR SWAP — .card-edge's OWN MECHANISM,
+     PORTED RATHER THAN REINVENTED. ::before is the resting copper identity,
+     full height, always present. ::after is a teal bar the same size, scaled to
+     0 height from the bottom (`scaleY(0)`, `origin-bottom`) and grown to full
+     (`scaleY(1)`) on hover/focus-within — the copper is not recoloured, it is
+     covered, growing upward the way .card-edge's own ::after did before this
+     recipe replaced it with a static colour swap. `transform`, not `height`: a
+     transform is compositor work and cannot trigger layout, which matters more
+     here than it did for the old strip because this bar now spans the full card
+     instead of a few pixels near one corner.
 
-     Floating the bar clear of both corners removes the interaction entirely
-     instead of tuning around it: inset from the top and bottom edges, it never
-     touches a radius to curve against, at any corner pairing a future card might
-     use. Capped ends (rounded-full) borrow the same capsule language
-     `.rule-accent` already uses for its own accent marks elsewhere on the page,
-     so the two read as one family rather than two unrelated accent shapes.
+     BOTH LAYERS SIT AT `left-0` NOW, FLUSH WITH THE EDGE — a deliberate change
+     back from the inset capsule this recipe used briefly. Flush against the
+     large top-left radius, `overflow-hidden` (below) is what keeps the bar from
+     visibly squaring past the curve: the corner clips the bar's own top few
+     pixels to follow its arc rather than the bar cutting a hard-edged notch out
+     of a rounded card. That is a different, milder version of the original
+     pinch problem — the bar's colour is clipped short of the very top pixel
+     rather than distorted into a hook — and reads as the bar emerging from
+     behind the curve, which is what "attached to the edge" asks for.
 
-     WHY THE STATE IS A COLOUR SWAP ON THE SAME BAR, NOT A NEW ELEMENT. WCAG
-     1.4.11 asks 3:1 for a state indicator; teal-800 on white is 7.75:1. copper-500
-     at rest does not need to clear that bar, because at rest it is identity, not
-     state — the same reasoning the strip-based .card-edge and border-based first
-     draft both used, carried over unchanged since only the shape moved.
+     THE BODY TINT CARRIES A DOTTED TEXTURE NOW, teal-100 identical, unchanged. A
+     radial-gradient on the card's own background — copper at low opacity, small
+     and widely spaced — rather than a fourth CSS layer or an image asset. Kept
+     deliberately quiet: at 12% opacity and a 1.5px dot the worst-case contrast
+     shift a dot can cause under body text is a fraction of a point off teal-100's
+     own 6.60:1 for teal-800 text, nowhere near AA's 4.5:1 floor. Copper, not
+     teal, for the dots themselves — decoration is exactly copper's documented
+     job on this site: structure and identity, never meaning carried alone.
 
-     WHY THE SHADOW MOVES TOO, NOT JUST THE BAR. A single accent bar recolouring is
-     easy to miss in peripheral vision. Pairing it with a simultaneous, same-hue
-     elevation change (tighter/lower-opacity at rest, wider/higher-opacity on
-     state) gives the eye two correlated signals instead of one faint one.
+     WHY THE SHADOW MOVES TOO. A single accent-bar change is easy to miss in
+     peripheral vision. Pairing it with a simultaneous, same-hue elevation change
+     (tighter/lower-opacity at rest, wider/higher-opacity on state) gives the eye
+     several correlated signals at once instead of one faint one.
 
      THE SHADOW IS TEAL, NOT A GENERIC GREY. rgba(15,91,102,...) is teal-800's own
      RGB — the card's elevation reads as "this surface lifted," in the brand's own
      hue, rather than borrowing a neutral shadow that could belong to any site.
 
-     140ms for the shadow and accent bar, matched to the buttons' state-transition
-     timing. The body fill keeps its own 100ms, unchanged from .card-edge's original
-     — see the note below it for why that one stays a beat quicker than the rest.
-     Behind the reduced-motion guard below, as ever. */
+     140ms for the shadow, 180ms for the bar's growth (.card-edge's own timing,
+     ported along with the mechanism), 100ms for the body fill — three durations
+     because the three signals are not equally urgent: the fill is fastest so it
+     registers first, the bar takes the longest because a fill-from-the-bottom
+     needs enough time to actually read as motion rather than a flicker, and the
+     shadow lands between them. Behind the reduced-motion guard below, as ever —
+     `scaleY` is a transform, so that guard collapses it to a snap, same as
+     everything else in this file.
+
+     `overflow-hidden` IS LOAD-BEARING NOW, where it was cosmetic on the single
+     colour-swap bar. Both bar layers are square-cornered, flush at `left-0`, and
+     span the full height (inset-y-0) — squarely inside the top-left and
+     bottom-left corner arcs for the first several pixels of height. Nothing
+     clips a child to its parent's border-radius by default, so without this the
+     bars would render as a hard-edged rectangle poking past the rounded corner
+     instead of appearing to emerge from behind its curve. */
   .card-geo {
-    @apply relative rounded-tl-3xl rounded-br-3xl rounded-tr-md rounded-bl-md bg-white;
+    @apply relative overflow-hidden rounded-tl-3xl rounded-br-3xl rounded-tr-md
+           rounded-bl-md bg-white;
     transition:
       background-color 100ms cubic-bezier(0.2, 0, 0, 1),
       box-shadow 140ms cubic-bezier(0.2, 0, 0, 1);
@@ -377,39 +399,48 @@
 
   .card-geo::before {
     content: '';
-    @apply absolute bottom-3 left-2 top-3 w-1 rounded-full bg-copper-500
-           transition-colors ease-standard;
-    transition-duration: 140ms;
+    @apply absolute inset-y-0 left-0 w-1.5 bg-copper-500;
   }
 
-  .card-geo:hover::before,
-  .card-geo:focus-within::before {
-    @apply bg-teal-800;
+  .card-geo::after {
+    content: '';
+    @apply absolute inset-y-0 left-0 w-1.5 origin-bottom bg-teal-800;
+    transform: scaleY(0);
+    transition: transform 180ms cubic-bezier(0.2, 0, 0, 1);
   }
 
-  /* THE BODY TINT IS BACK, ON THE SAME TOKEN .card-edge USED. Dropped when the strip
-     system gave way to the asymmetric-corner one — background-color is a repaint
-     regardless of what else the card is doing, and at the time state was carrying
-     enough signal through the accent bar and the shadow alone. Restored because a
-     single accent-bar recolour is easy to miss in peripheral vision on a page with
-     several cards, and a whole-body tint is not.
+  .card-geo:hover::after,
+  .card-geo:focus-within::after {
+    transform: scaleY(1);
+  }
 
-     teal-100, NOT teal-50: teal-50 is the tint Section tone="tint" itself uses, and
-     some of this card's own hosting sections sit on exactly that band — a teal-50
-     hover there would measure ~1.000 against its own ground, which is to say absent.
-     teal-100 is one step up and reads on both white and teal-50 hosts. Text colours
-     are unaffected: teal-800 holds 6.60:1 on teal-100, comfortably past body-text AA,
-     so nothing inside the card needs its own hover rule to stay legible.
+  /* THE BODY TINT IS BACK, ON THE SAME TOKEN .card-edge USED, NOW WITH A DOTTED
+     TEXTURE. Dropped when the strip system gave way to the asymmetric-corner one
+     — background-color is a repaint regardless of what else the card is doing,
+     and at the time state was carrying enough signal through the accent bar and
+     the shadow alone. Restored because a single accent-bar recolour is easy to
+     miss in peripheral vision on a page with several cards, and a whole-body
+     tint is not; the dots on top are decoration, not a second state signal.
 
-     100ms, not 140: .card-edge's own fill ran at 100ms, and this is a straight port
-     of that exact value, not a re-derivation — the point of bringing the fill back
-     was to match what was there before, timing included. It reads as a beat ahead of
-     the 140ms shadow/accent-bar pair, which is intentional: the fill is the fastest,
-     most legible signal of the three, and arriving first is what lets the slower two
-     read as confirmation rather than all three fighting to be noticed at once. */
+     teal-100, NOT teal-50: teal-50 is the tint Section tone="tint" itself uses,
+     and some of this card's own hosting sections sit on exactly that band — a
+     teal-50 hover there would measure ~1.000 against its own ground, which is to
+     say absent. teal-100 is one step up and reads on both white and teal-50
+     hosts. Text colours are unaffected: teal-800 holds 6.60:1 on teal-100,
+     comfortably past body-text AA, so nothing inside the card needs its own
+     hover rule to stay legible — the dot texture sits at 12% opacity specifically
+     so that stays true.
+
+     100ms, not 140: .card-edge's own fill ran at 100ms, and this is a straight
+     port of that exact value. It reads as a beat ahead of the shadow and the
+     bar's growth, which is intentional: the fill is the fastest, most legible
+     signal of the three, and arriving first is what lets the slower two read as
+     confirmation rather than all three fighting to be noticed at once. */
   .card-geo:hover,
   .card-geo:focus-within {
     @apply bg-teal-100;
+    background-image: radial-gradient(circle, rgba(156, 74, 40, 0.12) 1.5px, transparent 1.5px);
+    background-size: 16px 16px;
     box-shadow:
       0 2px 4px rgba(15, 91, 102, 0.08),
       0 16px 32px rgba(15, 91, 102, 0.14);
