@@ -76,6 +76,7 @@
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useTypewriterPlaceholder } from '@/hooks/useTypewriterPlaceholder'
 import { searchSite, type SearchEntry } from '@/lib/search-index'
 
 const FIELD_ID = 'site-search-input'
@@ -99,6 +100,17 @@ export function SiteSearch() {
   const pathname = usePathname()
 
   const results = useMemo(() => searchSite(query), [query])
+
+  /*
+   * The cycling placeholder runs only while the field is open AND empty.
+   *
+   * Closed, the bar is inert and off-screen, so animating it would be a timer firing
+   * every 80ms behind a hidden control on every page of the site for nothing. Once
+   * there is a query the placeholder is not visible anyway, and typing is what stops
+   * the motion — which, with the hook's prefers-reduced-motion check, is the pair of
+   * mechanisms WCAG 2.2.2 asks for.
+   */
+  const placeholder = useTypewriterPlaceholder({ enabled: open && query === '' })
 
   const openSearch = useCallback(() => setOpen(true), [])
 
@@ -318,7 +330,7 @@ export function SiteSearch() {
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               onKeyDown={onFieldKeyDown}
-              placeholder="Search doctors, specialities, services"
+              placeholder={placeholder}
               /*
                 No border, no outline and NO RING: the wrapper carries the single edge.
                 All three are needed, and they remove three different things.
