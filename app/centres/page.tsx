@@ -2,6 +2,10 @@
 //
 // The full LIMS service catalogue — all 26 services, grouped.
 //
+// This is the only page that shows all three sections together. Each section also has
+// its own route — /specialities, /services, /patient-care — and its heading here links
+// to it, so this page is the overview and those are the destinations.
+//
 // Grouped rather than listed flat because 26 undifferentiated tiles ask a patient to
 // tell "Neurosurgery" apart from "Color Doppler" unaided: one is a department you are
 // referred to, the other is a test you are sent for. The grouping is an editorial
@@ -16,7 +20,7 @@ import type { Metadata } from 'next'
 import { Grid } from '@/components/primitives/Grid'
 import { Section } from '@/components/primitives/Section'
 import { getDoctorsByDepartment } from '@/lib/doctors'
-import { SERVICE_CATEGORIES, SERVICES, servicesByCategory } from '@/lib/services'
+import { SERVICE_CATEGORIES, SERVICES, serviceHref, servicesByCategory } from '@/lib/services'
 
 export const revalidate = 3600
 
@@ -50,7 +54,9 @@ export default function CentresPage() {
         return (
           <section key={category.id} aria-labelledby={headingId} className="mt-14">
             <h2 id={headingId} className="text-step-3">
-              {category.name}
+              <Link href={category.basePath} className="text-teal-800 hover:underline">
+                {category.name}
+              </Link>
             </h2>
             <span className="rule-accent mt-3" aria-hidden="true" />
             <p className="mt-3 max-w-prose text-ink-600">{category.blurb}</p>
@@ -62,7 +68,7 @@ export default function CentresPage() {
                 return (
                   <Link
                     key={service.slug}
-                    href={`/centres/${service.slug}`}
+                    href={serviceHref(service)}
                     className="card-edge flex min-h-[44px] flex-col justify-center
                                border border-teal-200 bg-white p-5 shadow-card
                                transition-shadow ease-standard hover:shadow-raised"

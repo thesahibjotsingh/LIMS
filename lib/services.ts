@@ -33,26 +33,46 @@ export interface ClinicalService {
   alsoKnownAs?: string[]
 }
 
-export const SERVICE_CATEGORIES: Array<{
+export interface ServiceCategoryDefinition {
   id: ServiceCategory
+  /** Section heading, used on /centres where all three appear together. */
   name: string
+  /** The page's own <h1>, used on that category's index route. */
+  pageTitle: string
   /** One line telling a patient what this group of services is for. */
   blurb: string
-}> = [
+  /**
+   * Route prefix. A category's index lives here and its services live beneath it,
+   * so a URL always names the section the page is listed under.
+   *
+   * This is the single source of truth for that mapping. Both the nav and every
+   * link on every page resolve through serviceHref(), so moving a service between
+   * categories moves its URL with it and nothing is left pointing at the old one.
+   */
+  basePath: string
+}
+
+export const SERVICE_CATEGORIES: ServiceCategoryDefinition[] = [
   {
     id: 'clinical',
     name: 'Clinical departments',
+    pageTitle: 'Specialities',
     blurb: 'Specialist teams you consult, are referred to, or are admitted under.',
+    basePath: '/specialities',
   },
   {
     id: 'diagnostics',
     name: 'Diagnostics & imaging',
+    pageTitle: 'Diagnostics & imaging',
     blurb: 'Tests and scans, usually on a referral from a doctor.',
+    basePath: '/services',
   },
   {
     id: 'support',
     name: 'Patient support services',
+    pageTitle: 'Patient care',
     blurb: 'Services that run alongside your treatment.',
+    basePath: '/patient-care',
   },
 ]
 
@@ -142,6 +162,32 @@ export const SERVICES: ClinicalService[] = [
 
 export function getService(slug: string): ClinicalService | undefined {
   return SERVICES.find((service) => service.slug === slug)
+}
+
+export function getCategory(id: ServiceCategory): ServiceCategoryDefinition {
+  const category = SERVICE_CATEGORIES.find((entry) => entry.id === id)
+  // Unreachable while ServiceCategory and SERVICE_CATEGORIES agree, and the throw is
+  // what makes that a compile-and-run guarantee rather than an undefined at render.
+  if (!category) throw new Error(`lib/services.ts: no definition for category "${id}"`)
+  return category
+}
+
+/**
+ * Canonical URL for a service.
+ *
+ * Every link to a service goes through here — nav, home grid, /centres, doctor
+ * profiles. Nothing hard-codes a path, so recategorising a service in SERVICES moves
+ * its URL and every link to it in one edit. The old hand-written hrefs are exactly how
+ * "Specialities" and "Services" both ended up pointing at /centres.
+ */
+export function serviceHref(service: ClinicalService): string {
+  return `${getCategory(service.category).basePath}/${service.slug}`
+}
+
+/** Same, from a slug. Returns undefined for a slug that is not on the list. */
+export function serviceHrefBySlug(slug: string): string | undefined {
+  const service = getService(slug)
+  return service ? serviceHref(service) : undefined
 }
 
 export function servicesByCategory(category: ServiceCategory): ClinicalService[] {

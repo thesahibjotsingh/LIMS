@@ -11,7 +11,7 @@
 // From Phase 2 this is likely to move behind a CMS. Keeping it in one typed module now
 // means that migration touches one file, not thirty components.
 
-import { servicesByCategory } from '@/lib/services'
+import { getCategory, serviceHref, servicesByCategory } from '@/lib/services'
 import type { Location, NavItem } from '@/types'
 
 export const siteConfig = {
@@ -75,40 +75,50 @@ export const primaryLocation: Location = {
 /**
  * Primary navigation — eight items on their own tier.
  *
- * Health packages, Health library and About LIMS are back at the top level. They were
- * folded into dropdowns when the nav had to share one row with the lockup and the
- * buttons; on a dedicated ribbon the width constraint is gone, and a top-level item a
- * patient can see beats one they have to go looking for inside a menu.
+ * THREE SECTIONS, THREE DESTINATIONS. Specialities, Services and Patient care each own
+ * a route prefix, and every href below is derived from lib/services.ts rather than
+ * written by hand. That is the fix for the bug this replaced: Specialities and Services
+ * were both hard-coded to /centres, so the two triggers and their two "All …" rows were
+ * four links to one page.
  *
- * An entry with `children` renders as a dropdown; without, as a plain link. The two
- * service dropdowns split LIMS's 26 services the way a patient reads them, and both are
- * generated from lib/services.ts, so a nav entry cannot exist without a page behind it.
+ * The categories are what decide the split, so a service moving between them moves its
+ * nav entry and its URL together and neither can be left behind.
  *
- * `overviewLabel` is set only where the parent `href` resolves to a page that exists.
+ * An entry with `children` renders as a dropdown; without, as a plain link.
+ * `overviewLabel` is set only where the parent `href` resolves to a page that exists —
  * Contact Us points at a route that ships later, so it gets no overview row rather than
  * a dead one.
  */
 export const primaryNav: NavItem[] = [
   {
     label: 'Specialities',
-    href: '/centres',
+    href: getCategory('clinical').basePath,
     overviewLabel: 'All specialities',
     children: servicesByCategory('clinical').map((service) => ({
       label: service.name,
-      href: `/centres/${service.slug}`,
+      href: serviceHref(service),
     })),
   },
   { label: 'Find a doctor', href: '/doctors' },
   {
     label: 'Services',
-    href: '/centres',
-    overviewLabel: 'All services',
-    children: [...servicesByCategory('diagnostics'), ...servicesByCategory('support')].map(
-      (service) => ({ label: service.name, href: `/centres/${service.slug}` }),
-    ),
+    href: getCategory('diagnostics').basePath,
+    overviewLabel: 'All diagnostics & imaging',
+    children: servicesByCategory('diagnostics').map((service) => ({
+      label: service.name,
+      href: serviceHref(service),
+    })),
   },
   { label: 'Health packages', href: '/health-packages' },
-  { label: 'Patient care', href: '/patient-care' },
+  {
+    label: 'Patient care',
+    href: getCategory('support').basePath,
+    overviewLabel: 'All patient services',
+    children: servicesByCategory('support').map((service) => ({
+      label: service.name,
+      href: serviceHref(service),
+    })),
+  },
   { label: 'Health library', href: '/health-library' },
   { label: 'About LIMS', href: '/about' },
   {
@@ -137,7 +147,7 @@ export const primaryNav: NavItem[] = [
  */
 export const clinicalNav: NavItem[] = servicesByCategory('clinical').map((service) => ({
   label: service.name,
-  href: `/centres/${service.slug}`,
+  href: serviceHref(service),
 }))
 
 /**

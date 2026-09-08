@@ -37,8 +37,11 @@ Then open <http://localhost:3000>.
 | Route | Status |
 | --- | --- |
 | `/` | Home — hero, quick actions, clinical department grid. |
-| `/centres` | All 26 services, grouped into clinical / diagnostics / support. |
-| `/centres/[slug]` | One service, plus its consultants. 26 prerendered. |
+| `/centres` | Combined overview of all 26 services, grouped. Each heading links to its section. |
+| `/centres/[slug]` | **308 redirect** to the service's section route. Kept for inbound links only. |
+| `/specialities`, `/specialities/[slug]` | 15 clinical departments. |
+| `/services`, `/services/[slug]` | 7 diagnostics and imaging services. |
+| `/patient-care`, `/patient-care/[slug]` | 4 patient support services. |
 | `/doctors` | Directory, grouped by department. Filters + search in Phase 3. |
 | `/doctors/[id]` | Doctor profile. 4 prerendered. Portraits + OPD timings pending. |
 | `/dev/tokens` | **Live design-token reference.** Not linked in nav, `noindex`. |
@@ -46,8 +49,14 @@ Then open <http://localhost:3000>.
 ## Data
 
 `lib/services.ts` is the spine: the 26 services LIMS supplied, one slug each. Nav, home
-grid, footer, `/centres`, `/centres/[slug]` and the doctor roster all resolve against it,
-so a rename is one edit. `lib/doctors.ts` throws at module load if a doctor is filed
+grid, footer, every section route and the doctor roster all resolve against it, so a
+rename is one edit.
+
+Each category owns a route prefix (`basePath`), and **every link to a service goes
+through `serviceHref()`** rather than a hand-written path. That is what keeps a URL
+naming the section a page is listed under, and what stops two menu items drifting onto
+one destination — which is exactly what hand-written hrefs did to Specialities and
+Services. `lib/doctors.ts` throws at module load if a doctor is filed
 under a slug that does not exist there — otherwise a renamed slug silently drops that
 doctor off their department page.
 

@@ -23,7 +23,7 @@ import { notFound } from 'next/navigation'
 import { Section } from '@/components/primitives/Section'
 import { Stack } from '@/components/primitives/Stack'
 import { DOCTORS, getDoctor, registrationDisplay } from '@/lib/doctors'
-import { serviceName } from '@/lib/services'
+import { serviceHrefBySlug, serviceName } from '@/lib/services'
 import { contact, primaryLocation, siteConfig } from '@/lib/site-config'
 
 export const revalidate = 3600
@@ -90,7 +90,12 @@ export default async function DoctorProfilePage({ params }: DoctorProfilePagePro
     <>
       <Section tone="tint" labelledBy="doctor-heading">
         <Stack gap="md" className="max-w-prose">
-          <Link href={`/centres/${doctor.departmentSlug}`} className="eyebrow hover:underline">
+          {/* Resolved through lib/services so it follows the department to whichever
+              section it belongs to, rather than assuming a prefix. */}
+          <Link
+            href={serviceHrefBySlug(doctor.departmentSlug) ?? '/centres'}
+            className="eyebrow hover:underline"
+          >
             {department}
           </Link>
           <h1 id="doctor-heading" className="text-step-4">
