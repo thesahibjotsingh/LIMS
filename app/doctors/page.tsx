@@ -1,10 +1,11 @@
 export const runtime = 'edge';
 // app/doctors/page.tsx
 //
-// Search is URL state: /doctors?q=ortho. That was the recorded decision and this is it
-// applied — results are shareable, the Back button behaves, and the first paint is
-// already-filtered HTML rather than an empty list hydrating on a slow connection. The
-// header's search field is a plain GET form pointing here, so it works before hydration.
+// Search is URL state: /doctors?q=ortho&dept=urology. That was the recorded decision and
+// this is it applied — results are shareable, the Back button behaves, and the first
+// paint is already-filtered HTML rather than an empty list hydrating on a slow
+// connection. The header's search field is a plain GET form pointing here, so it works
+// before hydration.
 //
 // A query string is safe here because a speciality is not personal data. A patient
 // identifier must never appear in a URL (see the DPDP notes), which is why this searches
@@ -15,9 +16,22 @@ export const runtime = 'edge';
 // alternative is shipping the roster to the client and filtering there, which loses the
 // shareable URL and the pre-filtered first paint.
 //
-// Still to come: department filters alongside the text query, and pagination — not
-// infinite scroll, which breaks keyboard users, strands the footer, and loses your place
-// on back-navigation.
+// THE DEPARTMENT FILTER IS A SEPARATE STEP FROM searchDoctors, NOT A NEW PARAMETER ON IT.
+// That function free-texts across name, qualifications, designation AND department name —
+// widening its own contract to also narrow by an exact department would make one function
+// do two different kinds of matching. Filtering the text-search results by `dept`
+// afterward keeps each concern in one place and composes: a query AND a department both
+// narrow the same list, in either order.
+//
+// THE OPTIONS LIST IS departmentsWithDoctors(), NOT SERVICES. Fifteen clinical
+// departments are on LIMS's list; four currently have a named consultant. Offering all
+// fifteen would let a patient pick "Neurosurgery" and land on a guaranteed empty state —
+// a dead end the search itself already goes out of its way to avoid (see the note on
+// searchDoctors). The filter can only ever narrow to a department that already has
+// someone to show.
+//
+// Still to come: pagination — not infinite scroll, which breaks keyboard users, strands
+// the footer, and loses your place on back-navigation.
 //
 // The roster is real. Every optional field below is guarded rather than defaulted —
 // see the note at the top of lib/doctors.ts.
@@ -25,8 +39,8 @@ export const runtime = 'edge';
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { Section } from '@/components/primitives/Section'
-import { DOCTORS, registrationDisplay, searchDoctors } from '@/lib/doctors'
-import { SERVICES } from '@/lib/services'
+import { DOCTORS, departmentsWithDoctors, registrationDisplay, searchDoctors } from '@/lib/doctors'
+import { SERVICES, serviceName } from '@/lib/services'
 
 export const metadata: Metadata = {
   title: 'Find a doctor',
@@ -36,13 +50,23 @@ export const metadata: Metadata = {
 }
 
 interface DoctorsPageProps {
-  searchParams: Promise<{ q?: string }>
+  searchParams: Promise<{ q?: string; dept?: string }>
 }
 
 export default async function DoctorsPage({ searchParams }: DoctorsPageProps) {
-  const { q } = await searchParams
+  const { q, dept } = await searchParams
   const query = q?.trim() ?? ''
-  const results = searchDoctors(query)
+
+  // A stale or hand-edited dept value (a department that has since lost its only
+  // consultant, or a typo) is treated as no filter rather than an error — the page stays
+  // usable instead of quietly stranding a patient on an empty result for a reason they
+  // cannot see.
+  const departmentOptions = departmentsWithDoctors()
+  const department = dept && departmentOptions.includes(dept) ? dept : ''
+
+  const results = searchDoctors(query).filter(
+    (doctor) => !department || doctor.departmentSlug === department,
+  )
 
   return (
     <Section labelledBy="doctors-heading">
@@ -52,14 +76,15 @@ export default async function DoctorsPage({ searchParams }: DoctorsPageProps) {
       </h1>
       <span className="rule-accent-lg mt-3" aria-hidden="true" />
 
-      {/* The same form as the header panel, repeated on the page itself. Someone who
-          landed here from a link should not have to reopen a menu to search again, and
-          it carries the current query so refining a search starts from what you typed. */}
+      {/* The same form as the header panel, plus a department select the compact header
+          bar has no room for. Someone who landed here from a link should not have to
+          reopen a menu to search again, and both fields carry their current value so
+          refining a search starts from what was already chosen. */}
       <form
         action="/doctors"
         method="get"
         role="search"
-        className="mt-6 flex max-w-xl items-stretch gap-2"
+        className="mt-6 flex max-w-2xl flex-wrap items-stretch gap-2"
       >
         <label htmlFor="doctors-page-search" className="sr-only">
           Search for doctors by name, speciality or qualification
@@ -72,10 +97,33 @@ export default async function DoctorsPage({ searchParams }: DoctorsPageProps) {
           placeholder="Search for Doctors"
           /* focus:ring-0 kills the forms plugin's blue box-shadow ring, which would
              otherwise sit just inside this field's own teal focus border. */
-          className="h-12 w-full rounded-full border-2 border-ink-200 bg-white px-4
-                     text-step--1 text-ink-950 placeholder:text-ink-400
+          className="h-12 min-w-0 flex-1 basis-48 rounded-full border-2 border-ink-200
+                     bg-white px-4 text-step--1 text-ink-950 placeholder:text-ink-400
                      focus:border-teal-600 focus:outline-none focus:ring-0"
         />
+
+        <label htmlFor="doctors-page-dept" className="sr-only">
+          Filter by speciality
+        </label>
+        {/* A native <select>: full keyboard support and platform-consistent behaviour
+            for free, and one more real HTML control on a site that already prefers a
+            real <form>, <table> and <dialog> over hand-rolled equivalents elsewhere. */}
+        <select
+          id="doctors-page-dept"
+          name="dept"
+          defaultValue={department}
+          className="h-12 shrink-0 rounded-full border-2 border-ink-200 bg-white px-4
+                     text-step--1 text-ink-950 focus:border-teal-600 focus:outline-none
+                     focus:ring-0"
+        >
+          <option value="">All specialities</option>
+          {departmentOptions.map((slug) => (
+            <option key={slug} value={slug}>
+              {serviceName(slug)}
+            </option>
+          ))}
+        </select>
+
         <button
           type="submit"
           className="btn-primary inline-flex min-h-[48px] shrink-0 items-center px-5
@@ -88,13 +136,24 @@ export default async function DoctorsPage({ searchParams }: DoctorsPageProps) {
       {/* Live region: the count is what tells a screen-reader user their search did
           something, since the results themselves are further down the page. */}
       <p aria-live="polite" aria-atomic="true" className="mt-4 text-step--1 text-ink-600">
-        {query ? (
+        {query || department ? (
           <>
-            {results.length} {results.length === 1 ? 'doctor' : 'doctors'} matching{' '}
-            <strong className="text-ink-950">&ldquo;{query}&rdquo;</strong>
+            {results.length} {results.length === 1 ? 'doctor' : 'doctors'}
+            {query ? (
+              <>
+                {' '}
+                matching <strong className="text-ink-950">&ldquo;{query}&rdquo;</strong>
+              </>
+            ) : null}
+            {department ? (
+              <>
+                {' '}
+                in <strong className="text-ink-950">{serviceName(department)}</strong>
+              </>
+            ) : null}
             {' · '}
             <Link href="/doctors" className="link-accent">
-              Clear search
+              Clear {query && department ? 'search & filter' : query ? 'search' : 'filter'}
             </Link>
           </>
         ) : (
@@ -105,12 +164,17 @@ export default async function DoctorsPage({ searchParams }: DoctorsPageProps) {
       </p>
 
       {/* A dead end is a bad end. When nothing matches, offer the two things that do
-          work: the full roster, and a phone number answered by a person. */}
+          work: the full roster, and a phone number answered by a person.
+
+          department ALONE never lands here — departmentOptions only ever lists a
+          department that already has a consultant, so this can only fire when the text
+          query narrows a (possibly department-filtered) result set to zero. */}
       {query && results.length === 0 ? (
         <div className="mt-8 max-w-prose rounded border border-teal-200 bg-teal-50 p-5">
           <p className="text-step-0 text-ink-950">
-            No consultant matches &ldquo;{query}&rdquo;. The roster is small and still
-            growing, so the doctor you want may not be listed yet.
+            No consultant matches &ldquo;{query}&rdquo;
+            {department ? <> in {serviceName(department)}</> : null}. The roster is small
+            and still growing, so the doctor you want may not be listed yet.
           </p>
           <p className="mt-3 text-step--1">
             <Link href="/doctors" className="link-accent">

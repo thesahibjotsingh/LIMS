@@ -10,6 +10,7 @@
 
 import Link from 'next/link'
 import { Container } from '@/components/primitives/Container'
+import { RequestCallbackButton } from '@/components/sections/RequestCallbackButton'
 import type { Location, NavItem } from '@/types'
 
 export interface SiteFooterProps {
@@ -54,6 +55,18 @@ export function SiteFooter({ centres, patientServices, primaryLocation }: SiteFo
                 {primaryLocation.phoneDisplay ?? primaryLocation.phone}
               </a>
             </address>
+
+            {/* The lower-commitment third path, right beside the number it is an
+                alternative to: call now, or leave your number and someone calls you.
+                Outside the <address> element deliberately — it is an action, not a
+                fact about how to reach the hospital. */}
+            <RequestCallbackButton
+              className="mt-1 inline-flex min-h-[48px] items-center text-step--1
+                         font-semibold text-copper-300 underline-offset-4
+                         hover:text-white hover:underline"
+            >
+              Request a call back
+            </RequestCallbackButton>
           </div>
 
           <FooterNav
