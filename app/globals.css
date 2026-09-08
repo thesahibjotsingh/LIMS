@@ -327,6 +327,7 @@
                      right (1rem); tight top-right
                      + bottom-left (0.375rem)
        accent bar    inset copper-500 (identity)     inset teal-800 (state)
+       card body     white                           teal-100
        elevation     tight, low-opacity teal shadow  wider, deeper teal shadow
 
      THE ACCENT IS AN INSET BAR, NOT A BORDER — A REVISION, AND WHY. The first cut
@@ -360,12 +361,15 @@
      RGB — the card's elevation reads as "this surface lifted," in the brand's own
      hue, rather than borrowing a neutral shadow that could belong to any site.
 
-     140ms, matched to the buttons' state-transition timing. Behind the
-     reduced-motion guard below, as ever. */
+     140ms for the shadow and accent bar, matched to the buttons' state-transition
+     timing. The body fill keeps its own 100ms, unchanged from .card-edge's original
+     — see the note below it for why that one stays a beat quicker than the rest.
+     Behind the reduced-motion guard below, as ever. */
   .card-geo {
-    @apply relative rounded-tl-3xl rounded-br-3xl rounded-tr-md rounded-bl-md
-           bg-white transition-shadow ease-standard;
-    transition-duration: 140ms;
+    @apply relative rounded-tl-3xl rounded-br-3xl rounded-tr-md rounded-bl-md bg-white;
+    transition:
+      background-color 100ms cubic-bezier(0.2, 0, 0, 1),
+      box-shadow 140ms cubic-bezier(0.2, 0, 0, 1);
     box-shadow:
       0 1px 2px rgba(15, 91, 102, 0.05),
       0 8px 20px rgba(15, 91, 102, 0.08);
@@ -383,8 +387,29 @@
     @apply bg-teal-800;
   }
 
+  /* THE BODY TINT IS BACK, ON THE SAME TOKEN .card-edge USED. Dropped when the strip
+     system gave way to the asymmetric-corner one — background-color is a repaint
+     regardless of what else the card is doing, and at the time state was carrying
+     enough signal through the accent bar and the shadow alone. Restored because a
+     single accent-bar recolour is easy to miss in peripheral vision on a page with
+     several cards, and a whole-body tint is not.
+
+     teal-100, NOT teal-50: teal-50 is the tint Section tone="tint" itself uses, and
+     some of this card's own hosting sections sit on exactly that band — a teal-50
+     hover there would measure ~1.000 against its own ground, which is to say absent.
+     teal-100 is one step up and reads on both white and teal-50 hosts. Text colours
+     are unaffected: teal-800 holds 6.60:1 on teal-100, comfortably past body-text AA,
+     so nothing inside the card needs its own hover rule to stay legible.
+
+     100ms, not 140: .card-edge's own fill ran at 100ms, and this is a straight port
+     of that exact value, not a re-derivation — the point of bringing the fill back
+     was to match what was there before, timing included. It reads as a beat ahead of
+     the 140ms shadow/accent-bar pair, which is intentional: the fill is the fastest,
+     most legible signal of the three, and arriving first is what lets the slower two
+     read as confirmation rather than all three fighting to be noticed at once. */
   .card-geo:hover,
   .card-geo:focus-within {
+    @apply bg-teal-100;
     box-shadow:
       0 2px 4px rgba(15, 91, 102, 0.08),
       0 16px 32px rgba(15, 91, 102, 0.14);

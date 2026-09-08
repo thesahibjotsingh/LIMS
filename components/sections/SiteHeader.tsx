@@ -177,10 +177,14 @@ export function SiteHeader({
             </span>
           </Link>
 
-          {/* `relative`: the positioning root for SiteSearch's expanding bar. See the
-              note at the top of SiteSearch.tsx for why that anchor lives here instead
-              of on the trigger's own wrapper. */}
-          <div className="relative flex items-center gap-2 sm:gap-3">
+          {/* NO `relative` HERE. SiteSearch owns its own positioning root now — its
+              desktop bar deliberately grows out of the TRIGGER's own position, not
+              this row's, so it stops short of Emergency and Book appointment instead
+              of covering them; a `relative` here would widen that anchor back out to
+              the row and the bar would grow wide enough to overlap both. See the note
+              at the top of SiteSearch.tsx for the full reasoning, including why the
+              mobile panel needs neither this nor that local anchor. */}
+          <div className="flex items-center gap-2 sm:gap-3">
             {/*
               THE DRAWER TRIGGER LIVES HERE, NOT IN ITS OWN ROW BELOW TIER 2. It
               used to sit alone as a full-width "Menu" bar, which worked but cost

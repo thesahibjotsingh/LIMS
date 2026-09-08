@@ -2,112 +2,98 @@
 
 // components/sections/SiteSearch.tsx
 //
-// Site-wide search: a borderless magnifier in the header that expands right-to-left into
-// a search bar, filters as you type, and routes to the hit.
+// Site-wide search: a borderless magnifier in the header. Two different expanded shapes
+// below and above `lg`, sharing one trigger and one piece of state.
 //
-// IT OVERLAYS, IT DOES NOT PUSH. The bar is absolutely positioned against the action
-// group and anchored right, so expanding it moves nothing else. Laying it out in flow
-// would shove the Emergency button leftward on every open — animating the position of
-// the one control someone might be reaching for in a panic is not a trade worth making
-// for an effect.
+// WHY TWO SHAPES INSTEAD OF ONE RESPONSIVE ONE. The desktop bar grows right-to-left out
+// of the TRIGGER'S OWN position — `relative` lives on this component's own wrapper below,
+// not on the header's actions row — so it stops short of Emergency and Book appointment
+// instead of covering them; that is the whole visual point of it. Anchoring it to the
+// wider actions row instead (a change made and then reverted — see git history) fixes
+// nothing at `lg` and up, where there is always room for the bar to grow into on the
+// trigger's own left, and costs the one thing that made this shape worth keeping: at
+// wide viewports the bar then grows wide enough to sit on top of both buttons beside it.
+// Trigger-anchoring only becomes a bug below `lg`, on a phone, where other buttons
+// crowd the same row and there may not be enough room to the trigger's own left — which
+// is the actual, real incident this file's earlier version fixed. The fix for that
+// narrow case is the mobile panel below, not changing what desktop anchors to.
 //
-// "AGAINST THE ACTION GROUP" IS LITERAL: THE POSITIONING ROOT LIVES IN SiteHeader, NOT
-// HERE. This component's own wrapper deliberately carries no `relative` — the bar's
-// `absolute right-0` resolves against the nearest positioned ancestor, which is the
-// header's actions row (`relative` on that div in SiteHeader.tsx). Anchoring locally
-// instead, against a wrapper no wider than this trigger's own 48px, was the bug: on a
-// narrow phone with other items sharing the row, that wrapper can sit well short of the
-// header's right edge, so a bar expanding leftward from it runs out of room and its left
-// edge clips off-screen before reaching the header's own left padding. Anchored to the
-// actions row instead — which IS flush against the header's right edge, being the last
-// flex child in a `justify-between` row — the bar always has the full content width to
-// grow into, regardless of how many other buttons end up to its right.
+// ONE TRIGGER, TWO PANELS, BOTH MAY BE MOUNTED AT ONCE. The trigger button is shared;
+// only the expanded content differs per breakpoint, switched with `hidden lg:block` /
+// `lg:hidden` rather than a JS media-query read (no hydration mismatch, no resize
+// listener). Both panels exist in the DOM while `open` is true, on every viewport — the
+// one CSS hides is `display:none`, which makes it non-focusable, so calling `.focus()`
+// on its input is a harmless no-op. That is what lets a single `openSearch`/`closeSearch`
+// pair and a single set of keyboard/outside-click/blur handlers drive both shapes instead
+// of duplicating that logic per breakpoint.
 //
-// WIDTH, NOT TRANSFORM. Everywhere else in this codebase an animation is a transform,
-// because the compositor can run it off the main thread. Not here: scaleX would squash
-// the placeholder and the icon along with the box, and a search bar that unsquashes as
-// it opens looks broken. This is one element animating once per interaction, so the
-// layout cost is affordable — the rule it breaks is about repeated animation on many
-// elements, and this is neither.
+// THE DESKTOP BAR IS THE ORIGINAL MECHANISM, UNCHANGED. Always mounted and width-
+// animated rather than conditionally rendered, because "grows out of the icon" is a
+// width transition by definition — there is no fade-in that reads as growth. That is
+// also why it still needs the trap-avoidance the mobile panel does not: collapsed, it
+// sits exactly on top of the trigger (right-0, matching the trigger's own box), so
+// `inert` and a pointer-events gate keep the two from fighting over clicks and focus.
+// Both traps are documented in detail just above where they are handled below.
 //
-// A TRANSITION BETWEEN TWO STATES, NOT A KEYFRAME. The first version ran a keyframe to
-// `width: 100%`, and 100% resolved against the collapsed wrapper rather than the bar's
-// own width — so it expanded to the wrapper's own width and then snapped to full width
-// when the animation ended. That snap was the choppiness. A transition between two
-// explicit widths cannot have that bug, and it runs in both directions, so closing is
-// now animated too.
+// THE MOBILE PANEL IS `fixed`, NOT `absolute` AGAINST <header> OR THE TRIGGER. It was
+// `absolute inset-x-0 top-full` at first — the same mechanism NavDropdown's own
+// full-width mega-panel uses, spanning <header> because sticky counts as positioned —
+// which worked, but needed the header to carry no nearer positioned descendant between
+// it and this component. The desktop bar's own `relative` (on this component's wrapper,
+// directly below) is exactly such a descendant, so the two requirements cannot share one
+// ancestor chain: the mobile panel needs nothing closer than <header> in the way, and the
+// desktop bar needs something local. `fixed` sidesteps the conflict rather than picking a
+// side — it resolves against the viewport regardless of any `relative` ancestor in
+// between, so the desktop bar keeps its trigger-anchored context and the mobile panel
+// stops needing an ancestor at all. Its `top` is measured directly from <header>'s own
+// rendered bottom edge when the panel opens — a single read, not a subscription, because
+// the header's height cannot change while a modal-less inline panel like this is the
+// only thing open above it.
 //
-// The bar therefore stays MOUNTED and is inert while closed. A transition needs a
-// previous value to move from; an element mounted at its final width has nothing to
-// animate. `inert` is what makes that safe — it takes the collapsed field out of the tab
-// order and out of the accessibility tree, so there is no invisible input in the header
-// of every page.
+// Conditionally rendered, with the shared `dropdown` entrance keyframe every other
+// panel on this site uses, because it does not overlap the trigger and so has neither
+// trap to guard against.
 //
-// The trigger stays in flow too, covered by the bar rather than removed. Hiding it was
-// pulling a 48px item out of the action group on every open, which shifted the Emergency
-// and Book appointment buttons sideways — the layout shift this was supposed to avoid.
+// THE FIELD IS STILL A REAL COMBOBOX, IN BOTH SHAPES. Filtering as you type creates
+// content a keyboard user has no way to reach otherwise: Tab would walk them out of the
+// field and through every hit, and a screen reader would never be told the list changed.
+// So each carries the full pattern — aria-expanded, aria-controls, aria-activedescendant,
+// a listbox of options, arrow keys, Enter to go, and a live region announcing the count.
 //
-// TWO TRAPS LIVE HERE. Both made the search unopenable, and neither is visible from
-// any single line of code, so they are written down.
-//
-// 1. THE COLLAPSED BAR SAT ON TOP OF THE TRIGGER AND ATE THE CLICK. It is absolutely
-//    positioned at right-0 and the trigger's own width while closed, matching its box
-//    exactly. `inert` stops it handling the click itself, but an inert subtree is not
-//    hit-testable and the browser does not fall through to what is underneath:
-//    document.elementFromPoint() over the button returned null, so a real mouse click
-//    landed on nothing. The gate has to be pointer-events-none on the POSITIONING
-//    WRAPPER: putting it on the bar alone left the wrapper itself — same box, same
-//    z-50 — still swallowing the click. inert is not enough either; it stops the subtree
-//    handling events but does not let them through to what is beneath.
-//    Worth knowing that trigger.click() in a test dispatches straight at the element and
-//    skips hit-testing entirely, so this passes every scripted check and fails every
-//    human one. Test it with elementFromPoint over the trigger, not with .click().
-//
-// 2. THE INERT/BLUR TRAP. Opening puts `inert` on the trigger while it still holds
-//    focus; the browser blurs an inert element immediately, and that blur reaches the
-//    wrapper with relatedTarget === null. A close-on-blur handler that trusts
-//    relatedTarget therefore closed the search in the same tick it opened. See
-//    scheduleBlurCheck below.
-//
-// NO LONGER A <dialog>. An inline expander is not modal: the page behind stays live and
-// usable, so trapping focus and making the background inert would be wrong. What it does
-// still need is written out by hand below — Escape, outside pointerdown, focus leaving,
-// route change, and focus returning to the trigger.
-//
-// THE FIELD IS A REAL COMBOBOX. Filtering as you type creates content a keyboard user
-// has no way to reach: Tab would walk them out of the field and through every hit, and a
-// screen reader would never be told the list changed. So it carries the full pattern —
-// aria-expanded, aria-controls, aria-activedescendant, a listbox of options, arrow keys,
-// Enter to go, and a live region announcing the count. Half of this pattern is worse
-// than none of it.
-//
-// The results are <a> elements inside role="option". Strictly an option should not
-// contain an interactive element; the alternative is routing on click alone, which takes
-// middle-click and open-in-new-tab away from a list of destinations. The link is the
-// more useful trade and it is what the established implementations do.
+// The results are <a> elements inside role="option" in both shapes. Strictly an option
+// should not contain an interactive element; the alternative is routing on click alone,
+// which takes middle-click and open-in-new-tab away from a list of destinations. The
+// link is the more useful trade and it is what the established implementations do.
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useTypewriterPlaceholder } from '@/hooks/useTypewriterPlaceholder'
 import { searchSite, type SearchEntry } from '@/lib/search-index'
-
-const FIELD_ID = 'site-search-input'
-const LISTBOX_ID = 'site-search-listbox'
-const optionId = (index: number) => `site-search-option-${index}`
 
 export function SiteSearch() {
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState('')
   const [active, setActive] = useState(0)
+  /** The mobile panel's `top`, read from <header>'s own rendered bottom edge — see the
+   *  file header note for why this is a one-time measurement rather than `absolute`
+   *  against the header. 0 until the first open; never rendered before then. */
+  const [mobilePanelTop, setMobilePanelTop] = useState(0)
 
   const wrapperRef = useRef<HTMLDivElement>(null)
   const triggerRef = useRef<HTMLButtonElement>(null)
-  const inputRef = useRef<HTMLInputElement>(null)
+  const desktopInputRef = useRef<HTMLInputElement>(null)
+  const mobileInputRef = useRef<HTMLInputElement>(null)
   /** Set when closing, so focus only returns to the trigger on a deliberate close. */
   const restoreFocus = useRef(false)
   /** Pending deferred blur check, cancelled on unmount and on every new blur. */
   const blurCheck = useRef<number | null>(null)
+
+  const desktopFieldId = useId()
+  const desktopListboxId = useId()
+  const mobileFieldId = useId()
+  const mobileListboxId = useId()
+  const mobilePanelId = useId()
 
   const router = useRouter()
   const pathname = usePathname()
@@ -115,17 +101,22 @@ export function SiteSearch() {
   const results = useMemo(() => searchSite(query), [query])
 
   /*
-   * The cycling placeholder runs only while the field is open AND empty.
-   *
-   * Closed, the bar is inert and off-screen, so animating it would be a timer firing
-   * every 80ms behind a hidden control on every page of the site for nothing. Once
-   * there is a query the placeholder is not visible anyway, and typing is what stops
-   * the motion — which, with the hook's prefers-reduced-motion check, is the pair of
-   * mechanisms WCAG 2.2.2 asks for.
+   * The cycling placeholder runs only while the field is open AND empty. One flag drives
+   * the placeholder text used by BOTH inputs — only one of them is ever visible, so
+   * showing the same cycling text in both is correct, not duplicated motion.
    */
   const placeholder = useTypewriterPlaceholder({ enabled: open && query === '' })
 
-  const openSearch = useCallback(() => setOpen(true), [])
+  const openSearch = useCallback(() => {
+    // The one `<header>` on the page is the site-wide sticky one from SiteHeader —
+    // queried directly rather than threaded down as a prop, since nothing else about
+    // this component needs to know the header exists. getBoundingClientRect().bottom
+    // is already viewport-relative, the same coordinate space `fixed` positions in, so
+    // no unit conversion is needed between measuring it and using it.
+    const header = document.querySelector('header')
+    if (header) setMobilePanelTop(header.getBoundingClientRect().bottom)
+    setOpen(true)
+  }, [])
 
   const closeSearch = useCallback((returnFocus = false) => {
     restoreFocus.current = returnFocus
@@ -135,18 +126,19 @@ export function SiteSearch() {
   }, [])
 
   /*
-   * Focus the field as it opens, and hand focus back to the trigger on a deliberate
-   * close. useLayoutEffect rather than useEffect: this runs before paint, so the field
-   * is focused in the same frame the bar appears and the first keystroke cannot be
-   * dropped into a field that is not ready yet. It also shortens the window in which
-   * activeElement is body, which is what the deferred blur check has to tolerate.
+   * Focuses whichever input is actually visible. Calling .focus() on the other one is
+   * not a bug to guard against — an element hidden via `display:none` (which is what
+   * `hidden`/`lg:hidden` resolve to) cannot receive focus, so that call is a documented
+   * no-op rather than something that needs its own branch.
    *
-   * Both directions are safe against inert: by the time this runs React has already
-   * committed, so the trigger has lost inert on close and the field has lost it on open.
+   * useLayoutEffect rather than useEffect: this runs before paint, so the field is
+   * focused in the same frame the panel appears and the first keystroke cannot be
+   * dropped into a field that is not ready yet.
    */
   useLayoutEffect(() => {
     if (open) {
-      inputRef.current?.focus()
+      desktopInputRef.current?.focus()
+      mobileInputRef.current?.focus()
     } else if (restoreFocus.current) {
       restoreFocus.current = false
       triggerRef.current?.focus()
@@ -159,8 +151,8 @@ export function SiteSearch() {
     setActive(0)
   }, [query])
 
-  // Close on navigation. Following a result unmounts nothing, so without this the bar
-  // stays open over the page it just took you to.
+  // Close on navigation. Following a result unmounts nothing else on the page, so
+  // without this the panel stays open over the page it just took you to.
   useEffect(() => {
     setOpen(false)
     setQuery('')
@@ -177,7 +169,7 @@ export function SiteSearch() {
     }
 
     // pointerdown, not click: closing on click lets the press land on the page behind
-    // before the bar has gone, which reads as a lost tap.
+    // before the panel has gone, which reads as a lost tap.
     function onPointerDown(event: PointerEvent) {
       if (!wrapperRef.current?.contains(event.target as Node)) closeSearch()
     }
@@ -191,25 +183,15 @@ export function SiteSearch() {
   }, [open, closeSearch])
 
   /*
-   * WHY THIS IS DEFERRED, AND WHY IT DOES NOT TRUST relatedTarget.
+   * DEFERRED, AND DOES NOT TRUST relatedTarget DIRECTLY.
    *
-   * This handler used to close the moment relatedTarget fell outside the wrapper, and
-   * that made the search unopenable. Clicking the trigger sets `open`, which puts
-   * `inert` on the trigger while it still holds focus; a browser blurs an element the
-   * instant it becomes inert, and that blur arrives here with relatedTarget === null.
-   * "Not inside the wrapper" was therefore true, so the search closed in the same tick
-   * it opened — and because closeSearch() also clears the query, anything typed in the
-   * gap disappeared with it.
-   *
-   * relatedTarget is null in several legitimate cases: focus moving to an element that
-   * has just rendered, focus leaving for the browser chrome, and exactly this one. So
-   * instead of trusting it, the check waits a frame and asks where focus actually
-   * landed.
-   *
-   * document.body is treated as "still open" on purpose. Between the blur and the
-   * effect that focuses the field, activeElement is briefly body; closing on that would
-   * reintroduce the same bug one frame later. A click that lands outside is handled by
-   * the pointerdown listener above, which is the reliable signal for that case.
+   * On the desktop bar, opening puts `inert` on the trigger while it still holds focus;
+   * the browser blurs an inert element immediately, and that blur reaches this handler
+   * with relatedTarget === null. relatedTarget is null in other legitimate cases too
+   * (focus moving to an element that has just rendered, focus leaving for the browser
+   * chrome), so a handler that trusts it directly closes on cases it should not. Waiting
+   * a frame and asking where focus actually landed answers the real question instead of
+   * inferring it from a value with more than one legitimate meaning.
    */
   const scheduleBlurCheck = useCallback(() => {
     if (blurCheck.current !== null) cancelAnimationFrame(blurCheck.current)
@@ -256,56 +238,53 @@ export function SiteSearch() {
   return (
     <div
       ref={wrapperRef}
-      className="flex items-center"
+      className="relative flex items-center"
       onBlur={open ? scheduleBlurCheck : undefined}
     >
       {/*
-        Borderless. The hover fill from .sweep is the whole affordance — a ring around a
-        48px icon reads as a button that has been switched off next to two filled ones.
-        Still a 48px target: the padding does the work the border used to.
-      */}
-      {/*
-        Borderless at rest, rich teal on interaction, and never removed from the layout.
-        The expanded bar covers it, so it does not need hiding — and hiding it was
-        pulling a 48px item out of the action group, shifting the two buttons beside it
-        on every open.
+        Borderless. The teal fill on hover/focus/aria-expanded is the whole affordance —
+        a ring around a 48px icon reads as a button that has been switched off next to
+        two filled ones. Still a real 48px target: the padding does the work a border
+        used to. Shared by both panels; see the file header for why `inert` here is a
+        desktop-only requirement that costs mobile nothing.
       */}
       <button
         ref={triggerRef}
         type="button"
         onClick={openSearch}
         aria-expanded={open}
-        aria-controls={open ? FIELD_ID : undefined}
+        aria-controls={open ? (mobileFieldId + ' ' + desktopFieldId) : undefined}
         aria-label="Search this site"
-        // Covered by the bar while open, so it must not be reachable or announced.
+        // Covered by the desktop bar while open, so it must not be reachable or
+        // announced there. Costs the mobile panel nothing — it does not overlap the
+        // trigger, so this only ever matters at `lg` and up.
         inert={open}
         className="btn-ghost inline-flex h-12 w-12 shrink-0 items-center justify-center"
       >
         <SearchIcon className="h-5 w-5" />
       </button>
 
-      {/*
-        The bar. right-0 with an animated width is what makes it grow leftward out of the
-        icon: the right edge is pinned where the icon sits, so every pixel it gains
-        appears on the left.
-      */}
+      {/* ---------------------------------------------------------------------
+          DESKTOP — grows right-to-left out of the icon. `lg` and up only.
+          --------------------------------------------------------------------- */}
       {/*
         pointer-events GO ON THIS WRAPPER, not on the bar inside it. While closed this
-        div is 48px wide at right-0 — pixel-for-pixel the trigger's own box — and it sits
-        at z-50 above it. Left interactive it swallows every click aimed at the button,
-        which is precisely how the search became unopenable.
+        div is 48px wide at right-0 — pixel-for-pixel the trigger's own box — and it
+        sits at z-50 above it. Left interactive it swallows every click aimed at the
+        button, which is precisely how the search became unopenable the first time this
+        was built. `inert` on the bar's own content is not enough either; it stops the
+        subtree handling events but does not let clicks fall through to what is beneath.
       */}
       <div
-        className={`absolute right-0 top-1/2 z-50 -translate-y-1/2 ${
+        className={`absolute right-0 top-1/2 z-50 hidden -translate-y-1/2 lg:block ${
           open ? 'pointer-events-auto' : 'pointer-events-none'
         }`}
       >
         {/*
           ONE BORDER, ON THIS WRAPPER, AND NOWHERE ELSE. The input inside carries no
-          border and no outline of its own — that was the nested double ring. Focus is
-          shown by this border going teal-600 (4.05:1 on white, past the 3:1 a focus
-          indicator needs), so the field still announces focus with a single edge rather
-          than a ring inside a ring.
+          border and no outline of its own — that would be a nested double ring. Focus
+          is shown by this border going teal-600 (4.05:1 on white, past the 3:1 a focus
+          indicator needs).
 
           overflow-hidden clips the contents while the bar is narrow, so the icon and
           placeholder are revealed by the expansion instead of spilling out of it.
@@ -323,126 +302,222 @@ export function SiteSearch() {
                           : 'w-12 border-transparent opacity-0'
                       }`}
         >
-            <span aria-hidden="true" className="shrink-0 text-teal-600">
-              <SearchIcon className="h-4 w-4" />
-            </span>
+          <span aria-hidden="true" className="shrink-0 text-teal-600">
+            <SearchIcon className="h-4 w-4" />
+          </span>
 
-            <label htmlFor={FIELD_ID} className="sr-only">
-              Search doctors, specialities and services
-            </label>
-            <input
-              ref={inputRef}
-              id={FIELD_ID}
-              type="text"
-              role="combobox"
-              aria-expanded={results.length > 0}
-              aria-controls={LISTBOX_ID}
-              aria-autocomplete="list"
-              aria-activedescendant={results.length > 0 ? optionId(active) : undefined}
-              autoComplete="off"
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              onKeyDown={onFieldKeyDown}
-              placeholder={placeholder}
-              /*
-                No border, no outline and NO RING: the wrapper carries the single edge.
-                All three are needed, and they remove three different things.
+          <label htmlFor={desktopFieldId} className="sr-only">
+            Search doctors, specialities and services
+          </label>
+          <input
+            ref={desktopInputRef}
+            id={desktopFieldId}
+            type="text"
+            role="combobox"
+            aria-expanded={results.length > 0}
+            aria-controls={desktopListboxId}
+            aria-autocomplete="list"
+            aria-activedescendant={results.length > 0 ? desktopOptionId(active) : undefined}
+            autoComplete="off"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            onKeyDown={onFieldKeyDown}
+            placeholder={placeholder}
+            /*
+              No border, no outline and NO RING: the wrapper carries the single edge.
+                focus:outline-none / focus-visible:outline-none
+                  the outline from globals.css, which targets :focus-visible
+                focus:ring-0
+                  the ring @tailwindcss/forms puts on every focused text input,
+                  painted through box-shadow, not outline — outline-none cannot
+                  touch it because it is not an outline.
+            */
+            className="h-12 min-w-0 flex-1 border-0 bg-transparent px-2 text-step--1
+                       text-ink-950 placeholder:text-ink-400 focus:outline-none
+                       focus:ring-0 focus-visible:outline-none"
+          />
 
-                  focus:outline-none / focus-visible:outline-none
-                    the outline from globals.css, which targets :focus-visible
-
-                  focus:ring-0
-                    the ring @tailwindcss/forms puts on every focused text input —
-                    --tw-ring-color: #2563eb painted through box-shadow, not outline.
-                    That was the blue frame inside the pill, and outline-none cannot
-                    touch it because it is not an outline.
-              */
-              className="h-12 min-w-0 flex-1 border-0 bg-transparent px-2 text-step--1
-                         text-ink-950 placeholder:text-ink-400 focus:outline-none
-                         focus:ring-0 focus-visible:outline-none"
-            />
-
-            <button
-              type="button"
-              onClick={() => closeSearch(true)}
-              aria-label="Close search"
-              className="btn-ghost inline-flex h-12 w-12 shrink-0 items-center justify-center"
-            >
-              <CloseIcon />
-            </button>
-          </div>
-
-          {/* The count is what tells a screen-reader user their typing did something. */}
-        {open ? (
-          <>
-        <p aria-live="polite" aria-atomic="true" className="sr-only">
-            {query
-              ? `${results.length} ${results.length === 1 ? 'result' : 'results'} for ${query}`
-              : ''}
-          </p>
-
-          {query && results.length === 0 ? (
-            <p
-              className="mt-2 rounded-lg border border-ink-200 bg-white p-4 text-step--1
-                         text-ink-600 shadow-raised"
-            >
-              Nothing matches &ldquo;{query}&rdquo;. Try a department, a doctor&rsquo;s
-              name, or a test such as &ldquo;ultrasound&rdquo;.
-            </p>
-          ) : null}
-
-          <ul
-            id={LISTBOX_ID}
-            role="listbox"
-            aria-label="Search results"
-            className={
-              results.length > 0
-                ? `mt-2 max-h-[60vh] overflow-y-auto rounded-lg border border-ink-200
-                   bg-white p-2 shadow-raised
-                   motion-safe:animate-[dropdown_140ms_ease-out]`
-                : 'sr-only'
-            }
+          <button
+            type="button"
+            onClick={() => closeSearch(true)}
+            aria-label="Close search"
+            className="btn-ghost inline-flex h-12 w-12 shrink-0 items-center justify-center"
           >
-            {results.map((entry, index) => (
-              <li
-                key={entry.id}
-                id={optionId(index)}
-                role="option"
-                aria-selected={index === active}
-                // Hovering moves the highlight, so the mouse and the keyboard never
-                // disagree about which row Enter would open.
-                onMouseEnter={() => setActive(index)}
-                className={index === active ? 'rounded bg-teal-100' : 'rounded'}
-              >
-                <Link
-                  href={entry.href}
-                  onClick={() => closeSearch()}
-                  className="flex items-baseline justify-between gap-3 px-3 py-2.5"
-                >
-                  <span className="min-w-0">
-                    <span className="block truncate text-step--1 font-semibold text-teal-800">
-                      {entry.title}
-                    </span>
-                    {entry.subtitle ? (
-                      <span className="block truncate text-[0.75rem] text-ink-600">
-                        {entry.subtitle}
-                      </span>
-                    ) : null}
-                  </span>
-                  <span
-                    className="shrink-0 text-[0.6875rem] font-semibold uppercase
-                               tracking-[0.08em] text-copper-800"
-                  >
-                    {entry.kind}
-                  </span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-          </>
+            <CloseIcon />
+          </button>
+        </div>
+
+        {open ? (
+          <SearchResults
+            query={query}
+            results={results}
+            active={active}
+            listboxId={desktopListboxId}
+            optionId={desktopOptionId}
+            onSelectActive={setActive}
+            onNavigate={closeSearch}
+            widthClassName="max-w-2xl"
+          />
         ) : null}
       </div>
+
+      {/* ---------------------------------------------------------------------
+          MOBILE — full-width panel below the whole header. Below `lg` only.
+          --------------------------------------------------------------------- */}
+      {open ? (
+        <div
+          id={mobilePanelId}
+          style={{ top: mobilePanelTop }}
+          className="fixed inset-x-0 z-50 border-b border-ink-200 bg-white shadow-raised
+                     motion-safe:animate-[dropdown_140ms_ease-out] lg:hidden"
+        >
+          <div className="w-full px-6 py-4">
+            <div className="flex max-w-2xl items-center gap-1 rounded-full border-2
+                             border-ink-200 bg-white pl-3 pr-1 focus-within:border-teal-600">
+              <span aria-hidden="true" className="shrink-0 text-teal-600">
+                <SearchIcon className="h-4 w-4" />
+              </span>
+
+              <label htmlFor={mobileFieldId} className="sr-only">
+                Search doctors, specialities and services
+              </label>
+              <input
+                ref={mobileInputRef}
+                id={mobileFieldId}
+                type="text"
+                role="combobox"
+                aria-expanded={results.length > 0}
+                aria-controls={mobileListboxId}
+                aria-autocomplete="list"
+                aria-activedescendant={results.length > 0 ? mobileOptionId(active) : undefined}
+                autoComplete="off"
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                onKeyDown={onFieldKeyDown}
+                placeholder={placeholder}
+                className="h-12 min-w-0 flex-1 border-0 bg-transparent px-2 text-step--1
+                           text-ink-950 placeholder:text-ink-400 focus:outline-none
+                           focus:ring-0 focus-visible:outline-none"
+              />
+
+              <button
+                type="button"
+                onClick={() => closeSearch(true)}
+                aria-label="Close search"
+                className="btn-ghost inline-flex h-12 w-12 shrink-0 items-center justify-center"
+              >
+                <CloseIcon />
+              </button>
+            </div>
+
+            <SearchResults
+              query={query}
+              results={results}
+              active={active}
+              listboxId={mobileListboxId}
+              optionId={mobileOptionId}
+              onSelectActive={setActive}
+              onNavigate={closeSearch}
+              widthClassName="max-w-2xl"
+            />
+          </div>
+        </div>
+      ) : null}
     </div>
+  )
+}
+
+const desktopOptionId = (index: number) => `site-search-desktop-option-${index}`
+const mobileOptionId = (index: number) => `site-search-mobile-option-${index}`
+
+interface SearchResultsProps {
+  query: string
+  results: SearchEntry[]
+  active: number
+  listboxId: string
+  optionId: (index: number) => string
+  onSelectActive: (index: number) => void
+  onNavigate: () => void
+  widthClassName: string
+}
+
+/** The count live-region, "no results" message, and results listbox — identical markup
+ *  for both panel shapes, factored out so the two do not drift against each other. */
+function SearchResults({
+  query,
+  results,
+  active,
+  listboxId,
+  optionId,
+  onSelectActive,
+  onNavigate,
+  widthClassName,
+}: SearchResultsProps) {
+  return (
+    <>
+      {/* The count is what tells a screen-reader user their typing did something. */}
+      <p aria-live="polite" aria-atomic="true" className="sr-only">
+        {query
+          ? `${results.length} ${results.length === 1 ? 'result' : 'results'} for ${query}`
+          : ''}
+      </p>
+
+      {query && results.length === 0 ? (
+        <p
+          className={`mt-2 ${widthClassName} rounded-lg border border-ink-200 bg-white
+                      p-4 text-step--1 text-ink-600 shadow-raised`}
+        >
+          Nothing matches &ldquo;{query}&rdquo;. Try a department, a doctor&rsquo;s name,
+          or a test such as &ldquo;ultrasound&rdquo;.
+        </p>
+      ) : null}
+
+      <ul
+        id={listboxId}
+        role="listbox"
+        aria-label="Search results"
+        className={
+          results.length > 0
+            ? `mt-2 max-h-[60vh] ${widthClassName} overflow-y-auto rounded-lg border
+               border-ink-200 bg-white p-2 shadow-raised
+               motion-safe:animate-[dropdown_140ms_ease-out]`
+            : 'sr-only'
+        }
+      >
+        {results.map((entry, index) => (
+          <li
+            key={entry.id}
+            id={optionId(index)}
+            role="option"
+            aria-selected={index === active}
+            // Hovering moves the highlight, so the mouse and the keyboard never
+            // disagree about which row Enter would open.
+            onMouseEnter={() => onSelectActive(index)}
+            className={index === active ? 'rounded bg-teal-100' : 'rounded'}
+          >
+            <Link
+              href={entry.href}
+              onClick={() => onNavigate()}
+              className="flex items-baseline justify-between gap-3 px-3 py-2.5"
+            >
+              <span className="min-w-0">
+                <span className="block truncate text-step--1 font-semibold text-teal-800">
+                  {entry.title}
+                </span>
+                {entry.subtitle ? (
+                  <span className="block truncate text-[0.75rem] text-ink-600">
+                    {entry.subtitle}
+                  </span>
+                ) : null}
+              </span>
+              <span className="shrink-0 text-[0.6875rem] font-semibold uppercase tracking-[0.08em] text-copper-800">
+                {entry.kind}
+              </span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </>
   )
 }
 
