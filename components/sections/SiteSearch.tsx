@@ -15,8 +15,24 @@
 // because the compositor can run it off the main thread. Not here: scaleX would squash
 // the placeholder and the icon along with the box, and a search bar that unsquashes as
 // it opens looks broken. This is one element animating once per interaction, so the
-// layout cost is affordable — the rule it breaks is a rule about repeated animation on
-// many elements, and this is neither.
+// layout cost is affordable — the rule it breaks is about repeated animation on many
+// elements, and this is neither.
+//
+// A TRANSITION BETWEEN TWO STATES, NOT A KEYFRAME. The first version ran a keyframe to
+// `width: 100%`, and 100% resolved against the 44px wrapper rather than the bar's own
+// width — so it expanded to 44px and then snapped to full width when the animation
+// ended. That snap was the choppiness. A transition between two explicit widths cannot
+// have that bug, and it runs in both directions, so closing is now animated too.
+//
+// The bar therefore stays MOUNTED and is inert while closed. A transition needs a
+// previous value to move from; an element mounted at its final width has nothing to
+// animate. `inert` is what makes that safe — it takes the collapsed field out of the tab
+// order and out of the accessibility tree, so there is no invisible input in the header
+// of every page.
+//
+// The trigger stays in flow too, covered by the bar rather than removed. Hiding it was
+// pulling a 44px item out of the action group on every open, which shifted the Emergency
+// and Book appointment buttons sideways — the layout shift this was supposed to avoid.
 //
 // NO LONGER A <dialog>. An inline expander is not modal: the page behind stays live and
 // usable, so trapping focus and making the background inert would be wrong. What it does
@@ -154,35 +170,55 @@ export function SiteSearch() {
         44px icon reads as a button that has been switched off next to two filled ones.
         Still a 44px target: the padding does the work the border used to.
       */}
+      {/*
+        Borderless, and never removed from the layout. The expanded bar covers it, so it
+        does not need hiding — and hiding it was pulling a 44px item out of the action
+        group, shifting the two buttons beside it on every open.
+      */}
       <button
         ref={triggerRef}
         type="button"
         onClick={openSearch}
         aria-expanded={open}
-        // Only while the field exists. A dangling IDREF is an invalid reference, and
-        // some screen readers announce a control that points at nothing as broken.
         aria-controls={open ? FIELD_ID : undefined}
         aria-label="Search this site"
-        className={`sweep inline-flex h-11 w-11 shrink-0 items-center justify-center
-                    rounded-full ${open ? 'hidden' : ''}`}
+        // Covered by the bar while open, so it must not be reachable or announced.
+        inert={open}
+        className="sweep inline-flex h-11 w-11 shrink-0 items-center justify-center
+                   rounded-full"
       >
         <SearchIcon className="h-5 w-5" />
       </button>
 
       {/*
-        The expanding bar. right-0 with an animated width is what makes it grow leftward
-        out of the icon: the right edge is pinned where the icon was, so every pixel it
-        gains appears on the left.
-
-        Rendered only while open. Keeping a zero-width input mounted would leave a
-        focusable, screen-reader-visible field in the header of every page.
+        The bar. right-0 with an animated width is what makes it grow leftward out of the
+        icon: the right edge is pinned where the icon sits, so every pixel it gains
+        appears on the left.
       */}
-      {open ? (
+      <div className="absolute right-0 top-1/2 z-50 -translate-y-1/2">
+        {/*
+          ONE BORDER, ON THIS WRAPPER, AND NOWHERE ELSE. The input inside carries no
+          border and no outline of its own — that was the nested double ring. Focus is
+          shown by this border going teal-600 (4.05:1 on white, past the 3:1 a focus
+          indicator needs), so the field still announces focus with a single edge rather
+          than a ring inside a ring.
+
+          overflow-hidden clips the contents while the bar is narrow, so the icon and
+          placeholder are revealed by the expansion instead of spilling out of it.
+        */}
         <div
-          className="absolute right-0 top-1/2 z-50 w-[min(30rem,calc(100vw-3rem))]
-                     -translate-y-1/2 motion-safe:animate-[search-expand_220ms_cubic-bezier(0.2,0,0,1)]"
+          inert={!open}
+          className={`flex items-center gap-1 overflow-hidden rounded-full border-2
+                      bg-white pl-3 pr-1
+                      transition-[width,opacity,border-color] duration-300
+                      ease-[cubic-bezier(0.16,1,0.3,1)]
+                      focus-within:border-teal-600
+                      ${
+                        open
+                          ? 'w-[min(30rem,calc(100vw-3rem))] border-ink-200 opacity-100'
+                          : 'w-11 border-transparent opacity-0'
+                      }`}
         >
-          <div className="flex items-center gap-1 rounded-full border-2 border-teal-800 bg-white pl-3 pr-1">
             <span aria-hidden="true" className="shrink-0 text-teal-600">
               <SearchIcon className="h-4 w-4" />
             </span>
@@ -204,8 +240,13 @@ export function SiteSearch() {
               onChange={(event) => setQuery(event.target.value)}
               onKeyDown={onFieldKeyDown}
               placeholder="Search doctors, specialities, services"
+              // No border and no focus outline: the wrapper carries both. The
+              // focus-visible variant is needed as well as focus, because the global
+              // rule in globals.css targets :focus-visible and would otherwise draw a
+              // second ring inside this one.
               className="h-10 min-w-0 flex-1 border-0 bg-transparent px-2 text-step--1
-                         text-ink-950 placeholder:text-ink-400 focus:outline-none"
+                         text-ink-950 placeholder:text-ink-400 focus:outline-none
+                         focus-visible:outline-none"
             />
 
             <button
@@ -220,7 +261,9 @@ export function SiteSearch() {
           </div>
 
           {/* The count is what tells a screen-reader user their typing did something. */}
-          <p aria-live="polite" aria-atomic="true" className="sr-only">
+        {open ? (
+          <>
+        <p aria-live="polite" aria-atomic="true" className="sr-only">
             {query
               ? `${results.length} ${results.length === 1 ? 'result' : 'results'} for ${query}`
               : ''}
@@ -284,8 +327,9 @@ export function SiteSearch() {
               </li>
             ))}
           </ul>
-        </div>
-      ) : null}
+          </>
+        ) : null}
+      </div>
     </div>
   )
 }

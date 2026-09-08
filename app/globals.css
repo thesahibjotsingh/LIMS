@@ -490,24 +490,6 @@
   }
 }
 
-/* The header search expanding out of its magnifier.
-   Width, not transform, and deliberately so: scaleX would squash the placeholder and
-   the icon along with the box, and a bar that unsquashes as it opens looks broken. It
-   is one element animating once per interaction, so the layout cost is affordable — the
-   transform-only rule is about repeated animation across many elements, which this is
-   not. Applied with motion-safe:, so it is already absent for anyone who asks for
-   reduced motion; the guard below is the second belt on the same trousers. */
-@keyframes search-expand {
-  from {
-    width: 2.75rem;
-    opacity: 0;
-  }
-  to {
-    width: 100%;
-    opacity: 1;
-  }
-}
-
 /* Vestibular disorders are a real clinical population, and this site serves them.
    Every transition in the platform sits behind this guard. */
 @media (prefers-reduced-motion: reduce) {
