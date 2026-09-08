@@ -85,9 +85,7 @@ export const primaryLocation: Location = {
  * nav entry and its URL together and neither can be left behind.
  *
  * An entry with `children` renders as a dropdown; without, as a plain link.
- * `overviewLabel` is set only where the parent `href` resolves to a page that exists —
- * Contact Us points at a route that ships later, so it gets no overview row rather than
- * a dead one.
+ * `overviewLabel` is set only where the parent `href` resolves to a page that exists.
  */
 export const primaryNav: NavItem[] = [
   {
@@ -125,6 +123,7 @@ export const primaryNav: NavItem[] = [
   {
     label: 'Contact Us',
     href: '/contact',
+    overviewLabel: 'All contact details',
     children: [
       { label: 'Locations & directions', href: '/contact#locations' },
       { label: 'Book an appointment', href: '/appointments' },
