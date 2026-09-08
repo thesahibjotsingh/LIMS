@@ -147,7 +147,7 @@ export default function TokensPage() {
 
         <Recipe
           name=".btn-secondary"
-          note="SECONDARY buttons. teal-800 with a white label (7.75:1) at rest, inverting to copper-600 with an ink-950 label (4.79:1) on hover — the primary button's resting state, and vice versa"
+          note="SECONDARY buttons. teal-800 (7.75:1) at rest; on hover, focus and aria-expanded a copper-700 fill (4.67:1) sweeps in from the left over 240ms. The white label never changes, which is what makes the sweep legible — mid-sweep it sits on both fills at once. The primary button is this pair inverted"
         >
           <a
             href="#tokens-heading"
@@ -202,7 +202,7 @@ export default function TokensPage() {
 
         <Recipe
           name=".btn-primary"
-          note="PRIMARY buttons. copper-600 with an ink-950 label (4.79:1), inverting to teal-800 with a white label (7.75:1) on hover — the secondary button's resting state. The label moves with the fill because neither colour reads on both"
+          note="PRIMARY buttons. copper-700 (4.67:1) at rest; on hover and focus a teal-800 fill (7.75:1) sweeps in from the left over 240ms via a translateX ::before, clipped to the pill. White label throughout — no frame of the sweep is worse than 4.67:1"
         >
           <a
             href="#tokens-heading"

@@ -238,9 +238,11 @@ export function SiteHeader({
               <span aria-hidden="true">24&times;7</span>
             </EmergencyCallButton>
 
-            {/* .btn-primary is copper at rest and teal on hover; .btn-secondary is the
-                same pair inverted. The label colour moves with the fill because neither
-                colour is legible on both — the working is in app/globals.css. */}
+            {/* .btn-primary rests copper-700 and teal-800 sweeps in from the left;
+                .btn-secondary is the same pair inverted. The white label never changes
+                colour, which is what lets the fill travel rather than fade — mid-sweep
+                the label sits on both fills at once, so one colour has to clear AA on
+                each. The working is in app/globals.css. */}
             <Link
               href="/appointments"
               className="btn-primary inline-flex min-h-[44px] items-center px-5
