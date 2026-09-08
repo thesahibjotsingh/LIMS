@@ -2,61 +2,84 @@
 
 // components/sections/SiteSearch.tsx
 //
-// Site-wide search: a magnifier in the header that opens an overlay, filters as you
-// type, and routes to the hit.
+// Site-wide search: a borderless magnifier in the header that expands right-to-left into
+// a search bar, filters as you type, and routes to the hit.
 //
-// THE OVERLAY IS A NATIVE <dialog>, opened with showModal(). That hands the browser four
-// things this must not get wrong: the background goes inert, focus is moved inside and
-// trapped, Escape closes, and focus returns to the trigger. A div with role="dialog"
-// needs all four written by hand and eventually gets one of them wrong.
+// IT OVERLAYS, IT DOES NOT PUSH. The bar is absolutely positioned against the action
+// group and anchored right, so expanding it moves nothing else. Laying it out in flow
+// would shove the Emergency button leftward on every open — animating the position of
+// the one control someone might be reaching for in a panic is not a trade worth making
+// for an effect.
 //
-// THE FIELD IS A REAL COMBOBOX, not an input with a list under it. Filtering as you type
-// creates content a keyboard user has no way to reach — Tab would walk them out of the
-// field and through every hit, and a screen reader would never be told the list changed.
-// So it carries the full pattern: aria-expanded, aria-controls, aria-activedescendant,
-// a listbox of options, arrow keys to move, Enter to go, and a live region announcing
-// the count. Half of this pattern is worse than none of it, which is why the earlier
-// search field in the nav was deliberately left as a plain form.
+// WIDTH, NOT TRANSFORM. Everywhere else in this codebase an animation is a transform,
+// because the compositor can run it off the main thread. Not here: scaleX would squash
+// the placeholder and the icon along with the box, and a search bar that unsquashes as
+// it opens looks broken. This is one element animating once per interaction, so the
+// layout cost is affordable — the rule it breaks is a rule about repeated animation on
+// many elements, and this is neither.
 //
-// The results are <a> elements inside role="option". Strictly, an option should not
-// contain an interactive element; the alternative is routing on click alone, which
-// takes away middle-click and "open in new tab" from a list of destinations. The link
-// is the more useful trade and it is what the established combobox implementations do.
+// NO LONGER A <dialog>. An inline expander is not modal: the page behind stays live and
+// usable, so trapping focus and making the background inert would be wrong. What it does
+// still need is written out by hand below — Escape, outside pointerdown, focus leaving,
+// route change, and focus returning to the trigger.
 //
-// The index ships to the client because filtering is local: ~35 short entries, a few KB.
-// A network round-trip per keystroke would be slower, would fail offline, and would need
-// an endpoint that does not exist.
+// THE FIELD IS A REAL COMBOBOX. Filtering as you type creates content a keyboard user
+// has no way to reach: Tab would walk them out of the field and through every hit, and a
+// screen reader would never be told the list changed. So it carries the full pattern —
+// aria-expanded, aria-controls, aria-activedescendant, a listbox of options, arrow keys,
+// Enter to go, and a live region announcing the count. Half of this pattern is worse
+// than none of it.
+//
+// The results are <a> elements inside role="option". Strictly an option should not
+// contain an interactive element; the alternative is routing on click alone, which takes
+// middle-click and open-in-new-tab away from a list of destinations. The link is the
+// more useful trade and it is what the established implementations do.
 
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { searchSite, type SearchEntry } from '@/lib/search-index'
 
+const FIELD_ID = 'site-search-input'
 const LISTBOX_ID = 'site-search-listbox'
 const optionId = (index: number) => `site-search-option-${index}`
 
 export function SiteSearch() {
-  const dialogRef = useRef<HTMLDialogElement>(null)
-  const inputRef = useRef<HTMLInputElement>(null)
-  const router = useRouter()
-
+  const [open, setOpen] = useState(false)
   const [query, setQuery] = useState('')
   const [active, setActive] = useState(0)
 
+  const wrapperRef = useRef<HTMLDivElement>(null)
+  const triggerRef = useRef<HTMLButtonElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
+  /** Set when closing, so focus only returns to the trigger on a deliberate close. */
+  const restoreFocus = useRef(false)
+
+  const router = useRouter()
+  const pathname = usePathname()
+
   const results = useMemo(() => searchSite(query), [query])
 
-  const open = useCallback(() => {
-    dialogRef.current?.showModal()
-    // Focus the field rather than relying on autofocus: the dialog is reopened many
-    // times in a session and autofocus only fires on the first mount.
-    inputRef.current?.focus()
-  }, [])
+  const openSearch = useCallback(() => setOpen(true), [])
 
-  const close = useCallback(() => {
-    dialogRef.current?.close()
+  const closeSearch = useCallback((returnFocus = false) => {
+    restoreFocus.current = returnFocus
+    setOpen(false)
     setQuery('')
     setActive(0)
   }, [])
+
+  // Focus the field as it opens, and hand focus back to the trigger on a deliberate
+  // close. Both run after the DOM update, which is why the trigger can be display:none
+  // while open — it is back in the tree by the time this fires.
+  useEffect(() => {
+    if (open) {
+      inputRef.current?.focus()
+    } else if (restoreFocus.current) {
+      restoreFocus.current = false
+      triggerRef.current?.focus()
+    }
+  }, [open])
 
   // A new query invalidates the previous highlight — without this, typing while the
   // third row is active leaves the highlight on whatever now sits third.
@@ -64,126 +87,139 @@ export function SiteSearch() {
     setActive(0)
   }, [query])
 
-  const go = useCallback(
-    (entry: SearchEntry) => {
-      close()
-      router.push(entry.href)
-    },
-    [close, router],
-  )
+  // Close on navigation. Following a result unmounts nothing, so without this the bar
+  // stays open over the page it just took you to.
+  useEffect(() => {
+    setOpen(false)
+    setQuery('')
+  }, [pathname])
 
-  function onKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
+  useEffect(() => {
+    if (!open) return
+
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') {
+        event.stopPropagation()
+        closeSearch(true)
+      }
+    }
+
+    // pointerdown, not click: closing on click lets the press land on the page behind
+    // before the bar has gone, which reads as a lost tap.
+    function onPointerDown(event: PointerEvent) {
+      if (!wrapperRef.current?.contains(event.target as Node)) closeSearch()
+    }
+
+    document.addEventListener('keydown', onKeyDown)
+    document.addEventListener('pointerdown', onPointerDown)
+    return () => {
+      document.removeEventListener('keydown', onKeyDown)
+      document.removeEventListener('pointerdown', onPointerDown)
+    }
+  }, [open, closeSearch])
+
+  function onBlurCapture(event: React.FocusEvent<HTMLDivElement>) {
+    if (!event.currentTarget.contains(event.relatedTarget as Node | null)) closeSearch()
+  }
+
+  function onFieldKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
     if (results.length === 0) return
 
     if (event.key === 'ArrowDown') {
       event.preventDefault()
       setActive((index) => (index + 1) % results.length)
-      return
-    }
-
-    if (event.key === 'ArrowUp') {
+    } else if (event.key === 'ArrowUp') {
       event.preventDefault()
       setActive((index) => (index - 1 + results.length) % results.length)
-      return
-    }
-
-    if (event.key === 'Home') {
+    } else if (event.key === 'Home') {
       event.preventDefault()
       setActive(0)
-      return
-    }
-
-    if (event.key === 'End') {
+    } else if (event.key === 'End') {
       event.preventDefault()
       setActive(results.length - 1)
-      return
-    }
-
-    if (event.key === 'Enter') {
-      const entry = results[active]
+    } else if (event.key === 'Enter') {
+      const entry: SearchEntry | undefined = results[active]
       if (entry) {
         event.preventDefault()
-        go(entry)
+        closeSearch()
+        router.push(entry.href)
       }
     }
   }
 
-  // Clicking the backdrop targets the dialog itself; clicking the panel targets a child.
-  function onDialogClick(event: React.MouseEvent<HTMLDialogElement>) {
-    if (event.target === event.currentTarget) close()
-  }
-
   return (
-    <>
+    <div ref={wrapperRef} className="relative flex items-center" onBlur={onBlurCapture}>
+      {/*
+        Borderless. The hover fill from .sweep is the whole affordance — a ring around a
+        44px icon reads as a button that has been switched off next to two filled ones.
+        Still a 44px target: the padding does the work the border used to.
+      */}
       <button
+        ref={triggerRef}
         type="button"
-        onClick={open}
+        onClick={openSearch}
+        aria-expanded={open}
+        // Only while the field exists. A dangling IDREF is an invalid reference, and
+        // some screen readers announce a control that points at nothing as broken.
+        aria-controls={open ? FIELD_ID : undefined}
         aria-label="Search this site"
-        className="sweep inline-flex h-11 w-11 shrink-0 items-center justify-center
-                   rounded-full border-2 border-teal-800"
+        className={`sweep inline-flex h-11 w-11 shrink-0 items-center justify-center
+                    rounded-full ${open ? 'hidden' : ''}`}
       >
         <SearchIcon className="h-5 w-5" />
       </button>
 
-      {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-noninteractive-element-interactions */}
-      <dialog
-        ref={dialogRef}
-        onClick={onDialogClick}
-        onClose={close}
-        aria-label="Search this site"
-        className="mt-[10vh] w-[min(40rem,calc(100vw-2rem))] rounded-lg border
-                   border-ink-200 bg-white p-0 text-ink-950 shadow-raised
-                   backdrop:bg-ink-950/60"
-      >
-        <div className="p-4">
-          <div className="flex items-stretch gap-2">
-            <div className="relative min-w-0 flex-1">
-              <span
-                aria-hidden="true"
-                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2
-                           text-teal-600"
-              >
-                <SearchIcon className="h-4 w-4" />
-              </span>
-              <label htmlFor="site-search-input" className="sr-only">
-                Search doctors, specialities and services
-              </label>
-              <input
-                ref={inputRef}
-                id="site-search-input"
-                type="text"
-                role="combobox"
-                aria-expanded={results.length > 0}
-                aria-controls={LISTBOX_ID}
-                aria-autocomplete="list"
-                aria-activedescendant={
-                  results.length > 0 ? optionId(active) : undefined
-                }
-                autoComplete="off"
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                onKeyDown={onKeyDown}
-                placeholder="Search doctors, specialities, services"
-                className="h-11 w-full rounded-full border-2 border-ink-200 bg-white pl-10
-                           pr-4 text-step--1 text-ink-950 placeholder:text-ink-400
-                           focus:border-teal-600"
-              />
-            </div>
+      {/*
+        The expanding bar. right-0 with an animated width is what makes it grow leftward
+        out of the icon: the right edge is pinned where the icon was, so every pixel it
+        gains appears on the left.
+
+        Rendered only while open. Keeping a zero-width input mounted would leave a
+        focusable, screen-reader-visible field in the header of every page.
+      */}
+      {open ? (
+        <div
+          className="absolute right-0 top-1/2 z-50 w-[min(30rem,calc(100vw-3rem))]
+                     -translate-y-1/2 motion-safe:animate-[search-expand_220ms_cubic-bezier(0.2,0,0,1)]"
+        >
+          <div className="flex items-center gap-1 rounded-full border-2 border-teal-800 bg-white pl-3 pr-1">
+            <span aria-hidden="true" className="shrink-0 text-teal-600">
+              <SearchIcon className="h-4 w-4" />
+            </span>
+
+            <label htmlFor={FIELD_ID} className="sr-only">
+              Search doctors, specialities and services
+            </label>
+            <input
+              ref={inputRef}
+              id={FIELD_ID}
+              type="text"
+              role="combobox"
+              aria-expanded={results.length > 0}
+              aria-controls={LISTBOX_ID}
+              aria-autocomplete="list"
+              aria-activedescendant={results.length > 0 ? optionId(active) : undefined}
+              autoComplete="off"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              onKeyDown={onFieldKeyDown}
+              placeholder="Search doctors, specialities, services"
+              className="h-10 min-w-0 flex-1 border-0 bg-transparent px-2 text-step--1
+                         text-ink-950 placeholder:text-ink-400 focus:outline-none"
+            />
 
             <button
               type="button"
-              onClick={close}
-              className="sweep inline-flex min-h-[44px] shrink-0 items-center rounded-full
-                         border-2 border-teal-800 px-4 text-step--1 font-semibold"
+              onClick={() => closeSearch(true)}
+              aria-label="Close search"
+              className="sweep inline-flex h-9 w-9 shrink-0 items-center justify-center
+                         rounded-full"
             >
-              Close
+              <CloseIcon />
             </button>
           </div>
 
-          {/*
-            The count is what tells a screen-reader user their typing did something.
-            Without it the list changes silently and the only feedback is visual.
-          */}
+          {/* The count is what tells a screen-reader user their typing did something. */}
           <p aria-live="polite" aria-atomic="true" className="sr-only">
             {query
               ? `${results.length} ${results.length === 1 ? 'result' : 'results'} for ${query}`
@@ -191,7 +227,10 @@ export function SiteSearch() {
           </p>
 
           {query && results.length === 0 ? (
-            <p className="mt-4 text-step--1 text-ink-600">
+            <p
+              className="mt-2 rounded-lg border border-ink-200 bg-white p-4 text-step--1
+                         text-ink-600 shadow-raised"
+            >
               Nothing matches &ldquo;{query}&rdquo;. Try a department, a doctor&rsquo;s
               name, or a test such as &ldquo;ultrasound&rdquo;.
             </p>
@@ -201,7 +240,13 @@ export function SiteSearch() {
             id={LISTBOX_ID}
             role="listbox"
             aria-label="Search results"
-            className={results.length > 0 ? 'mt-3 max-h-[50vh] overflow-y-auto' : 'sr-only'}
+            className={
+              results.length > 0
+                ? `mt-2 max-h-[60vh] overflow-y-auto rounded-lg border border-ink-200
+                   bg-white p-2 shadow-raised
+                   motion-safe:animate-[dropdown_140ms_ease-out]`
+                : 'sr-only'
+            }
           >
             {results.map((entry, index) => (
               <li
@@ -216,7 +261,7 @@ export function SiteSearch() {
               >
                 <Link
                   href={entry.href}
-                  onClick={close}
+                  onClick={() => closeSearch()}
                   className="flex items-baseline justify-between gap-3 px-3 py-2.5"
                 >
                   <span className="min-w-0">
@@ -229,7 +274,10 @@ export function SiteSearch() {
                       </span>
                     ) : null}
                   </span>
-                  <span className="shrink-0 text-[0.6875rem] font-semibold uppercase tracking-[0.08em] text-copper-800">
+                  <span
+                    className="shrink-0 text-[0.6875rem] font-semibold uppercase
+                               tracking-[0.08em] text-copper-800"
+                  >
                     {entry.kind}
                   </span>
                 </Link>
@@ -237,8 +285,8 @@ export function SiteSearch() {
             ))}
           </ul>
         </div>
-      </dialog>
-    </>
+      ) : null}
+    </div>
   )
 }
 
@@ -256,6 +304,23 @@ function SearchIcon({ className }: { className?: string }) {
     >
       <circle cx="9" cy="9" r="6" />
       <path d="m13.5 13.5 4 4" />
+    </svg>
+  )
+}
+
+function CloseIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      focusable="false"
+      viewBox="0 0 20 20"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      className="h-4 w-4 shrink-0"
+    >
+      <path d="m5 5 10 10M15 5 5 15" />
     </svg>
   )
 }
