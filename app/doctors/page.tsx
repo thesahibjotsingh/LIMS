@@ -220,3 +220,7 @@ export default async function DoctorsPage({ searchParams }: DoctorsPageProps) {
     </Section>
   )
 }
+
+export const runtime = 'edge';
+
+export const runtime = 'edge';
