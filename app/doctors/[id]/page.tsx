@@ -226,8 +226,8 @@ export default async function DoctorProfilePage({ params }: DoctorProfilePagePro
           </a>
           <Link
             href="/appointments"
-            className="sweep inline-flex min-h-[44px] items-center rounded-full border-2
-                       border-teal-800 px-5 font-semibold"
+            className="btn-secondary inline-flex min-h-[44px] items-center px-5
+                       font-semibold"
           >
             Request an appointment
           </Link>

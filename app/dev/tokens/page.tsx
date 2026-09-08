@@ -146,15 +146,38 @@ export default function TokensPage() {
         </Recipe>
 
         <Recipe
-          name=".sweep"
-          note="SECONDARY buttons. Calm teal: lifts teal-100 on hover, label stays teal-800 (7.75:1 on white, 6.60:1 on the lift). Copper is reserved for primary actions"
+          name=".btn-secondary"
+          note="SECONDARY buttons. Rich teal-800 with a white label (7.75:1), teal-700 on hover (5.77:1). No sweep: mid-sweep a label has to read on both halves, and against a dark fill no colour does"
         >
           <a
             href="#tokens-heading"
-            className="sweep inline-flex min-h-[44px] items-center rounded-full border-2
-                       border-teal-800 px-4 font-semibold"
+            className="btn-secondary inline-flex min-h-[44px] items-center px-4 font-semibold"
           >
             Find a doctor
+          </a>
+        </Recipe>
+
+        <Recipe
+          name=".btn-ghost"
+          note="utility icon buttons — the search trigger, Close. Borderless and quiet at rest, teal-800 fill with a white icon on hover and focus"
+        >
+          <a
+            href="#tokens-heading"
+            className="btn-ghost inline-flex h-11 w-11 items-center justify-center"
+            aria-label="Example utility button"
+          >
+            <svg
+              aria-hidden="true"
+              viewBox="0 0 20 20"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              className="h-5 w-5"
+            >
+              <circle cx="9" cy="9" r="6" />
+              <path d="m13.5 13.5 4 4" />
+            </svg>
           </a>
         </Recipe>
 

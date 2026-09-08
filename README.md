@@ -124,7 +124,8 @@ rendered on `/dev/tokens`.
 | `.rule-accent` / `.rule-accent-lg` | Hairline under `h2`, 3px under `h1` |
 | `.divider-accent` | Full-bleed band transition (top of the footer) |
 | `.badge-accent` / `.badge-accent-soft` | Department and experience badging |
-| `.sweep` | Secondary buttons — calm teal, lifts teal-100 on hover |
+| `.btn-secondary` | Secondary buttons — teal-800 fill, white label, teal-700 on hover |
+| `.btn-ghost` | Utility icon buttons — borderless, teal-800 fill on hover |
 | `.menu-row` | Dropdown panel rows — teal-100 lift + 6px teal strip |
 | `.card-edge` | Department and service cards — copper strip at rest; teal strip + teal-100 tint on hover / `:focus-within` |
 | `.sweep-solid` | Primary buttons — copper-600 fill, ink-950 label |

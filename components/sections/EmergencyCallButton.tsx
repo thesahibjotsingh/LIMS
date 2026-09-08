@@ -142,8 +142,8 @@ export function EmergencyCallButton({
             <button
               type="button"
               onClick={close}
-              className="sweep inline-flex min-h-[44px] items-center rounded-full
-                         border-2 border-teal-800 px-5 font-semibold"
+              className="btn-secondary inline-flex min-h-[44px] items-center px-5
+                         font-semibold"
             >
               Close
             </button>

@@ -171,9 +171,10 @@ export function SiteSearch() {
         Still a 44px target: the padding does the work the border used to.
       */}
       {/*
-        Borderless, and never removed from the layout. The expanded bar covers it, so it
-        does not need hiding — and hiding it was pulling a 44px item out of the action
-        group, shifting the two buttons beside it on every open.
+        Borderless at rest, rich teal on interaction, and never removed from the layout.
+        The expanded bar covers it, so it does not need hiding — and hiding it was
+        pulling a 44px item out of the action group, shifting the two buttons beside it
+        on every open.
       */}
       <button
         ref={triggerRef}
@@ -184,8 +185,7 @@ export function SiteSearch() {
         aria-label="Search this site"
         // Covered by the bar while open, so it must not be reachable or announced.
         inert={open}
-        className="sweep inline-flex h-11 w-11 shrink-0 items-center justify-center
-                   rounded-full"
+        className="btn-ghost inline-flex h-11 w-11 shrink-0 items-center justify-center"
       >
         <SearchIcon className="h-5 w-5" />
       </button>
@@ -253,8 +253,7 @@ export function SiteSearch() {
               type="button"
               onClick={() => closeSearch(true)}
               aria-label="Close search"
-              className="sweep inline-flex h-9 w-9 shrink-0 items-center justify-center
-                         rounded-full"
+              className="btn-ghost inline-flex h-9 w-9 shrink-0 items-center justify-center"
             >
               <CloseIcon />
             </button>
