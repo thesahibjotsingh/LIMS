@@ -34,6 +34,13 @@
 // pulling a 44px item out of the action group on every open, which shifted the Emergency
 // and Book appointment buttons sideways — the layout shift this was supposed to avoid.
 //
+// THE INERT/BLUR TRAP, recorded because it made the search unopenable and the cause is
+// not obvious from either piece on its own. Opening puts `inert` on the trigger while it
+// still holds focus; the browser blurs an inert element immediately, and that blur
+// reaches the wrapper with relatedTarget === null. A close-on-blur handler that trusts
+// relatedTarget therefore closed the search in the same tick it opened. See
+// scheduleBlurCheck below for the fix.
+//
 // NO LONGER A <dialog>. An inline expander is not modal: the page behind stays live and
 // usable, so trapping focus and making the background inert would be wrong. What it does
 // still need is written out by hand below — Escape, outside pointerdown, focus leaving,
@@ -53,7 +60,7 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { searchSite, type SearchEntry } from '@/lib/search-index'
 
 const FIELD_ID = 'site-search-input'
@@ -70,6 +77,8 @@ export function SiteSearch() {
   const inputRef = useRef<HTMLInputElement>(null)
   /** Set when closing, so focus only returns to the trigger on a deliberate close. */
   const restoreFocus = useRef(false)
+  /** Pending deferred blur check, cancelled on unmount and on every new blur. */
+  const blurCheck = useRef<number | null>(null)
 
   const router = useRouter()
   const pathname = usePathname()
@@ -85,10 +94,17 @@ export function SiteSearch() {
     setActive(0)
   }, [])
 
-  // Focus the field as it opens, and hand focus back to the trigger on a deliberate
-  // close. Both run after the DOM update, which is why the trigger can be display:none
-  // while open — it is back in the tree by the time this fires.
-  useEffect(() => {
+  /*
+   * Focus the field as it opens, and hand focus back to the trigger on a deliberate
+   * close. useLayoutEffect rather than useEffect: this runs before paint, so the field
+   * is focused in the same frame the bar appears and the first keystroke cannot be
+   * dropped into a field that is not ready yet. It also shortens the window in which
+   * activeElement is body, which is what the deferred blur check has to tolerate.
+   *
+   * Both directions are safe against inert: by the time this runs React has already
+   * committed, so the trigger has lost inert on close and the field has lost it on open.
+   */
+  useLayoutEffect(() => {
     if (open) {
       inputRef.current?.focus()
     } else if (restoreFocus.current) {
@@ -134,9 +150,43 @@ export function SiteSearch() {
     }
   }, [open, closeSearch])
 
-  function onBlurCapture(event: React.FocusEvent<HTMLDivElement>) {
-    if (!event.currentTarget.contains(event.relatedTarget as Node | null)) closeSearch()
-  }
+  /*
+   * WHY THIS IS DEFERRED, AND WHY IT DOES NOT TRUST relatedTarget.
+   *
+   * This handler used to close the moment relatedTarget fell outside the wrapper, and
+   * that made the search unopenable. Clicking the trigger sets `open`, which puts
+   * `inert` on the trigger while it still holds focus; a browser blurs an element the
+   * instant it becomes inert, and that blur arrives here with relatedTarget === null.
+   * "Not inside the wrapper" was therefore true, so the search closed in the same tick
+   * it opened — and because closeSearch() also clears the query, anything typed in the
+   * gap disappeared with it.
+   *
+   * relatedTarget is null in several legitimate cases: focus moving to an element that
+   * has just rendered, focus leaving for the browser chrome, and exactly this one. So
+   * instead of trusting it, the check waits a frame and asks where focus actually
+   * landed.
+   *
+   * document.body is treated as "still open" on purpose. Between the blur and the
+   * effect that focuses the field, activeElement is briefly body; closing on that would
+   * reintroduce the same bug one frame later. A click that lands outside is handled by
+   * the pointerdown listener above, which is the reliable signal for that case.
+   */
+  const scheduleBlurCheck = useCallback(() => {
+    if (blurCheck.current !== null) cancelAnimationFrame(blurCheck.current)
+    blurCheck.current = requestAnimationFrame(() => {
+      blurCheck.current = null
+      const focused = document.activeElement
+      if (!focused || focused === document.body) return
+      if (!wrapperRef.current?.contains(focused)) closeSearch()
+    })
+  }, [closeSearch])
+
+  useEffect(
+    () => () => {
+      if (blurCheck.current !== null) cancelAnimationFrame(blurCheck.current)
+    },
+    [],
+  )
 
   function onFieldKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
     if (results.length === 0) return
@@ -164,7 +214,11 @@ export function SiteSearch() {
   }
 
   return (
-    <div ref={wrapperRef} className="relative flex items-center" onBlur={onBlurCapture}>
+    <div
+      ref={wrapperRef}
+      className="relative flex items-center"
+      onBlur={open ? scheduleBlurCheck : undefined}
+    >
       {/*
         Borderless. The hover fill from .sweep is the whole affordance — a ring around a
         44px icon reads as a button that has been switched off next to two filled ones.
