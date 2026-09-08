@@ -147,7 +147,7 @@ export default function TokensPage() {
 
         <Recipe
           name=".btn-secondary"
-          note="SECONDARY buttons. A white pill inside a 2px teal-800 border, teal-800 label (7.75:1); on hover, focus and aria-expanded the teal-100 tint sweeps in from the left over 240ms and the label flips to ink-950 (15.88:1). Both fills are light, so either label colour clears AA on both and the flip is safe mid-sweep. The border is the boundary a pale fill cannot supply — 7.75:1 on white, 7.29:1 on the teal-50 band"
+          note="SECONDARY buttons. teal-800 (7.75:1) at rest; on hover, focus and aria-expanded a copper-700 fill (4.67:1) sweeps in from the left over 240ms. The white label never changes, which is what makes the sweep legible — mid-sweep it sits on both fills at once. The primary button is this pair inverted"
         >
           <a
             href="#tokens-heading"
@@ -159,7 +159,7 @@ export default function TokensPage() {
 
         <Recipe
           name=".btn-ghost"
-          note="utility icon buttons — the search trigger, Close. Borderless and quiet at rest (teal-800 icon, 7.75:1), teal-100 fill with an ink-950 icon on hover and focus (15.88:1). No border: this control is identified by its icon, not by a fill, so a ring that appeared only on hover would read as a different control"
+          note="utility icon buttons — the search trigger, Close. Borderless and quiet at rest, teal-800 fill with a white icon on hover and focus"
         >
           <a
             href="#tokens-heading"
@@ -202,7 +202,7 @@ export default function TokensPage() {
 
         <Recipe
           name=".btn-primary"
-          note="PRIMARY buttons. copper-600 with an ink-950 label (4.79:1) at rest; on hover and focus the teal-100 tint (15.88:1) sweeps in from the left over 240ms via a translateX ::before, clipped to the pill, and a 2px border reserved in transparent turns teal-800 to hold the boundary at 7.75:1. ink-950 label throughout — no frame of the sweep is worse than 4.79:1"
+          note="PRIMARY buttons. copper-700 (4.67:1) at rest; on hover and focus a teal-800 fill (7.75:1) sweeps in from the left over 240ms via a translateX ::before, clipped to the pill. White label throughout — no frame of the sweep is worse than 4.67:1"
         >
           <a
             href="#tokens-heading"
@@ -221,10 +221,10 @@ export default function TokensPage() {
 
       <h2 className="mt-12 text-step-3">Component recipes</h2>
       <div className="mt-4 flex flex-wrap items-center gap-3">
-        <button type="button" className="min-h-[44px] rounded border-2 border-transparent bg-copper-600 px-5 font-semibold text-ink-950 hover:border-teal-800 hover:bg-teal-100">
+        <button type="button" className="min-h-[44px] rounded bg-teal-800 px-5 font-semibold text-white hover:bg-teal-700">
           Primary
         </button>
-        <button type="button" className="min-h-[44px] rounded border-2 border-teal-800 px-5 font-semibold text-teal-800 hover:bg-teal-100 hover:text-ink-950">
+        <button type="button" className="min-h-[44px] rounded border-2 border-teal-800 px-5 font-semibold text-teal-800 hover:bg-teal-50">
           Secondary
         </button>
         <button type="button" className="min-h-[44px] rounded bg-copper-500 px-5 font-semibold text-ink-950 hover:bg-copper-600">
