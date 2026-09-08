@@ -41,7 +41,7 @@ export default function HomePage() {
           <div className="flex flex-wrap gap-3">
             <Link
               href="/appointments"
-              className="sweep-solid inline-flex min-h-[44px] items-center px-5
+              className="btn-primary inline-flex min-h-[44px] items-center px-5
                          font-semibold"
             >
               Book an appointment

@@ -63,7 +63,7 @@ export function DoctorSearchPanel() {
 
         <button
           type="submit"
-          className="sweep-solid inline-flex min-h-[44px] shrink-0 items-center gap-2 px-5
+          className="btn-primary inline-flex min-h-[44px] shrink-0 items-center gap-2 px-5
                      text-step--1 font-semibold"
         >
           <SearchIcon />

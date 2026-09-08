@@ -147,7 +147,7 @@ export default function TokensPage() {
 
         <Recipe
           name=".btn-secondary"
-          note="SECONDARY buttons. Rich teal-800 with a white label (7.75:1), teal-700 on hover (5.77:1). No sweep: mid-sweep a label has to read on both halves, and against a dark fill no colour does"
+          note="SECONDARY buttons. teal-800 with a white label (7.75:1) at rest, inverting to copper-600 with an ink-950 label (4.79:1) on hover — the primary button's resting state, and vice versa"
         >
           <a
             href="#tokens-heading"
@@ -201,12 +201,12 @@ export default function TokensPage() {
         </Recipe>
 
         <Recipe
-          name=".sweep-solid"
-          note="PRIMARY buttons. copper-600 with an ink-950 label: 4.79:1 on the label and 3.89:1 at the edge, the only copper that clears both. Brightens to copper-500 on hover (6.32:1) — darkening would fail"
+          name=".btn-primary"
+          note="PRIMARY buttons. copper-600 with an ink-950 label (4.79:1), inverting to teal-800 with a white label (7.75:1) on hover — the secondary button's resting state. The label moves with the fill because neither colour reads on both"
         >
           <a
             href="#tokens-heading"
-            className="sweep-solid inline-flex min-h-[44px] items-center px-5 font-semibold"
+            className="btn-primary inline-flex min-h-[44px] items-center px-5 font-semibold"
           >
             Book an appointment
           </a>

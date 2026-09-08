@@ -77,7 +77,7 @@ export default async function DoctorsPage({ searchParams }: DoctorsPageProps) {
         />
         <button
           type="submit"
-          className="sweep-solid inline-flex min-h-[44px] shrink-0 items-center px-5
+          className="btn-primary inline-flex min-h-[44px] shrink-0 items-center px-5
                      text-step--1 font-semibold"
         >
           Search

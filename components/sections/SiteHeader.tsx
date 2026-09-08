@@ -238,12 +238,12 @@ export function SiteHeader({
               <span aria-hidden="true">24&times;7</span>
             </EmergencyCallButton>
 
-            {/* .sweep-solid fills to copper-700, not the copper-500 accent: white on
-                copper-500 is 2.95:1, so the accent tone would make this label unreadable
-                the moment the fill arrived. See the working in app/globals.css. */}
+            {/* .btn-primary is copper at rest and teal on hover; .btn-secondary is the
+                same pair inverted. The label colour moves with the fill because neither
+                colour is legible on both — the working is in app/globals.css. */}
             <Link
               href="/appointments"
-              className="sweep-solid inline-flex min-h-[44px] items-center px-5
+              className="btn-primary inline-flex min-h-[44px] items-center px-5
                          font-semibold"
             >
               Book appointment
@@ -288,9 +288,8 @@ export function SiteHeader({
               ) : (
                 <li key={item.href}>
                   {/* NavLink is a client leaf purely so it can read the pathname and
-                      mark itself aria-current. .sweep carries the copper fill and
-                      .nav-underline the state bar — both are in app/globals.css with
-                      their contrast working. */}
+                      mark itself aria-current. .nav-underline draws the copper state bar;
+                      the ribbon items carry no fill. */}
                   <NavLink
                     href={item.href}
                     label={item.label}

@@ -128,7 +128,7 @@ rendered on `/dev/tokens`.
 | `.btn-ghost` | Utility icon buttons — borderless, teal-800 fill on hover |
 | `.menu-row` | Dropdown panel rows — teal-100 lift + 6px teal strip |
 | `.card-edge` | Department and service cards — copper strip at rest; teal strip + teal-100 tint on hover / `:focus-within` |
-| `.sweep-solid` | Primary buttons — copper-600 fill, ink-950 label |
+| `.btn-primary` | Primary buttons — copper-600 + ink-950, inverting to teal-800 + white on hover |
 | `.link-accent` | Copper text links |
 
 **The one rule that gets broken:** copper's contrast depends on the band it sits on, and

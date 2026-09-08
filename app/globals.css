@@ -166,65 +166,40 @@
   }
 
   /* -------------------------------------------------------------------------
-     THE SWEEP — one interaction language for every clickable surface.
+     BUTTONS — two fills that trade places.
      -------------------------------------------------------------------------
-     A copper panel scaled from origin-left. transform, not width and not
-     background-position: it is the only one of the three the compositor runs
-     off the main thread, and this fires on eight nav items, four quick actions,
-     twenty-six service tiles and every doctor card.
+     Nothing sweeps any more, and that is a conclusion rather than a
+     simplification. A swept fill arrives across a button, so mid-sweep its label
+     straddles both fills and has to be legible on each. Measured:
 
-     THE TEXT COLOUR IS THE WHOLE PROBLEM, and it is why there are three
-     variants rather than one. Measured against the actual grounds:
+       ink-950 on copper-600  4.79 PASS   on teal-800  2.41 FAIL
+       white   on copper-600  3.89 FAIL   on teal-800  7.75 PASS
 
-       on white / teal-50            on copper-500
-       teal-800  7.75 / 7.29  PASS   2.63  FAIL   <- the resting colour fails
-       ink-600   7.12 / 6.69  PASS   2.41  FAIL      the moment copper arrives
-       teal-950 15.57 /14.63  PASS   5.28  PASS   <- survives both
-       ink-950  18.65 /17.53  PASS   6.32  PASS
+     No single colour clears both, so a swept fill between these two is
+     unreadable at every intermediate frame whichever label colour you pick.
+     Uniform background transitions have no half-and-half frame, so the label can
+     move with the fill instead.
 
-     So anything on a light ground swaps to teal-950 as the copper lands.
+     The recipes below are therefore all colour transitions:
+       .btn-primary    copper-600 + ink-950  <->  teal-800 + white
+       .btn-secondary  teal-800 + white      <->  copper-600 + ink-950
+       .btn-ghost      transparent + teal-800 -> teal-800 + white
+     The first two are each other inverted, so all four states are the same two
+     proven pairs.
 
-     A FILLED teal-800 BUTTON CANNOT USE THE SAME FILL AT ALL:
-       white     on teal-800 7.75 PASS -> on copper-500 2.95 FAIL
-       teal-950  on teal-800 2.01 FAIL -> on copper-500 5.28 PASS
-       ink-950   on teal-800 2.41 FAIL -> on copper-500 6.32 PASS
-     There is no text colour that clears 4.5:1 on both halves, so mid-sweep is
-     unreadable whichever way you go. .sweep-solid fills to copper-700 instead,
-     where white holds at 4.67:1 against 7.75:1 at rest — the same gesture, one
-     step darker, and legible at every frame.
-
-     The colour transition is deliberately shorter than the fill (140ms vs
-     260ms) so text is already safe before the copper reaches it. Both sit
-     behind the prefers-reduced-motion guard below, which collapses them to
-     0.01ms — the fill still appears, it just does not travel.
+     Everything sits behind the prefers-reduced-motion guard below, which
+     collapses these to 0.01ms — the state still changes, it just stops easing.
      ------------------------------------------------------------------------- */
-
-  /* Sweep mechanics. Only the primary button sweeps now: a swept fill needs a
-     label that reads on BOTH halves while it travels, which a light copper allows
-     and a dark teal does not. The secondary and utility buttons below change
-     background uniformly instead, so they never have a half-and-half frame. */
-  .sweep-solid {
-    @apply relative isolate overflow-hidden;
-    transition: color 140ms cubic-bezier(0.2, 0, 0, 1);
-  }
-
-  .sweep-solid::before {
-    content: '';
-    @apply absolute inset-0 -z-10 origin-left;
-    transform: scaleX(0);
-    transition: transform 260ms cubic-bezier(0.2, 0, 0, 1);
-  }
-
-  .sweep-solid:hover::before,
-  .sweep-solid:focus-visible::before {
-    transform: scaleX(1);
-  }
 
   /* 1. SECONDARY buttons. Rich teal — the brand primary — not a pale tint.
         -------------------------------------------------------------------------
-          rest    teal-800 fill, white label   7.75:1
-          hover   teal-700 fill, white label   5.77:1
+          rest    teal-800 fill, white label     7.75:1
+          hover   copper-600 fill, ink-950 label  4.79:1
           edge    teal-800 on the teal-50 hero band  7.29:1
+
+        The hover is the PRIMARY button's resting state, and the primary's hover is
+        this one's — the pair trades places. See .btn-primary for why the label has
+        to move with the fill, and why neither button can sweep.
 
         That last number is why this is also a fix and not only a restyle. The
         previous pale teal-200 fill left the button's edge at 1.30:1 against the
@@ -243,13 +218,17 @@
         promote itself the moment you pointed at it. */
   .btn-secondary {
     @apply rounded-full bg-teal-800 text-white;
-    transition: background-color 140ms cubic-bezier(0.2, 0, 0, 1);
+    /* Both properties, and over the same duration: the label flips with the fill
+       now, so easing one while snapping the other reads as a glitch. */
+    transition:
+      background-color 140ms cubic-bezier(0.2, 0, 0, 1),
+      color 140ms cubic-bezier(0.2, 0, 0, 1);
   }
 
   .btn-secondary:hover,
   .btn-secondary:focus-visible,
   .btn-secondary[aria-expanded='true'] {
-    @apply bg-teal-700;
+    @apply bg-copper-600 text-ink-950;
   }
 
   /* 1b. Utility icon buttons — the search trigger, Close. Borderless and quiet at
@@ -511,12 +490,39 @@
         instinct, but ink-950 drops to 3.99:1 on copper-700 and fails, while it rises
         to 6.32:1 on copper-500. The direction is chosen by the contrast, not by
         convention. */
-  .sweep-solid {
+  /* PRIMARY buttons. Copper at rest, teal on hover.
+        -------------------------------------------------------------------------
+        The two action buttons trade places. Each one's hover state is the other's
+        resting state, which is why all four combinations are already proven:
+
+          primary    rest   ink-950 on copper-600   4.79:1
+                     hover  white   on teal-800     7.75:1
+          secondary  rest   white   on teal-800     7.75:1
+                     hover  ink-950 on copper-600   4.79:1
+
+        THE LABEL HAS TO FLIP WITH THE FILL. Neither colour survives both grounds:
+        ink-950 is 2.41:1 on teal-800, and white is 3.89:1 on copper-600. So the
+        label transitions alongside the background rather than staying put.
+
+        WHICH IS WHY THE SWEEP IS GONE. A swept fill arrives across the button, so
+        mid-sweep the label straddles copper and teal at once and would have to read
+        on both — and by the numbers above, nothing does. A uniform background
+        transition has no half-and-half frame, so the label can flip with the fill.
+        Colour and background move together over the same 140ms; the intermediate
+        frames are a transition, not a state, and nothing rests there.
+
+        copper-600 rather than copper-700 at rest: copper-700 with a white label is
+        the emergency button, and the primary CTA must not impersonate it. */
+  .btn-primary {
     @apply rounded-full bg-copper-600 text-ink-950;
+    transition:
+      background-color 140ms cubic-bezier(0.2, 0, 0, 1),
+      color 140ms cubic-bezier(0.2, 0, 0, 1);
   }
 
-  .sweep-solid::before {
-    @apply bg-copper-500;
+  .btn-primary:hover,
+  .btn-primary:focus-visible {
+    @apply bg-teal-800 text-white;
   }
 
   /* Copper text link. Underline is always present — colour alone never marks a link. */
