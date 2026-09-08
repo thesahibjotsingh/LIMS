@@ -229,6 +229,9 @@ export function SiteHeader({
                     href={item.href}
                     // A named panel renders custom content; otherwise the children list.
                     panel={item.panel === 'doctor-search' ? <DoctorSearchPanel /> : undefined}
+                    // A search row is one line of controls, so it reads as a bar across
+                    // the header rather than a box hanging off one nav item.
+                    fullWidth={Boolean(item.panel)}
                     items={item.children}
                     overviewHref={item.overviewLabel ? item.href : undefined}
                     overviewLabel={item.overviewLabel}

@@ -1,11 +1,13 @@
 // components/sections/DoctorSearchPanel.tsx
 //
-// The panel behind "Find a doctor" in the nav.
+// The bar behind "Find a doctor" in the nav. It spans the header rather than hanging off
+// the nav item — see the positioning note in NavDropdown — so its contents are laid out
+// as one row: field, submit, then the two shortcuts.
 //
 // A REAL <form method="get">, not an onChange handler. It submits to /doctors?q=…, which
 // buys three things a JS-only search does not:
-//   • it works before hydration and with the bundle blocked — the panel is in the
-//     header of every page, so it is the first thing someone can reach
+//   • it works before hydration and with the bundle blocked — the bar is in the header of
+//     every page, so it is among the first things anyone can reach
 //   • the result is a URL, so it can be shared, bookmarked, and reached with Back
 //   • the directory renders already-filtered HTML rather than an empty list that
 //     populates on a slow connection
@@ -18,8 +20,18 @@ import Link from 'next/link'
 
 export function DoctorSearchPanel() {
   return (
-    <div className="w-[min(34rem,calc(100vw-3rem))] p-2">
-      <form action="/doctors" method="get" role="search" className="flex items-stretch gap-2">
+    <div className="flex flex-wrap items-center gap-x-8 gap-y-3">
+      {/*
+        The field takes the room and the shortcuts sit beside it. max-w keeps the input
+        from stretching to 1900px on a wide monitor, where a search field the width of
+        the screen reads as a text area rather than a control.
+      */}
+      <form
+        action="/doctors"
+        method="get"
+        role="search"
+        className="flex min-w-0 flex-1 basis-80 items-stretch gap-2 lg:max-w-2xl"
+      >
         {/*
           A real label, visually hidden. A placeholder is not a label: it disappears the
           moment someone types, so anyone relying on it has nothing left to check what
@@ -29,7 +41,7 @@ export function DoctorSearchPanel() {
           Search for doctors by name, speciality or qualification
         </label>
 
-        <div className="relative flex-1">
+        <div className="relative min-w-0 flex-1">
           <span
             aria-hidden="true"
             className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2
@@ -60,26 +72,28 @@ export function DoctorSearchPanel() {
       </form>
 
       {/*
-        The booking shortcut. Separated by a rule rather than sitting in the form row:
-        it is a different job, and a second control inside a search row reads as a
-        second way to submit the search.
+        Shortcuts, inline. A vertical rule separates them from the form on wide screens:
+        they are a different job, and without the divider a second control on the same
+        row reads as a second way to submit the search.
       */}
-      <Link
-        href="/appointments"
-        className="menu-row mt-2 flex min-h-[44px] items-center gap-2 border-t
-                   border-ink-200 pl-5 pr-3 text-step--1 font-semibold text-teal-800"
-      >
-        <CalendarIcon />
-        Book an appointment
-      </Link>
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-1 lg:border-l lg:border-ink-200 lg:pl-8">
+        <Link
+          href="/appointments"
+          className="menu-row flex min-h-[44px] items-center gap-2 whitespace-nowrap pl-5
+                     pr-3 text-step--1 font-semibold text-teal-800"
+        >
+          <CalendarIcon />
+          Book an appointment
+        </Link>
 
-      <Link
-        href="/doctors"
-        className="menu-row flex min-h-[44px] items-center pl-5 pr-3 text-step--1
-                   font-semibold text-copper-800"
-      >
-        Browse all doctors
-      </Link>
+        <Link
+          href="/doctors"
+          className="menu-row flex min-h-[44px] items-center whitespace-nowrap pl-5 pr-3
+                     text-step--1 font-semibold text-copper-800"
+        >
+          Browse all doctors
+        </Link>
+      </div>
     </div>
   )
 }

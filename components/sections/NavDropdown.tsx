@@ -60,6 +60,12 @@ export interface NavDropdownProps {
    * server component and ships no JS of its own — only this disclosure does.
    */
   panel?: React.ReactNode
+  /**
+   * Render the panel as a bar spanning the whole header rather than a floating box
+   * anchored to this item. See the note on the positioning context below — it is the
+   * reason the underline moved off the outer wrapper.
+   */
+  fullWidth?: boolean
   items?: NavItem[]
   /** Optional link to the section's own index page, rendered as the last row. */
   overviewHref?: string
@@ -74,6 +80,7 @@ export function NavDropdown({
   label,
   href,
   panel,
+  fullWidth = false,
   items = [],
   overviewHref,
   overviewLabel,
@@ -164,11 +171,22 @@ export function NavDropdown({
   }
 
   return (
+    /*
+      THE POSITIONING CONTEXT IS THE POINT OF THIS WRAPPER.
+
+      A floating panel is absolute against this wrapper, so the wrapper is relative.
+      A full-width bar has to be absolute against the <header> instead — the header is
+      sticky, which makes it a positioned ancestor, so a panel with inset-x-0 spans the
+      whole header the moment no nearer relative ancestor stands in the way.
+
+      That is why .nav-underline moved down onto the trigger span: the recipe applies
+      `relative` itself, so leaving it here would silently re-anchor the bar to this one
+      nav item and quietly undo the full-width layout. Same visual result either way —
+      the underline spans the link and the chevron, which is what it did before.
+    */
     <div
       ref={wrapperRef}
-      className="nav-underline relative"
-      data-open={open ? 'true' : undefined}
-      data-active={active ? 'true' : undefined}
+      className={fullWidth ? undefined : 'relative'}
       onMouseEnter={openNow}
       onMouseLeave={closeSoon}
       onBlur={onBlurCapture}
@@ -189,7 +207,11 @@ export function NavDropdown({
         The chevron is a real 44px target, not a decoration inside the link. It carries
         its own accessible name because "▾" announces as nothing.
       */}
-      <span className="flex items-stretch">
+      <span
+        className="nav-underline flex items-stretch"
+        data-open={open ? 'true' : undefined}
+        data-active={active ? 'true' : undefined}
+      >
         <Link
           href={href}
           aria-current={active ? 'page' : undefined}
@@ -224,7 +246,25 @@ export function NavDropdown({
         left-anchored panel would run off the viewport. max-w on the inner panel is the
         backstop for every other case.
       */}
-      {open ? (
+      {open && fullWidth ? (
+        /*
+          The mega-bar. No rounding, no max-width, no hover bridge: it butts directly
+          against the bottom of the header, so there is no gap for the pointer to cross
+          on its way in. Its inner padding matches the header's own so the field lines
+          up with the logo above it rather than floating at an unrelated inset.
+        */
+        <div
+          id={panelId}
+          className="absolute inset-x-0 top-full z-50 border-b border-ink-200 bg-white
+                     shadow-raised motion-safe:animate-[dropdown_140ms_ease-out]"
+          onMouseEnter={openNow}
+          onMouseLeave={closeSoon}
+        >
+          <div className="w-full px-6 py-4 lg:px-12">{panel}</div>
+        </div>
+      ) : null}
+
+      {open && !fullWidth ? (
         <div
           id={panelId}
           className={`absolute top-full z-50 pt-2 ${alignRight ? 'right-0' : 'left-0'}`}
