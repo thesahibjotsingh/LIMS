@@ -34,12 +34,27 @@
 // pulling a 44px item out of the action group on every open, which shifted the Emergency
 // and Book appointment buttons sideways — the layout shift this was supposed to avoid.
 //
-// THE INERT/BLUR TRAP, recorded because it made the search unopenable and the cause is
-// not obvious from either piece on its own. Opening puts `inert` on the trigger while it
-// still holds focus; the browser blurs an inert element immediately, and that blur
-// reaches the wrapper with relatedTarget === null. A close-on-blur handler that trusts
-// relatedTarget therefore closed the search in the same tick it opened. See
-// scheduleBlurCheck below for the fix.
+// TWO TRAPS LIVE HERE. Both made the search unopenable, and neither is visible from
+// any single line of code, so they are written down.
+//
+// 1. THE COLLAPSED BAR SAT ON TOP OF THE TRIGGER AND ATE THE CLICK. It is absolutely
+//    positioned at right-0 and 44px wide while closed, which is exactly the trigger's
+//    box. `inert` stops it handling the click itself, but an inert subtree is not
+//    hit-testable and the browser does not fall through to what is underneath:
+//    document.elementFromPoint() over the button returned null, so a real mouse click
+//    landed on nothing. The gate has to be pointer-events-none on the POSITIONING
+//    WRAPPER: putting it on the bar alone left the wrapper itself — same 44px box, same
+//    z-50 — still swallowing the click. inert is not enough either; it stops the subtree
+//    handling events but does not let them through to what is beneath.
+//    Worth knowing that trigger.click() in a test dispatches straight at the element and
+//    skips hit-testing entirely, so this passes every scripted check and fails every
+//    human one. Test it with elementFromPoint over the trigger, not with .click().
+//
+// 2. THE INERT/BLUR TRAP. Opening puts `inert` on the trigger while it still holds
+//    focus; the browser blurs an inert element immediately, and that blur reaches the
+//    wrapper with relatedTarget === null. A close-on-blur handler that trusts
+//    relatedTarget therefore closed the search in the same tick it opened. See
+//    scheduleBlurCheck below.
 //
 // NO LONGER A <dialog>. An inline expander is not modal: the page behind stays live and
 // usable, so trapping focus and making the background inert would be wrong. What it does
@@ -249,7 +264,17 @@ export function SiteSearch() {
         icon: the right edge is pinned where the icon sits, so every pixel it gains
         appears on the left.
       */}
-      <div className="absolute right-0 top-1/2 z-50 -translate-y-1/2">
+      {/*
+        pointer-events GO ON THIS WRAPPER, not on the bar inside it. While closed this
+        div is 44px wide at right-0 — pixel-for-pixel the trigger's own box — and it sits
+        at z-50 above it. Left interactive it swallows every click aimed at the button,
+        which is precisely how the search became unopenable.
+      */}
+      <div
+        className={`absolute right-0 top-1/2 z-50 -translate-y-1/2 ${
+          open ? 'pointer-events-auto' : 'pointer-events-none'
+        }`}
+      >
         {/*
           ONE BORDER, ON THIS WRAPPER, AND NOWHERE ELSE. The input inside carries no
           border and no outline of its own — that was the nested double ring. Focus is
