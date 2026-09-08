@@ -238,11 +238,15 @@ export function SiteHeader({
               <span aria-hidden="true">24&times;7</span>
             </EmergencyCallButton>
 
-            {/* .btn-primary rests copper-700 and teal-800 sweeps in from the left;
-                .btn-secondary is the same pair inverted. The white label never changes
-                colour, which is what lets the fill travel rather than fade — mid-sweep
-                the label sits on both fills at once, so one colour has to clear AA on
-                each. The working is in app/globals.css. */}
+            {/* .btn-primary rests copper-600 and the teal-100 tint sweeps in from the
+                left — the same tint the quick-action cards and the dropdown rows use,
+                so "hovered" looks like one thing across the site. The ink-950 label
+                never changes colour, which is what lets the fill travel rather than
+                fade: mid-sweep the label sits on both fills at once, so one colour has
+                to clear AA on each. A 2px border, transparent at rest and teal-800
+                while the tint is in, keeps the button's boundary at 7.75:1 — a pale
+                fill on a white page has none of its own. The working is in
+                app/globals.css. */}
             <Link
               href="/appointments"
               className="btn-primary inline-flex min-h-[44px] items-center px-5

@@ -166,10 +166,13 @@
   }
 
   /* -------------------------------------------------------------------------
-     BUTTONS — one label colour, two fills that slide past each other.
+     BUTTONS — every hovered state is the same light teal tint, dark ink on it.
      -------------------------------------------------------------------------
-     The fill sweeps in from the left. It could not before, and the thing that
-     changed is the palette, not the technique.
+     HOVER IS ONE COLOUR ACROSS THE SITE: teal-100, the tint the quick-action
+     cards and the dropdown rows already use. A patient who learns what "the thing
+     under my cursor" looks like on the home page's cards knows it on every button
+     in the header. Previously the buttons answered that question with a dark teal
+     fill and the cards with a light one, so the site had two hover languages.
 
      A SWEEP IS A GEOMETRIC PROBLEM, NOT A TIMING ONE. While the incoming fill is
      crossing the button, part of the label sits on the old ground and part on the
@@ -178,39 +181,40 @@
      lockstep with the sweep cannot help: whatever value it holds at that instant
      it holds across the whole word, and the word is on two grounds at once.
 
-     Against the old copper-600 / teal-800 pair, no colour exists. Solving the
-     contrast equation rather than guessing at swatches:
+     Against the old copper-700 / teal-800 pair only white cleared both, which is
+     what forced a light label onto the primary CTA. A LIGHT HOVER FILL DISSOLVES
+     THAT CONSTRAINT rather than trading one horn of it for the other: teal-100 is
+     light, so a dark label is legible on it, and a dark label was always legible
+     on copper. Measured, on the pairs the sweep actually produces:
 
-       on copper-600  the label needs relative luminance >= 1.164 or <= 0.0099
-       on teal-800    the label needs relative luminance >= 0.559 or <= -0.0199
+       ink-950 on copper-600   4.79  PASS   the resting fill
+       ink-950 on teal-100    15.88  PASS   the arriving fill
+       teal-800 on white       7.75  PASS   the outline button at rest
+       teal-800 on teal-100    6.60  PASS   the same label mid-sweep
 
-     The first ground demands something near-black, the second something light.
-     The windows do not overlap, and >1.164 and <0 are outside the range a colour
-     can even have. That is why the sweep was removed in f4a6164.
+     The primary's worst sweep frame therefore rises from 4.67:1 to 4.79:1, and it
+     is a DARK label on it — the direction long-form legibility wants.
 
-     WHAT MAKES IT POSSIBLE NOW: one step of copper, and a label that never moves.
+     WHICH TINT, AND WHY NOT teal-50. The quick-action cards settled on teal-100
+     because teal-50 is the tint Section tone="tint" paints, so a teal-50 hover
+     measures 1.000 against its own band — not subtle, absent. Buttons sit on those
+     same bands (the hero, the nav ribbon), so they inherit the same answer.
+     teal-100 reads on both: 1.175 against white, 1.104 against a teal-50 band.
 
-       white on copper-700   4.67  PASS
-       white on teal-800     7.75  PASS
-
-     One colour, legible on both fills, so every intermediate frame of the sweep is
-     as readable as both endpoints. The label is not animated at all — there is
-     nothing to synchronise, which is stronger than synchronising it, because a
-     dropped frame or an interrupted transition cannot desynchronise something that
-     never changes.
-
-     The cost is honest and worth naming: the primary button's label goes from
-     ink-950 on copper-600 to white on copper-700 — a slightly deeper copper and a
-     light label. That is the price of the sweep, and it buys 4.67:1 in every frame
-     rather than 4.79:1 in two frames and nothing legible in between.
+     THE BORDER IS NOT DECORATION, IT IS WCAG 1.4.11. teal-100 is 1.17:1 against
+     the white page — a filled button whose fill is that close to the page has no
+     boundary, which is the 1.30:1 bug that the old pale teal-200 secondary was
+     fixed for. So every button that can wear the tint carries a 2px teal-800 edge
+     while it wears it: 7.75:1 against the page and 6.60:1 against the tint itself.
+     .btn-primary reserves that border at rest in transparent, so gaining it costs
+     no layout shift.
 
      The recipes below:
-       .btn-primary    copper-700, teal-800 sweeps in    white label throughout
-       .btn-secondary  teal-800, copper-700 sweeps in    white label throughout
-       .btn-ghost      transparent -> teal-800           label flips, NO sweep
-     The first two are each other inverted, so all four states are the same two
-     measured pairs. .btn-ghost keeps a uniform fade because it genuinely cannot
-     sweep — see its note.
+       .btn-primary    copper-600, teal-100 sweeps in    ink-950 label throughout
+       .btn-secondary  white outline, teal-100 sweeps in label flips to ink-950
+       .btn-ghost      transparent -> teal-100           icon flips, NO sweep
+     .btn-ghost keeps a uniform fade because it genuinely cannot sweep — see its
+     note.
 
      Everything sits behind the prefers-reduced-motion guard at the foot of this
      file, and that guard already names *::before, so the sweep collapses to
@@ -241,36 +245,48 @@
         clipped by overflow, so the focus ring is unaffected — worth stating
         because a box-shadow ring WOULD have been swallowed here. */
 
-  /* 1. SECONDARY buttons. Rich teal — the brand primary — not a pale tint.
+  /* 1. SECONDARY buttons. A teal outline that fills with the tint on hover.
         -------------------------------------------------------------------------
-          rest      teal-800 fill        white label   7.75:1
-          sweeping  both fills at once   white label   4.67:1 worst frame
-          hovered   copper-700 fill      white label   4.67:1
-          edge      teal-800 on the teal-50 hero band  7.29:1
+          rest      white fill      teal-800 label   7.75:1
+          sweeping  both fills      either label     6.60:1 worst frame
+          hovered   teal-100 fill   ink-950 label   15.88:1
+          edge      teal-800 2px border, throughout: 7.75:1 on the white page,
+                    7.29:1 on the teal-50 hero band, 6.60:1 on its own hovered fill
 
-        The hovered state is the PRIMARY button's resting state, and the primary's
-        is this one's — the pair trades places, now by sliding rather than fading.
+        THE BORDER IS WHAT MAKES A PALE SECONDARY LEGAL. A teal-200 fill was tried
+        before and reverted: at 1.30:1 against the hero band the button had no
+        boundary, under the 3:1 WCAG 1.4.11 asks of a control. The fix then was to
+        make the fill rich. The fix now is to draw the boundary explicitly, which
+        holds at 7.29:1 or better on every surface the button sits on — a stronger
+        edge than the dark fill gave, and it survives the hover.
 
-        No frame of the sweep is worse than the worse of its two endpoints, because
-        the label never changes and the two fills never blend into each other: at
-        any instant every pixel of the button is exactly one of them.
+        THE LABEL MAY FLIP HERE, AND ON THE PRIMARY IT MAY NOT. Mid-sweep the label
+        straddles white and teal-100. Both are light, so both candidate colours
+        clear AA on both grounds — teal-800 is 7.75 and 6.60, ink-950 is 18.65 and
+        15.88 — and whichever value the transition holds in a given frame is
+        legible across the whole word. That is the freedom a light hover fill buys;
+        the primary still spans a copper and a tint, so its label stays put.
 
-        That last number is a fix and not only a restyle. The old pale teal-200
-        fill left the button's edge at 1.30:1 against the hero band, under the 3:1
-        WCAG 1.4.11 asks of a control's boundary. A rich fill puts it at 7.29:1.
-
-        Copper stays the primary action: a secondary that RESTED copper would
-        promote itself. Arriving copper on hover is a different claim — it says
-        "this is the thing you are pointing at", not "this is the thing to do". */
+        Copper stays the primary action. A secondary that filled copper on hover
+        would promote itself into one; the shared tint says "this is the thing you
+        are pointing at" without making a claim about which thing to do. */
   .btn-secondary {
-    @apply relative isolate overflow-hidden rounded-full bg-teal-800 text-white;
+    @apply relative isolate overflow-hidden rounded-full border-2 border-teal-800
+           bg-white text-teal-800;
+    transition: color 240ms cubic-bezier(0.2, 0, 0, 1);
   }
 
   .btn-secondary::before {
     content: '';
-    @apply absolute inset-0 -z-10 bg-copper-700;
+    @apply absolute inset-0 -z-10 bg-teal-100;
     transform: translateX(-100%);
     transition: transform 240ms cubic-bezier(0.2, 0, 0, 1);
+  }
+
+  .btn-secondary:hover,
+  .btn-secondary:focus-visible,
+  .btn-secondary[aria-expanded='true'] {
+    @apply text-ink-950;
   }
 
   /* aria-expanded carries over from the previous recipe and currently matches
@@ -287,17 +303,27 @@
 
   /* 1b. Utility icon buttons — the search trigger, Close. Borderless and quiet at
          rest so they do not compete with the two filled CTAs beside them, then the
-         same rich teal on interaction.
+         same tint every other hover on the site uses.
 
-         NO SWEEP HERE, AND THIS ONE GENUINELY CANNOT HAVE ONE. The two filled
-         buttons above sweep because a single white label clears AA on both of
-         their fills. This one sweeps from transparent, so mid-sweep the icon
-         would straddle the page's white ground and a teal-800 fill: teal-800 is
-         1.00:1 on teal-800, white is 1.00:1 on white. The two halves demand
-         opposite colours, and unlike the copper/teal pair there is no deeper
-         shade to reach for — one of the grounds is the page itself. So the fill
-         arrives uniformly and the icon flips with it, which has no half-and-half
-         frame to be illegible in. */
+           rest      transparent     teal-800 icon    7.75:1 on the white header
+           hovered   teal-100 fill   ink-950 icon    15.88:1
+
+         NO BORDER ON THIS ONE, and it is the one place that is defensible. The
+         other two buttons need an edge because a tint-filled pill has no boundary
+         against a white page (1.17:1). This control is identified at rest by its
+         icon, not by a fill — putting a ring on it only while hovered would make
+         the quiet icon button grow a frame under the cursor, which reads as a
+         different control rather than the same one in a state. The state is
+         carried by two channels instead: the tint arriving, and the icon going
+         from teal-800 to ink-950.
+
+         NO SWEEP HERE, AND THIS ONE GENUINELY CANNOT HAVE ONE. The filled buttons
+         above sweep between two grounds that a single label colour can clear. This
+         one sweeps from the page itself, so mid-sweep the icon would straddle
+         whatever the header is painted with and the tint — and the header is white
+         in the top tier and teal-50 in the ribbon, so the "old" ground is not even
+         one fixed colour to solve against. The fill arrives uniformly instead,
+         which has no half-and-half frame to be illegible in. */
   .btn-ghost {
     @apply rounded-full text-teal-800;
     transition:
@@ -308,7 +334,7 @@
   .btn-ghost:hover,
   .btn-ghost:focus-visible,
   .btn-ghost[aria-expanded='true'] {
-    @apply bg-teal-800 text-white;
+    @apply bg-teal-100 text-ink-950;
   }
 
   /* -------------------------------------------------------------------------
@@ -531,65 +557,64 @@
     @apply border-copper-600 bg-copper-600 text-ink-950;
   }
 
-  /* 3. PRIMARY buttons. Copper, because copper is now the action colour.
+  /* 3. PRIMARY buttons. Copper, because copper is the action colour.
         -------------------------------------------------------------------------
-        copper-600 with an ink-950 label — the only copper that clears both of the
-        numbers that matter here:
+        Which copper a DARK label can sit on, which is the constraint that decides
+        the resting fill now that the hover is light:
 
           fill        label: ink / white     edge vs white page
           copper-500   6.32 / 2.95           2.95   <- edge fails
           copper-600   4.79 / 3.89           3.89   <- both pass
           copper-700   3.99 / 4.67           4.67   <- ink label fails
-          copper-800   3.04 / 6.13           6.13   <- ink label fails
-
-        copper-700 with a WHITE label also passes both, and is deliberately not used:
-        that is the emergency button. If the primary CTA took the same fill and the
-        same label colour, the one control that must be unmistakable would look like
-        every "Book appointment" beside it. copper-600 with a dark label reads as a
-        sibling of the emergency badge without impersonating it — different value,
-        opposite label colour.
-
-        The hover BRIGHTENS to copper-500 rather than darkening. Darkening is the
-        instinct, but ink-950 drops to 3.99:1 on copper-700 and fails, while it rises
-        to 6.32:1 on copper-500. The direction is chosen by the contrast, not by
-        convention. */
-  /* PRIMARY buttons. Copper at rest, teal on hover.
+          copper-800   3.04 / 6.13           6.13   <- ink label fails */
+  /* PRIMARY buttons. Copper at rest, the shared tint on hover.
         -------------------------------------------------------------------------
-        The two action buttons trade places. Each one's hover state is the other's
-        resting state, which is why all four combinations are already proven:
+          rest      copper-600 fill   ink-950 label    4.79:1   edge 3.89:1
+          sweeping  both fills        ink-950 label    4.79:1 worst frame
+          hovered   teal-100 fill     ink-950 label   15.88:1   edge 7.75:1
 
-          primary    rest   ink-950 on copper-600   4.79:1
-                     hover  white   on teal-800     7.75:1
-          secondary  rest   white   on teal-800     7.75:1
-                     hover  ink-950 on copper-600   4.79:1
+        THE LABEL DOES NOT MOVE, AND THAT IS STILL THE WHOLE MECHANISM. ink-950
+        reads 4.79:1 on the copper that is leaving and 15.88:1 on the tint that is
+        arriving, so it is legible in every frame where the button is half of each.
+        Nothing about the label is animated, so there is no synchronisation to get
+        wrong and no interrupted transition can strand it on the wrong ground.
 
-        THE LABEL DOES NOT MOVE, AND THAT IS THE WHOLE MECHANISM. White reads
-        4.67:1 on copper-700 and 7.75:1 on teal-800, so it is legible on the fill
-        that is leaving, the fill that is arriving, and every frame where the
-        button is half of each. Nothing about the label is animated, so there is no
-        synchronisation to get wrong and no interrupted transition can strand it on
-        the wrong ground.
+        WHY THE RESTING FILL MOVED copper-700 -> copper-600. The label has to be
+        dark now, because the arriving fill is light: white would be 1.19:1 on
+        teal-100. And a dark label rules copper-700 out — ink-950 measures 3.99:1
+        there, under AA. copper-600 is the deepest copper a dark label clears, at
+        4.79:1, with a 3.89:1 edge against the white page. So the sweep's worst
+        frame improves from 4.67:1 to 4.79:1 while the hovered state goes from
+        7.75:1 to 15.88:1.
 
-        WHY NOT copper-600 + ink-950, WHICH MEASURES HIGHER AT REST. Because 4.79:1
-        at rest and 2.41:1 for the 240ms of the sweep is worse than 4.67:1
-        throughout. AA is not an average.
+        THE BORDER IS RESERVED, NOT ADDED. The button carries a 2px transparent
+        border at rest — the copper fill paints under it, so nothing looks
+        different — and colours it teal-800 while the tint is in. Without it a
+        hovered primary would sit at 1.17:1 against the page and lose its boundary
+        exactly when the pointer is on it. Reserving the space rather than adding
+        the border on hover is what keeps the button from growing 4px under the
+        cursor and shoving the header's action group sideways.
 
-        COPPER-700 NO LONGER COLLIDES WITH THE EMERGENCY BUTTON. It used to, and
-        this recipe deliberately avoided copper-700 for that reason: the emergency
-        control was a copper-700 pill with a white label, and the primary CTA must
-        never impersonate it. That control is now bg-beacon (#E91C26) carrying the
-        beacon graphic — a saturated red with a disc in it, not a copper pill — so
-        the reason for the exclusion is gone. The two still sit side by side in the
-        header, told apart by hue, by saturation, and by the graphic. */
+        IT STILL CANNOT BE MISTAKEN FOR THE EMERGENCY CONTROL. That one is
+        bg-beacon (#E91C26) with a white label and the beacon graphic; this is a
+        copper pill with a dark one. They sit side by side in the header, told
+        apart by hue, by saturation, by label colour, and by the graphic. */
   .btn-primary {
-    @apply relative isolate overflow-hidden rounded-full bg-copper-700 text-white;
+    @apply relative isolate overflow-hidden rounded-full border-2 border-transparent
+           bg-copper-600 text-ink-950;
+    transition: border-color 240ms cubic-bezier(0.2, 0, 0, 1);
   }
 
   .btn-primary::before {
     content: '';
-    @apply absolute inset-0 -z-10 bg-teal-800;
+    @apply absolute inset-0 -z-10 bg-teal-100;
     transform: translateX(-100%);
     transition: transform 240ms cubic-bezier(0.2, 0, 0, 1);
+  }
+
+  .btn-primary:hover,
+  .btn-primary:focus-visible {
+    @apply border-teal-800;
   }
 
   .btn-primary:hover::before,

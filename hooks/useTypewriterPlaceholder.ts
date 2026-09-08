@@ -6,24 +6,36 @@ import { useEffect, useState } from 'react'
 //
 // Cycles the search field's placeholder, Medanta-style.
 //
-// THE PHRASES NAME THINGS THIS SITE CAN ACTUALLY FIND. The reference cycles
-// "Hospitals", which works for a group with many of them; LIMS is one hospital at
-// Jindal Chowk, so a placeholder inviting someone to search for hospitals promises a
-// result that cannot exist. "Treatments" is the same trap — there is no procedures data
-// anywhere in the index, deliberately, because inventing what a hospital treats is the
-// one thing this codebase refuses to do. Every phrase below maps to a real kind of entry
-// in lib/search-index.ts, so anything the placeholder suggests actually returns hits.
-const PHRASES = [
+// THE LIST IS A PARAMETER, because the two fields that use this hook search different
+// things. The header searches the whole site, so it cycles the kinds of entry the site
+// holds. The "Find a doctor" bar searches doctors only, so it cycles the prompt and then
+// the consultants by name — a placeholder there that named specialities or treatments
+// would advertise a search that field cannot run.
+//
+// KNOWN GAP, ASKED FOR DELIBERATELY: "Hospitals" and "Treatments" in the default list do
+// not map to entries in lib/search-index.ts. LIMS is one hospital at Jindal Chowk, so
+// there is no set of hospitals to search, and there is no procedures data in the index —
+// inventing what a hospital treats is the one thing this codebase refuses to do. Both
+// phrases therefore invite a search that returns nothing. If they stay, the fix is to
+// give them something to find: an index entry for the hospital itself, and real
+// treatment pages.
+const DEFAULT_PHRASES = [
   'Search for Doctors',
   'Search for Specialities',
-  'Search for Services',
-  'Search for Patient Care',
+  'Search for Hospitals',
+  'Search for Treatments',
 ] as const
 
-/** The phrase shown when the animation is off. Also the server-rendered value. */
-const FIRST = PHRASES[0]
-
 export interface TypewriterOptions {
+  /**
+   * The phrases to cycle, in order. The first one is what the field shows before
+   * hydration and whenever the animation is off, so it must stand on its own.
+   *
+   * Pass a STABLE array. A literal built inline in the render body is a new reference
+   * every render, which re-runs the effect and resets the timer on each pass — the
+   * animation stalls a character in. Hoist it to a module constant, or memoise it.
+   */
+  phrases?: readonly string[]
   /** Milliseconds per character while typing. Deleting runs at half this. */
   speed?: number
   /** How long a completed phrase rests before it starts deleting. */
@@ -37,16 +49,20 @@ export interface TypewriterOptions {
 }
 
 export function useTypewriterPlaceholder({
+  phrases = DEFAULT_PHRASES,
   speed = 80,
   pause = 2000,
   enabled = true,
 }: TypewriterOptions = {}): string {
   const reducedMotion = usePrefersReducedMotion()
 
+  /** The phrase shown when the animation is off. Also the server-rendered value. */
+  const first = phrases[0] ?? DEFAULT_PHRASES[0]
+
   // Starts on the complete first phrase rather than an empty string. Two reasons: the
   // field never paints with an empty placeholder, and the server and the first client
   // render agree, so there is no hydration mismatch to reconcile.
-  const [text, setText] = useState<string>(FIRST)
+  const [text, setText] = useState<string>(first)
   const [deleting, setDeleting] = useState(false)
   const [index, setIndex] = useState(0)
 
@@ -55,7 +71,7 @@ export function useTypewriterPlaceholder({
   useEffect(() => {
     if (!animate) return
 
-    const full = PHRASES[index % PHRASES.length] ?? FIRST
+    const full = phrases[index % phrases.length] ?? first
     const atFull = !deleting && text === full
     const atEmpty = deleting && text === ''
 
@@ -85,11 +101,11 @@ export function useTypewriterPlaceholder({
     }, delay)
 
     return () => clearTimeout(timer)
-  }, [animate, text, deleting, index, speed, pause])
+  }, [animate, text, deleting, index, speed, pause, phrases, first])
 
   // Whenever the animation is off, show a complete phrase rather than whatever
   // half-typed fragment it happened to stop on.
-  return animate ? text : FIRST
+  return animate ? text : first
 }
 
 /**

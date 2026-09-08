@@ -13,10 +13,30 @@
 //     populates on a slow connection
 // That is the decision already recorded in app/doctors/page.tsx, applied here.
 //
-// Server component. Nothing in it needs client JS; the surrounding disclosure is the
-// only part that does.
+// Server component apart from the field. The cycling placeholder needs client JS, so it
+// lives in DoctorSearchField and this file stays server-rendered — the form, the submit
+// button and the two shortcuts ship nothing.
 
 import Link from 'next/link'
+import { DoctorSearchField } from '@/components/sections/DoctorSearchField'
+import { DOCTORS } from '@/lib/doctors'
+
+/*
+ * What the field's placeholder cycles: the prompt, then the consultants by name.
+ *
+ * This bar submits to /doctors?q=…, which searches doctors and nothing else, so the
+ * placeholder stays inside that set. Naming specialities or treatments here — as the
+ * header search does, where the index really does hold them — would invite a query this
+ * field cannot answer. A real name is also the strongest hint about what the field
+ * accepts: it shows the format someone should type rather than describing it.
+ *
+ * Built from lib/doctors.ts, so it cannot drift from the directory. A doctor who leaves
+ * disappears from the placeholder in the same edit that removes their page.
+ */
+const PLACEHOLDER_PHRASES = [
+  'Search for Doctors',
+  ...DOCTORS.map((doctor) => doctor.name),
+]
 
 export function DoctorSearchPanel() {
   return (
@@ -41,27 +61,11 @@ export function DoctorSearchPanel() {
           Search for doctors by name, speciality or qualification
         </label>
 
-        <div className="relative min-w-0 flex-1">
-          <span
-            aria-hidden="true"
-            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2
-                       text-teal-600"
-          >
-            <SearchIcon />
-          </span>
-          <input
-            id="doctor-search"
-            type="search"
-            name="q"
-            placeholder="Search for Doctors"
-            autoComplete="off"
-            /* focus:ring-0 kills the forms plugin's blue box-shadow ring, which would
-               otherwise sit just inside this field's own teal focus border. */
-            className="h-11 w-full rounded-full border-2 border-ink-200 bg-white pl-10 pr-4
-                       text-step--1 text-ink-950 placeholder:text-ink-400
-                       focus:border-teal-600 focus:outline-none focus:ring-0"
-          />
-        </div>
+        {/*
+          The field is the panel's one client leaf. It runs the same
+          useTypewriterPlaceholder hook as the header search, on this field's own list.
+        */}
+        <DoctorSearchField phrases={PLACEHOLDER_PHRASES} />
 
         <button
           type="submit"
