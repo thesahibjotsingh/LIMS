@@ -1,9 +1,9 @@
 // app/api/request-callback/route.ts
 //
 // Receives the "Request a call back" form and relays it to Resend as an email to the
-// staff inbox that watches CALLBACK_NOTIFY_EMAIL. Nothing here is stored — this route
-// has no database to write to yet, so a submission that is not read as an email is
-// gone. Phase 2 email/CRM ownership can add persistence without changing the form.
+// staff inbox that watches NOTIFY_EMAIL. Nothing here is stored — this route has no
+// database to write to yet, so a submission that is not read as an email is gone.
+// Phase 2 email/CRM ownership can add persistence without changing the form.
 //
 // edge RUNTIME, EXPLICITLY, LIKE app/doctors/page.tsx. Cloudflare Pages runs on
 // Workers, not Node — an API route without this declaration builds locally and then
@@ -19,6 +19,8 @@
 // this platform is careful not to leave lying around in a request log.
 export const runtime = 'edge'
 
+import { escapeForEmail, isPlausibleEmail, isPlausiblePhone, sendNotificationEmail } from '@/lib/send-notification-email'
+
 interface CallbackPayload {
   name?: unknown
   phone?: unknown
@@ -32,19 +34,6 @@ const NAME_MAX = 120
 const PHONE_MAX = 20
 const EMAIL_MAX = 200
 const PREFERRED_TIME_MAX = 60
-
-// Loose on purpose: LIMS traffic is majority Indian mobile numbers, entered with every
-// punctuation habit a person has — spaces, hyphens, a leading +91 or 0 or neither. This
-// counts digits after stripping everything else and only asks for a plausible length,
-// rather than matching one specific format and rejecting real numbers that do not fit it.
-function isPlausiblePhone(value: string): boolean {
-  const digits = value.replace(/\D/g, '')
-  return digits.length >= 10 && digits.length <= 15
-}
-
-function isPlausibleEmail(value: string): boolean {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
-}
 
 export async function POST(request: Request): Promise<Response> {
   let body: CallbackPayload
@@ -83,7 +72,7 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   const apiKey = process.env.RESEND_API_KEY
-  const notifyEmail = process.env.CALLBACK_NOTIFY_EMAIL
+  const notifyEmail = process.env.NOTIFY_EMAIL
   if (!apiKey || !notifyEmail) {
     // A missing env var is a deployment mistake, not a patient's mistake — the message
     // stays generic and actionable (call instead) rather than exposing configuration
@@ -94,46 +83,22 @@ export async function POST(request: Request): Promise<Response> {
     )
   }
 
-  // Every field is HTML-escaped before it reaches the email body. This is a plain-text
-  // email, not HTML, so this is not about markup injection — it is so a name or a
-  // preferred-time value someone pastes with stray angle brackets renders as the
-  // literal characters they typed rather than doing anything unexpected in a mail
-  // client that renders plain text permissively.
-  const escapeForEmail = (value: string) =>
-    value.replace(/[<>&]/g, (char) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' })[char] ?? char)
-
-  const lines = [
-    `Name: ${escapeForEmail(name)}`,
-    `Phone: ${escapeForEmail(phone)}`,
-    `Email: ${email ? escapeForEmail(email) : 'Not provided'}`,
-    `Preferred callback time: ${preferredTime ? escapeForEmail(preferredTime) : 'Not specified'}`,
-    '',
-    'Submitted from the "Request a call back" form on limshisar.com.',
-  ]
-
-  const resendResponse = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      // onboarding@resend.dev is Resend's shared sandbox sender — it works with zero
-      // setup but Resend will only deliver mail sent FROM it to the account's own
-      // verified address. Swap this for a limshisar.com address (e.g.
-      // no-reply@limshisar.com) the moment that domain is verified in the Resend
-      // dashboard — see the note in .env.example.
-      from: 'LIMS Website <onboarding@resend.dev>',
-      to: [notifyEmail],
-      // A reply lands directly with the patient rather than bouncing through the
-      // no-reply sender, when they left an email to reply to.
-      ...(email ? { reply_to: email } : {}),
-      subject: `Call back request — ${name}`,
-      text: lines.join('\n'),
-    }),
+  const sent = await sendNotificationEmail({
+    apiKey,
+    to: notifyEmail,
+    replyTo: email || undefined,
+    subject: `Call back request — ${name}`,
+    text: [
+      `Name: ${escapeForEmail(name)}`,
+      `Phone: ${escapeForEmail(phone)}`,
+      `Email: ${email ? escapeForEmail(email) : 'Not provided'}`,
+      `Preferred callback time: ${preferredTime ? escapeForEmail(preferredTime) : 'Not specified'}`,
+      '',
+      'Submitted from the "Request a call back" form on limshisar.com.',
+    ].join('\n'),
   })
 
-  if (!resendResponse.ok) {
+  if (!sent) {
     return Response.json(
       { error: 'Could not send your request right now. Please call us instead.' },
       { status: 502 },
