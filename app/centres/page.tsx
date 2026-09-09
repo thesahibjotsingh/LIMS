@@ -18,10 +18,10 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import type { Metadata } from 'next'
-import { Grid } from '@/components/primitives/Grid'
 import { Section } from '@/components/primitives/Section'
 import { centreIconSrc } from '@/lib/centre-icons'
 import { getDoctorsByDepartment } from '@/lib/doctors'
+import { gridColsClassName } from '@/lib/grid-cols'
 import {
   SERVICE_CATEGORIES,
   SERVICES,
@@ -80,14 +80,30 @@ export default function CentresPage() {
             <span className="rule-accent mt-3" aria-hidden="true" />
             <p className="mt-3 max-w-prose text-ink-600">{category.blurb}</p>
 
-            {/* min="xs" + vertical icon-over-label reads as a scannable specialty
-                index, applied to all three categories for one consistent grid
-                language down the page. Almost every service has a supplied icon now
-                (see lib/centre-icons.ts) — the one gap is CT Scan / X-Ray, which
-                simply centres its label with no icon slot rather than a generic
-                stand-in, so a service without an asset yet reads as "not supplied",
-                not as a guess. */}
-            <Grid min="xs" gap="sm" className="mt-6">
+            {/* Vertical icon-over-label reads as a scannable specialty index, applied
+                to all three categories for one consistent grid language down the
+                page. Every service has a supplied icon now (see lib/centre-icons.ts);
+                the conditional render stays in place so a service without an asset
+                in future reads as "not supplied", not as a guess.
+
+                Fixed column counts, not the shared Grid primitive's auto-fit — same
+                choice as the home page's Centres of Excellence grid and ServiceIndex.
+                gridColsClassName (lib/grid-cols.ts) sizes the count to each group —
+                capped at 6 on desktop, and chosen so the last row is never a single
+                stranded card.
+
+                min-h-[192px]: without it, a CSS grid row is only as tall as its own
+                content, so a row of one-line names sits visibly shorter than a row
+                with a three-line name — the grid looks uneven even though every card
+                is internally correct. Fixed to the tallest case so every row matches.
+
+                loading="eager": the clinical group starts right after the page
+                intro, so its first row sits above the fold. The browser's native
+                loading="lazy" only reliably fires for images that cross INTO view
+                during a scroll — one already in the initial viewport at load can
+                simply never load. These icons are a few KB each, so eager-loading
+                costs nothing worth trading for icons that silently never appear. */}
+            <div className={`mt-6 grid gap-4 ${gridColsClassName(services.length)}`}>
               {services.map((service) => {
                 const doctors = getDoctorsByDepartment(service.slug)
                 const iconSrc = centreIconSrc(service.slug)
@@ -96,11 +112,18 @@ export default function CentresPage() {
                   <Link
                     key={service.slug}
                     href={serviceHref(service)}
-                    className="card-geo flex min-h-[48px] flex-col items-center gap-3 p-5
+                    className="card-geo flex min-h-[192px] flex-col items-center gap-3 p-5
                                text-center"
                   >
                     {iconSrc ? (
-                      <Image src={iconSrc} alt="" width={80} height={80} className="h-12 w-12" />
+                      <Image
+                        src={iconSrc}
+                        alt=""
+                        width={96}
+                        height={96}
+                        loading="eager"
+                        className="h-14 w-14 object-contain"
+                      />
                     ) : null}
                     <div>
                       <h3 className="text-step-0 font-semibold text-teal-800">
@@ -116,7 +139,7 @@ export default function CentresPage() {
                   </Link>
                 )
               })}
-            </Grid>
+            </div>
           </section>
         )
       })}

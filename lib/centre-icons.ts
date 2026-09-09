@@ -8,7 +8,7 @@
 // One folder per category under public/images, matching the category's own basePath
 // naming so the mapping is easy to audit against lib/services.ts:
 //   clinical  -> public/images/centres        (all 15 services have an icon)
-//   diagnostics -> public/images/diagnostics  (6 of 7 — no ct-scan-x-ray icon yet)
+//   diagnostics -> public/images/diagnostics  (all 7 services have an icon)
 //   support   -> public/images/patient-care   (all 4 services have an icon)
 const ICON_DIRS: Record<string, string> = {
   'anaesthesia-pain-management': 'centres',
@@ -28,12 +28,12 @@ const ICON_DIRS: Record<string, string> = {
   urology: 'centres',
 
   'color-doppler': 'diagnostics',
+  'ct-scan-x-ray': 'diagnostics',
   'echocardiogram-tmt': 'diagnostics',
   endoscopy: 'diagnostics',
   'pathology-microbiology': 'diagnostics',
   'radiology-imaging': 'diagnostics',
   ultrasound: 'diagnostics',
-  // 'ct-scan-x-ray': no asset supplied yet — omitted rather than guessed.
 
   'physiotherapy-rehabilitation': 'patient-care',
   'dietetics-nutrition': 'patient-care',

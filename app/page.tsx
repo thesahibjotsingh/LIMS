@@ -20,6 +20,7 @@ import { Section } from '@/components/primitives/Section'
 import { Stack } from '@/components/primitives/Stack'
 import { centreIconSrc } from '@/lib/centre-icons'
 import { DOCTORS } from '@/lib/doctors'
+import { gridColsClassName } from '@/lib/grid-cols'
 import { SERVICES, serviceHref, servicesByCategory } from '@/lib/services'
 import { contact, siteConfig } from '@/lib/site-config'
 
@@ -38,6 +39,8 @@ const HERO_INTRO =
   'imaging, and pathology under the same roof.'
 
 export default function HomePage() {
+  const clinicalServices = servicesByCategory('clinical')
+
   return (
     <>
       {/* -- Hero ---------------------------------------------------------- */}
@@ -132,32 +135,60 @@ export default function HomePage() {
           Specialist teams across our clinical departments, with diagnostics, imaging and
           patient support services on the same campus.
         </p>
-        {/* min="xs" + a vertical icon-over-label card reads as a scannable specialty
-            index — closer to how a patient actually uses this grid (find the
-            department at a glance) than the wider, horizontal icon-beside-text cards
-            used elsewhere on the site, where the content is prose rather than a
-            one-or-two-word label. .card-geo's own accent bar and cut corners carry
-            over unchanged; only the content orientation and grid density are new. */}
-        <Grid min="xs" gap="sm" className="mt-8">
-          {servicesByCategory('clinical').map((service) => {
+        {/* A vertical icon-over-label card reads as a scannable specialty index —
+            closer to how a patient actually uses this grid (find the department at a
+            glance) than the wider, horizontal icon-beside-text cards used elsewhere
+            on the site, where the content is prose rather than a one-or-two-word
+            label. .card-geo's own accent bar and cut corners carry over unchanged;
+            only the content orientation and grid density are new.
+
+            FIXED COLUMN COUNTS, not the shared Grid primitive's auto-fit: auto-fit at
+            this card's min-width settles on 7 columns at typical desktop widths,
+            which is an arbitrary fit rather than a chosen density. gridColsClassName
+            (lib/grid-cols.ts) picks a count sized to the list instead — capped at 6
+            on desktop, and chosen so the last row is never a single stranded card.
+
+            min-h-[192px]: without it, a CSS grid row is only as tall as its own
+            content, so a row of one-line names (ENT, Urology) sits visibly shorter
+            than a row with a three-line name (General & Laparoscopic Surgery) — the
+            grid looks uneven top to bottom even though every card is internally
+            correct. Fixed to the tallest case so every row matches. */}
+        <div className={`mt-8 grid gap-4 ${gridColsClassName(clinicalServices.length)}`}>
+          {clinicalServices.map((service) => {
             const iconSrc = centreIconSrc(service.slug)
             return (
               <Link
                 key={service.slug}
                 href={serviceHref(service)}
-                className="card-geo flex flex-col items-center gap-3 p-5 text-center"
+                className="card-geo flex min-h-[192px] flex-col items-center gap-3 p-5
+                           text-center"
               >
                 {/* Icon-only where LIMS has supplied one (public/images/centres) —
                     conditional, not a generic fallback glyph, so a department without
-                    an asset yet reads as "no icon" rather than a guess. */}
+                    an asset yet reads as "no icon" rather than a guess.
+
+                    loading="eager": this grid sits mid-page, but on shorter viewports
+                    its first row can still land inside the initial viewport, where
+                    the browser's native loading="lazy" only reliably fires for images
+                    that cross INTO view during a scroll — one already there at load
+                    can simply never load. These icons are a few KB each, so
+                    eager-loading the row costs nothing worth trading for icons that
+                    silently never appear on first paint. */}
                 {iconSrc ? (
-                  <Image src={iconSrc} alt="" width={96} height={96} className="h-14 w-14" />
+                  <Image
+                    src={iconSrc}
+                    alt=""
+                    width={96}
+                    height={96}
+                    loading="eager"
+                    className="h-14 w-14 object-contain"
+                  />
                 ) : null}
                 <h3 className="text-step-0 font-semibold text-teal-800">{service.name}</h3>
               </Link>
             )
           })}
-        </Grid>
+        </div>
 
         <p className="mt-8">
           <Link href="/centres" className="link-accent">
