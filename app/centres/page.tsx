@@ -15,10 +15,12 @@
 // "0 consultants" on a service LIMS runs perfectly well would be an own goal, so the
 // line is absent rather than zero.
 
+import Image from 'next/image'
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { Grid } from '@/components/primitives/Grid'
 import { Section } from '@/components/primitives/Section'
+import { centreIconSrc } from '@/lib/centre-icons'
 import { getDoctorsByDepartment } from '@/lib/doctors'
 import {
   SERVICE_CATEGORIES,
@@ -81,22 +83,32 @@ export default function CentresPage() {
             <Grid min="sm" className="mt-6">
               {services.map((service) => {
                 const doctors = getDoctorsByDepartment(service.slug)
+                const iconSrc = centreIconSrc(service.slug)
 
                 return (
                   <Link
                     key={service.slug}
                     href={serviceHref(service)}
-                    className="card-geo flex min-h-[48px] flex-col justify-center p-5"
+                    className="card-geo flex min-h-[48px] items-center gap-3 p-5"
                   >
-                    <h3 className="text-step-1 font-semibold text-teal-800">
-                      {service.name}
-                    </h3>
-                    {doctors.length > 0 ? (
-                      <p className="mt-1 text-step--1 text-ink-600">
-                        {doctors.length}{' '}
-                        {doctors.length === 1 ? 'consultant' : 'consultants'}
-                      </p>
+                    {/* Only clinical departments have a supplied icon today — see
+                        lib/centre-icons.ts. Absent elsewhere rather than a generic
+                        stand-in, so a diagnostics or support tile without one reads
+                        as "not supplied yet", not as a guess. */}
+                    {iconSrc ? (
+                      <Image src={iconSrc} alt="" width={72} height={72} className="h-10 w-10 shrink-0" />
                     ) : null}
+                    <div>
+                      <h3 className="text-step-1 font-semibold text-teal-800">
+                        {service.name}
+                      </h3>
+                      {doctors.length > 0 ? (
+                        <p className="mt-1 text-step--1 text-ink-600">
+                          {doctors.length}{' '}
+                          {doctors.length === 1 ? 'consultant' : 'consultants'}
+                        </p>
+                      ) : null}
+                    </div>
                   </Link>
                 )
               })}
