@@ -39,88 +39,44 @@ export default function HomePage() {
   return (
     <>
       {/* -- Hero ---------------------------------------------------------- */}
-      {/* overflow-hidden clips the texture div below to the section's own bounds —
-          without it the dot grid's un-masked corner could bleed past the tint band
-          on a very short viewport. relative gives that absolutely-positioned div
-          something to anchor to. */}
-      <Section tone="tint" labelledBy="hero-heading" className="relative overflow-hidden">
-        {/* isolate is load-bearing, not decorative — the exact pairing .btn-primary's
-            own -z-10 sweep layer already relies on in app/globals.css. position:
-            relative alone does not create a stacking context; without an explicit
-            isolate (or z-index) here, the texture div's -z-10 below escapes past this
-            div entirely and paints behind the page's own background rather than just
-            behind the Stack beside it — which is why the texture rendered as fully
-            invisible regardless of any opacity or mask value tried before this. */}
-        <div className="relative isolate">
-          {/* Decorative depth for a hero that was previously flat text-on-tint with
-              nothing behind it — see the audit note on app/globals.css's .hero-texture
-              for why this is the card's own hover motif rather than invented
-              photography. Faded toward the right, vertically centred on the hero
-              rather than tucked into a corner, via a mask — that is where the prose
-              column (max-w-prose) leaves the most open tint for it to sit in, rather
-              than tiled evenly across the whole band. aria-hidden and
-              pointer-events-none: it carries no information and must never intercept
-              a tap meant for the buttons below it.
+      <Section tone="tint" labelledBy="hero-heading">
+        <Stack gap="lg" className="max-w-prose">
+          {/* Eyebrow is copper-700, not copper-500: at this size the accent tone is
+              2.95:1 and fails AA outright. The text-safe copper is the only one that
+              may carry words. */}
+          <p className="eyebrow">{siteConfig.city}, Haryana</p>
+          <h1 id="hero-heading" className="text-step-5">
+            {siteConfig.name}
+          </h1>
+          <span className="rule-accent-lg" aria-hidden="true" />
+          <p className="text-step-1 text-ink-950">{HERO_INTRO}</p>
 
-              -inset-6 (24px on every edge) rather than inset-0: .hero-texture drifts
-              on a 22px transform loop, and this is what keeps that loop from ever
-              uncovering a bare edge — the Section's own overflow-hidden (see its
-              className above) clips the 24px overhang back down to the hero's actual
-              bounds, so nothing here changes the hero's visible size.
+          <div className="flex flex-wrap gap-3">
+            <Link
+              href="/appointments"
+              className="btn-primary inline-flex min-h-[48px] items-center px-5
+                         font-semibold"
+            >
+              Book an appointment
+            </Link>
+            {/*
+              Both hero CTAs are solid fills with no stroke: copper for the primary
+              action, rich teal for the secondary. The label is white on both.
 
-              WHITE at the mask's visible stop, not black — this is the actual reason
-              three opacity bumps in a row rendered nothing. mask-image gradients are
-              ambiguous between luminance masking (black = 0 luminance = fully masked
-              OUT) and alpha masking (black at alpha 1 = fully visible); which one a
-              browser applies depends on the mask source, so the value that means
-              "show" is not the same in both models. White is the one colour that
-              means "fully visible" under EITHER model — full luminance in one, full
-              alpha in the other — which is why it is the standard safe choice for a
-              mask's visible stop, not a stylistic pick. */}
-          <div
-            aria-hidden="true"
-            className="hero-texture pointer-events-none absolute -inset-6 -z-10
-                       [mask-image:radial-gradient(circle_at_85%_45%,white,transparent_75%)]
-                       [-webkit-mask-image:radial-gradient(circle_at_85%_45%,white,transparent_75%)]"
-          />
-          <Stack gap="lg" className="max-w-prose">
-            {/* Eyebrow is copper-700, not copper-500: at this size the accent tone is
-                2.95:1 and fails AA outright. The text-safe copper is the only one that
-                may carry words. */}
-            <p className="eyebrow">{siteConfig.city}, Haryana</p>
-            <h1 id="hero-heading" className="text-step-5">
-              {siteConfig.name}
-            </h1>
-            <span className="rule-accent-lg" aria-hidden="true" />
-            <p className="text-step-1 text-ink-950">{HERO_INTRO}</p>
-
-            <div className="flex flex-wrap gap-3">
-              <Link
-                href="/appointments"
-                className="btn-primary inline-flex min-h-[48px] items-center px-5
-                           font-semibold"
-              >
-                Book an appointment
-              </Link>
-              {/*
-                Both hero CTAs are solid fills with no stroke: copper for the primary
-                action, rich teal for the secondary. The label is white on both.
-
-                The rich fill also closes something the pale version left open. As a
-                teal-200 tint this button's EDGE against the teal-50 hero band was
-                1.30:1, under the 3:1 WCAG 1.4.11 asks of a control's boundary — no
-                light tint clears that on this band. teal-800 puts it at 7.29:1.
-              */}
-              <Link
-                href="/doctors"
-                className="btn-secondary inline-flex min-h-[48px] items-center px-5
-                           font-semibold"
-              >
-                Find a doctor
-              </Link>
-            </div>
-          </Stack>
-        </div>
+              The rich fill also closes something the pale version left open. As a
+              teal-200 tint this button's EDGE against the teal-50 hero band was
+              1.30:1, under the 3:1 WCAG 1.4.11 asks of a control's boundary — no
+              light tint clears that on this band. teal-800 puts it at 7.29:1.
+            */}
+            <Link
+              href="/doctors"
+              className="btn-secondary inline-flex min-h-[48px] items-center px-5
+                         font-semibold"
+            >
+              Find a doctor
+            </Link>
+          </div>
+        </Stack>
       </Section>
 
       {/* -- Quick actions ------------------------------------------------- */}
