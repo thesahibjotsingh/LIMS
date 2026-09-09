@@ -11,7 +11,7 @@ import { Inter, Source_Serif_4 } from 'next/font/google'
 export const sans = Inter({
   subsets: ['latin'],
   display: 'swap',
-  weight: ['400', '600'],
+  weight: ['400', '500', '600'],
   variable: '--font-sans',
 })
 

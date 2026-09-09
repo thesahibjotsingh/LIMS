@@ -33,6 +33,51 @@ export interface AppointmentFormProps {
 
 type Status = 'idle' | 'pending' | 'success' | 'error'
 
+/**
+ * Field-level validation, run on submit.
+ *
+ * `noValidate` on the <form> below turns off the browser's own tooltips, which is why
+ * this exists at all — without it, a malformed phone number was silently rejected only
+ * after a round trip to the server, with no indication of which field was wrong. Kept
+ * deliberately loose: this checks shape (digit count, an @ and a dot), never content a
+ * patient might legitimately type differently than expected.
+ */
+interface FieldErrors {
+  name?: string
+  phone?: string
+  email?: string
+  preferredDate?: string
+}
+
+const FIELD_ORDER = ['name', 'phone', 'email', 'preferredDate'] as const
+
+function validate(formData: FormData, todayIso: string): FieldErrors {
+  const errors: FieldErrors = {}
+
+  const name = (formData.get('name') as string | null)?.trim() ?? ''
+  if (!name) errors.name = 'Enter your name.'
+
+  const phone = (formData.get('phone') as string | null)?.trim() ?? ''
+  const phoneDigits = phone.replace(/\D/g, '')
+  if (!phone) {
+    errors.phone = 'Enter a phone number we can reach you on.'
+  } else if (phoneDigits.length < 10 || phoneDigits.length > 13) {
+    errors.phone = 'Enter a valid phone number, e.g. 98765 43210.'
+  }
+
+  const email = (formData.get('email') as string | null)?.trim() ?? ''
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    errors.email = 'Enter a valid email address, or leave it blank.'
+  }
+
+  const preferredDate = (formData.get('preferredDate') as string | null)?.trim() ?? ''
+  if (preferredDate && preferredDate < todayIso) {
+    errors.preferredDate = 'Choose a date from today onward.'
+  }
+
+  return errors
+}
+
 export function AppointmentForm({
   categories,
   servicesByCategory,
@@ -42,11 +87,38 @@ export function AppointmentForm({
   const formRef = useRef<HTMLFormElement>(null)
   const [status, setStatus] = useState<Status>('idle')
   const [errorMessage, setErrorMessage] = useState('')
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
   const errorId = useId()
+
+  const nameRef = useRef<HTMLInputElement>(null)
+  const phoneRef = useRef<HTMLInputElement>(null)
+  const emailRef = useRef<HTMLInputElement>(null)
+  const dateRef = useRef<HTMLInputElement>(null)
+
+  /** Clears one field's error the moment its value changes, rather than making a
+   *  patient re-submit to find out the fix worked. */
+  const clearFieldError = useCallback((field: keyof FieldErrors) => {
+    setFieldErrors((current) => {
+      if (!current[field]) return current
+      const next = { ...current }
+      delete next[field]
+      return next
+    })
+  }, [])
 
   const onSubmit = useCallback(async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     const formData = new FormData(event.currentTarget)
+
+    const validationErrors = validate(formData, todayIso)
+    setFieldErrors(validationErrors)
+
+    const firstInvalidField = FIELD_ORDER.find((field) => validationErrors[field])
+    if (firstInvalidField === 'name') nameRef.current?.focus()
+    else if (firstInvalidField === 'phone') phoneRef.current?.focus()
+    else if (firstInvalidField === 'email') emailRef.current?.focus()
+    else if (firstInvalidField === 'preferredDate') dateRef.current?.focus()
+    if (firstInvalidField) return
 
     setStatus('pending')
     setErrorMessage('')
@@ -81,7 +153,7 @@ export function AppointmentForm({
       setStatus('error')
       setErrorMessage('Could not reach the server. Check your connection and try again.')
     }
-  }, [])
+  }, [todayIso])
 
   if (status === 'success') {
     return (
@@ -98,6 +170,7 @@ export function AppointmentForm({
           type="button"
           onClick={() => {
             setStatus('idle')
+            setFieldErrors({})
             formRef.current?.reset()
           }}
           className="btn-secondary mt-6 inline-flex min-h-[48px] items-center px-5
@@ -124,15 +197,27 @@ export function AppointmentForm({
             Name
           </label>
           <input
+            ref={nameRef}
             id="appointment-name"
             name="name"
             type="text"
             required
             autoComplete="name"
-            className="mt-1.5 h-12 w-full rounded-full border-2 border-ink-200 bg-white
-                       px-4 text-step--1 text-ink-950 focus:border-teal-600
-                       focus:outline-none focus:ring-0"
+            aria-invalid={Boolean(fieldErrors.name)}
+            aria-describedby={fieldErrors.name ? 'appointment-name-error' : undefined}
+            onChange={() => clearFieldError('name')}
+            className={`mt-1.5 h-12 w-full rounded-full border-2 bg-white px-4 text-step--1
+                        text-ink-950 focus:outline-none focus:ring-0 ${
+                          fieldErrors.name
+                            ? 'border-emergency focus:border-emergency'
+                            : 'border-ink-200 focus:border-teal-600'
+                        }`}
           />
+          {fieldErrors.name ? (
+            <p id="appointment-name-error" role="alert" className="mt-1.5 text-[0.8rem] text-emergency">
+              {fieldErrors.name}
+            </p>
+          ) : null}
         </div>
 
         <div>
@@ -140,15 +225,27 @@ export function AppointmentForm({
             Phone number
           </label>
           <input
+            ref={phoneRef}
             id="appointment-phone"
             name="phone"
             type="tel"
             required
             autoComplete="tel"
-            className="mt-1.5 h-12 w-full rounded-full border-2 border-ink-200 bg-white
-                       px-4 text-step--1 text-ink-950 focus:border-teal-600
-                       focus:outline-none focus:ring-0"
+            aria-invalid={Boolean(fieldErrors.phone)}
+            aria-describedby={fieldErrors.phone ? 'appointment-phone-error' : undefined}
+            onChange={() => clearFieldError('phone')}
+            className={`mt-1.5 h-12 w-full rounded-full border-2 bg-white px-4 text-step--1
+                        text-ink-950 focus:outline-none focus:ring-0 ${
+                          fieldErrors.phone
+                            ? 'border-emergency focus:border-emergency'
+                            : 'border-ink-200 focus:border-teal-600'
+                        }`}
           />
+          {fieldErrors.phone ? (
+            <p id="appointment-phone-error" role="alert" className="mt-1.5 text-[0.8rem] text-emergency">
+              {fieldErrors.phone}
+            </p>
+          ) : null}
         </div>
       </div>
 
@@ -157,14 +254,26 @@ export function AppointmentForm({
           Email <span className="font-normal text-ink-600">(optional)</span>
         </label>
         <input
+          ref={emailRef}
           id="appointment-email"
           name="email"
           type="email"
           autoComplete="email"
-          className="mt-1.5 h-12 w-full rounded-full border-2 border-ink-200 bg-white
-                     px-4 text-step--1 text-ink-950 focus:border-teal-600
-                     focus:outline-none focus:ring-0"
+          aria-invalid={Boolean(fieldErrors.email)}
+          aria-describedby={fieldErrors.email ? 'appointment-email-error' : undefined}
+          onChange={() => clearFieldError('email')}
+          className={`mt-1.5 h-12 w-full rounded-full border-2 bg-white px-4 text-step--1
+                      text-ink-950 focus:outline-none focus:ring-0 ${
+                        fieldErrors.email
+                          ? 'border-emergency focus:border-emergency'
+                          : 'border-ink-200 focus:border-teal-600'
+                      }`}
         />
+        {fieldErrors.email ? (
+          <p id="appointment-email-error" role="alert" className="mt-1.5 text-[0.8rem] text-emergency">
+            {fieldErrors.email}
+          </p>
+        ) : null}
       </div>
 
       <div className="grid gap-5 sm:grid-cols-2">
@@ -221,14 +330,26 @@ export function AppointmentForm({
             Preferred date <span className="font-normal text-ink-600">(optional)</span>
           </label>
           <input
+            ref={dateRef}
             id="appointment-date"
             name="preferredDate"
             type="date"
             min={todayIso}
-            className="mt-1.5 h-12 w-full rounded-full border-2 border-ink-200 bg-white
-                       px-4 text-step--1 text-ink-950 focus:border-teal-600
-                       focus:outline-none focus:ring-0"
+            aria-invalid={Boolean(fieldErrors.preferredDate)}
+            aria-describedby={fieldErrors.preferredDate ? 'appointment-date-error' : undefined}
+            onChange={() => clearFieldError('preferredDate')}
+            className={`mt-1.5 h-12 w-full rounded-full border-2 bg-white px-4 text-step--1
+                        text-ink-950 focus:outline-none focus:ring-0 ${
+                          fieldErrors.preferredDate
+                            ? 'border-emergency focus:border-emergency'
+                            : 'border-ink-200 focus:border-teal-600'
+                        }`}
           />
+          {fieldErrors.preferredDate ? (
+            <p id="appointment-date-error" role="alert" className="mt-1.5 text-[0.8rem] text-emergency">
+              {fieldErrors.preferredDate}
+            </p>
+          ) : null}
         </div>
 
         <div>
@@ -285,11 +406,35 @@ export function AppointmentForm({
         type="submit"
         disabled={status === 'pending'}
         aria-describedby={status === 'error' ? errorId : undefined}
-        className="btn-primary inline-flex min-h-[48px] items-center px-5 font-semibold
+        className="btn-primary inline-flex min-h-[48px] items-center gap-2 px-5 font-semibold
                    disabled:cursor-not-allowed disabled:opacity-60"
       >
-        {status === 'pending' ? 'Sending…' : 'Request appointment'}
+        {status === 'pending' ? (
+          <>
+            {/* animate-spin is a standard CSS animation, so the sitewide
+                prefers-reduced-motion guard in globals.css already collapses it to a
+                static ring for anyone who asks — no separate guard needed here. */}
+            <SpinnerIcon className="h-4 w-4 animate-spin" />
+            Sending…
+          </>
+        ) : (
+          'Request appointment'
+        )}
       </button>
     </form>
+  )
+}
+
+function SpinnerIcon({ className }: { className?: string }) {
+  return (
+    <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" className={className}>
+      <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2.5" opacity="0.3" />
+      <path
+        d="M21 12a9 9 0 0 0-9-9"
+        stroke="currentColor"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+      />
+    </svg>
   )
 }

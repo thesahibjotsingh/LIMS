@@ -20,7 +20,13 @@ import type { Metadata } from 'next'
 import { Grid } from '@/components/primitives/Grid'
 import { Section } from '@/components/primitives/Section'
 import { getDoctorsByDepartment } from '@/lib/doctors'
-import { SERVICE_CATEGORIES, SERVICES, serviceHref, servicesByCategory } from '@/lib/services'
+import {
+  SERVICE_CATEGORIES,
+  SERVICES,
+  serviceHref,
+  servicesByCategory,
+  type ServiceCategory,
+} from '@/lib/services'
 
 export const revalidate = 3600
 
@@ -51,13 +57,24 @@ export default function CentresPage() {
 
         const headingId = `category-${category.id}`
 
+        const CategoryIcon = CATEGORY_ICONS[category.id]
+
         return (
           <section key={category.id} aria-labelledby={headingId} className="mt-14">
-            <h2 id={headingId} className="text-step-3">
-              <Link href={category.basePath} className="text-teal-800 hover:underline">
-                {category.name}
-              </Link>
-            </h2>
+            <div className="flex items-center gap-3">
+              <span
+                aria-hidden="true"
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl
+                           bg-teal-100 text-teal-800"
+              >
+                <CategoryIcon className="h-5 w-5" />
+              </span>
+              <h2 id={headingId} className="text-step-3">
+                <Link href={category.basePath} className="text-teal-800 hover:underline">
+                  {category.name}
+                </Link>
+              </h2>
+            </div>
             <span className="rule-accent mt-3" aria-hidden="true" />
             <p className="mt-3 max-w-prose text-ink-600">{category.blurb}</p>
 
@@ -89,4 +106,78 @@ export default function CentresPage() {
       })}
     </Section>
   )
+}
+
+/* ---------------------------------------------------------------------------
+   Category pictograms — one per section, drawn from circles and straight lines
+   only (the same restraint SiteSearch's own icons use), not an icon-kit import.
+   Chosen for what each category actually is, not a borrowed SaaS metaphor: a
+   cross for clinical treatment, scan rings for diagnostics and imaging, and a
+   lifebuoy for patient support — which happens to echo "Lifeline" too.
+   --------------------------------------------------------------------------- */
+
+interface IconProps {
+  className?: string
+}
+
+function ClinicalIcon({ className }: IconProps) {
+  return (
+    <svg
+      aria-hidden="true"
+      focusable="false"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      className={className}
+    >
+      <circle cx="12" cy="12" r="8.5" />
+      <path d="M12 8.5v7M8.5 12h7" />
+    </svg>
+  )
+}
+
+function DiagnosticsIcon({ className }: IconProps) {
+  return (
+    <svg
+      aria-hidden="true"
+      focusable="false"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      className={className}
+    >
+      <circle cx="12" cy="12" r="8.5" />
+      <circle cx="12" cy="12" r="4.25" />
+      <circle cx="12" cy="12" r="0.75" fill="currentColor" stroke="none" />
+    </svg>
+  )
+}
+
+function SupportIcon({ className }: IconProps) {
+  return (
+    <svg
+      aria-hidden="true"
+      focusable="false"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      className={className}
+    >
+      <circle cx="12" cy="12" r="8.5" />
+      <circle cx="12" cy="12" r="4" />
+      <path d="M12 3.5v4M12 16.5v4M3.5 12h4M16.5 12h4" />
+    </svg>
+  )
+}
+
+const CATEGORY_ICONS: Record<ServiceCategory, React.ComponentType<IconProps>> = {
+  clinical: ClinicalIcon,
+  diagnostics: DiagnosticsIcon,
+  support: SupportIcon,
 }

@@ -17,6 +17,7 @@
 // and DPDP. The facade (poster + play button, youtube-nocookie injected on click,
 // behind media consent) is the only permitted embed on this platform.
 
+import Image from 'next/image'
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
@@ -89,51 +90,64 @@ export default async function DoctorProfilePage({ params }: DoctorProfilePagePro
   return (
     <>
       <Section tone="tint" labelledBy="doctor-heading">
-        <Stack gap="md" className="max-w-prose">
-          {/* Resolved through lib/services so it follows the department to whichever
-              section it belongs to, rather than assuming a prefix. */}
-          <Link
-            href={serviceHrefBySlug(doctor.departmentSlug) ?? '/centres'}
-            className="eyebrow hover:underline"
-          >
-            {department}
-          </Link>
-          <h1 id="doctor-heading" className="text-step-4">
-            {doctor.name}
-          </h1>
+        <div className="flex flex-col gap-8 sm:flex-row sm:items-start">
+          {/* alt="" — the name beside it is the page's own <h1>, so naming the photo too
+              would announce the doctor's name twice to a screen reader. */}
+          <Image
+            src={doctor.portrait?.src ?? '/images/placeholder-doctor.jpg'}
+            alt=""
+            width={doctor.portrait?.width ?? 200}
+            height={doctor.portrait?.height ?? 200}
+            priority
+            className="h-32 w-32 shrink-0 rounded-2xl bg-teal-100 object-cover sm:h-40 sm:w-40"
+          />
 
-          {/* Post-nominals run long in India — never truncate or clamp this line. */}
-          {doctor.qualifications ? (
-            <p className="text-step-0 text-ink-600">{doctor.qualifications}</p>
-          ) : null}
+          <Stack gap="md" className="max-w-prose">
+            {/* Resolved through lib/services so it follows the department to whichever
+                section it belongs to, rather than assuming a prefix. */}
+            <Link
+              href={serviceHrefBySlug(doctor.departmentSlug) ?? '/centres'}
+              className="eyebrow hover:underline"
+            >
+              {department}
+            </Link>
+            <h1 id="doctor-heading" className="text-step-4">
+              {doctor.name}
+            </h1>
 
-          {doctor.designation ? (
-            <p className="text-step-0 text-ink-950">{doctor.designation}</p>
-          ) : null}
-
-          <span className="rule-accent-lg" aria-hidden="true" />
-
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-            {doctor.experienceYears ? (
-              <span className="badge-accent">
-                {doctor.experienceYears} years&rsquo; experience
-              </span>
+            {/* Post-nominals run long in India — never truncate or clamp this line. */}
+            {doctor.qualifications ? (
+              <p className="text-step-0 text-ink-600">{doctor.qualifications}</p>
             ) : null}
 
-            {/* Verbatim, and labelled: this is what a patient checks against the council
-                register, so a reformatted number is a broken number. */}
-            {doctor.registrationNumber ? (
-              <span className="text-step--1 text-ink-950">
-                <span className="font-semibold">Registration no.</span>{' '}
-                <span className="tabular-nums">{registrationDisplay(doctor.registrationNumber)}</span>
-              </span>
+            {doctor.designation ? (
+              <p className="text-step-0 text-ink-950">{doctor.designation}</p>
             ) : null}
-          </div>
 
-          {doctor.languages?.length ? (
-            <p className="text-step--1 text-ink-950">Speaks {doctor.languages.join(', ')}</p>
-          ) : null}
-        </Stack>
+            <span className="rule-accent-lg" aria-hidden="true" />
+
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+              {doctor.experienceYears ? (
+                <span className="badge-accent">
+                  {doctor.experienceYears} years&rsquo; experience
+                </span>
+              ) : null}
+
+              {/* Verbatim, and labelled: this is what a patient checks against the council
+                  register, so a reformatted number is a broken number. */}
+              {doctor.registrationNumber ? (
+                <span className="text-step--1 text-ink-950">
+                  <span className="font-semibold">Registration no.</span>{' '}
+                  <span className="tabular-nums">{registrationDisplay(doctor.registrationNumber)}</span>
+                </span>
+              ) : null}
+            </div>
+
+            {doctor.languages?.length ? (
+              <p className="text-step--1 text-ink-950">Speaks {doctor.languages.join(', ')}</p>
+            ) : null}
+          </Stack>
+        </div>
       </Section>
 
       <Section labelledBy="appointment-heading" width="prose">

@@ -264,6 +264,16 @@
         "this is the thing you are pointing at", not "this is the thing to do". */
   .btn-secondary {
     @apply relative isolate overflow-hidden rounded-full bg-teal-800 text-white;
+    transition: transform 140ms cubic-bezier(0.2, 0, 0, 1);
+  }
+
+  /* Press feedback: a small, transform-only scale so the button reads as a physical
+     control rather than a flat hit target. transform, never top/left/width, so this
+     costs no layout — and it composes cleanly with the sweep above, which animates
+     ::before, not the button's own box. Covered by the sitewide reduced-motion guard
+     like every other transition on the site. */
+  .btn-secondary:active {
+    transform: scale(0.98);
   }
 
   .btn-secondary::before {
@@ -302,13 +312,18 @@
     @apply rounded-full text-teal-800;
     transition:
       background-color 140ms cubic-bezier(0.2, 0, 0, 1),
-      color 140ms cubic-bezier(0.2, 0, 0, 1);
+      color 140ms cubic-bezier(0.2, 0, 0, 1),
+      transform 140ms cubic-bezier(0.2, 0, 0, 1);
   }
 
   .btn-ghost:hover,
   .btn-ghost:focus-visible,
   .btn-ghost[aria-expanded='true'] {
     @apply bg-teal-800 text-white;
+  }
+
+  .btn-ghost:active {
+    transform: scale(0.92);
   }
 
   /* -------------------------------------------------------------------------
@@ -570,7 +585,12 @@
     transition:
       background-color 140ms cubic-bezier(0.2, 0, 0, 1),
       border-color 140ms cubic-bezier(0.2, 0, 0, 1),
-      color 140ms cubic-bezier(0.2, 0, 0, 1);
+      color 140ms cubic-bezier(0.2, 0, 0, 1),
+      transform 140ms cubic-bezier(0.2, 0, 0, 1);
+  }
+
+  .card-cta:active {
+    transform: scale(0.98);
   }
 
   .card-geo:hover .card-cta,
@@ -630,6 +650,7 @@
         header, told apart by hue, by saturation, and by the graphic. */
   .btn-primary {
     @apply relative isolate overflow-hidden rounded-full bg-copper-700 text-white;
+    transition: transform 140ms cubic-bezier(0.2, 0, 0, 1);
   }
 
   .btn-primary::before {
@@ -644,11 +665,28 @@
     transform: translateX(0);
   }
 
+  .btn-primary:active {
+    transform: scale(0.98);
+  }
+
   /* Copper text link. Underline is always present — colour alone never marks a link. */
   .link-accent {
     @apply font-semibold text-copper-800 underline decoration-copper-500 decoration-2
            underline-offset-4 transition-colors ease-standard hover:text-copper-900
            hover:decoration-copper-700;
+  }
+
+  /* Quiet dot-grid texture for the homepage hero — the same motif .card-geo already
+     draws on hover (radial-gradient dots, copper at low opacity), reused here for a
+     section that otherwise has nothing behind its text but a flat tint. 14%, slightly
+     above the card's 12%, because this sits behind a whole hero rather than one hover
+     state and needs to read at a glance; still nowhere near a value that could shift
+     body-text contrast. Always paired with a mask-image at the call site so the dots
+     fade toward one corner instead of tiling evenly across the whole band — an even
+     grid reads as wallpaper, a fading one reads as a considered accent. */
+  .hero-texture {
+    background-image: radial-gradient(circle, rgba(156, 74, 40, 0.14) 1.5px, transparent 1.5px);
+    background-size: 22px 22px;
   }
 
   /* -------------------------------------------------------------------------
