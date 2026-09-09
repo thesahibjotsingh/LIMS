@@ -13,14 +13,27 @@
 // the emergency number within one screen. Everything below is ordered for that.
 
 import Link from 'next/link'
+import { DoctorCarousel } from '@/components/sections/DoctorCarousel'
 import { Grid } from '@/components/primitives/Grid'
 import { Section } from '@/components/primitives/Section'
 import { Stack } from '@/components/primitives/Stack'
+import { DOCTORS } from '@/lib/doctors'
 import { SERVICES } from '@/lib/services'
 import { clinicalNav, contact, siteConfig } from '@/lib/site-config'
 
 // Content changes weekly at most — static with hourly revalidation keeps TTFB low.
 export const revalidate = 3600
+
+// The hero's own sentence, separate from siteConfig.description on purpose:
+// siteConfig.description is written dense and keyword-loaded for the <meta
+// description> tag (see app/layout.tsx), and reusing it verbatim as the hero's visible
+// paragraph made the hero read like a search snippet rather than something a person
+// would say. Same facts, same address, same services — said the way LIMS actually
+// wants a visitor greeted.
+const HERO_INTRO =
+  "Hisar's multi-speciality hospital at Jindal Chowk. Round-the-clock emergency care, " +
+  'on-site surgery, orthopaedics, and obstetrics & gynaecology, plus diagnostics, ' +
+  'imaging, and pathology under the same roof.'
 
 export default function HomePage() {
   return (
@@ -39,10 +52,16 @@ export default function HomePage() {
               column leaves the most open tint for it to sit in, rather than tiled
               evenly across the whole band. aria-hidden and pointer-events-none: it
               carries no information and must never intercept a tap meant for the
-              buttons below it. */}
+              buttons below it.
+
+              -inset-6 (24px on every edge) rather than inset-0: .hero-texture drifts
+              on a 22px transform loop, and this is what keeps that loop from ever
+              uncovering a bare edge — the Section's own overflow-hidden (see its
+              className above) clips the 24px overhang back down to the hero's actual
+              bounds, so nothing here changes the hero's visible size. */}
           <div
             aria-hidden="true"
-            className="hero-texture pointer-events-none absolute inset-0 -z-10
+            className="hero-texture pointer-events-none absolute -inset-6 -z-10
                        [mask-image:radial-gradient(circle_at_88%_12%,black,transparent_60%)]
                        [-webkit-mask-image:radial-gradient(circle_at_88%_12%,black,transparent_60%)]"
           />
@@ -55,7 +74,7 @@ export default function HomePage() {
               {siteConfig.name}
             </h1>
             <span className="rule-accent-lg" aria-hidden="true" />
-            <p className="text-step-1 text-ink-950">{siteConfig.description}</p>
+            <p className="text-step-1 text-ink-950">{HERO_INTRO}</p>
 
             <div className="flex flex-wrap gap-3">
               <Link
@@ -151,11 +170,30 @@ export default function HomePage() {
         </p>
       </Section>
 
+      {/* -- Meet our consultants -------------------------------------------- */}
+      {/* tone="warm" (copper-50) was reserved from the start for "human-centred
+          content (patient stories)" and sat unused until now — see Section.tsx. A
+          named consultant is exactly that kind of content, so this is its first use
+          rather than a new tone invented for the job.
+
+          DoctorCarousel renders the real roster from lib/doctors.ts, arrows-only (no
+          autoplay — see the component's own header for why), and marks its bio/quote
+          copy as an explicit sample until LIMS supplies the doctor's real words. */}
+      <Section tone="warm" labelledBy="doctors-heading">
+        <p className="eyebrow">Our consultants</p>
+        <h2 id="doctors-heading" className="mt-2 text-step-4">
+          Meet our consultants
+        </h2>
+        <span className="rule-accent mt-3" aria-hidden="true" />
+        <div className="mt-8">
+          <DoctorCarousel doctors={DOCTORS} />
+        </div>
+      </Section>
+
       {/*
         PHASE 1 — remaining sections, still deliberately not stubbed with invented
         content:
           • "Why LIMS" statistics   → needs verified figures from LIMS
-          • Featured doctors        → needs the real doctor roster (Phase 3 components)
           • Patient stories         → needs recorded patient consent before publication
           • Health packages teaser  → needs pricing sign-off
 

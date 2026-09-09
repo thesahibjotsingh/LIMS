@@ -17,7 +17,7 @@
 // Labels are teal-800 on teal-50 at 7.29:1 and never change colour, because nothing
 // fills behind them here — only the 3px bar at the bottom edge moves.
 //
-// Eight items fit here comfortably, which is why the three secondary entries came back
+// Nine items fit here comfortably, which is why the three secondary entries came back
 // out of the dropdowns — a tier of its own removes the width constraint that put them
 // there.
 //

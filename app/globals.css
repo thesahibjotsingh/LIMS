@@ -687,6 +687,21 @@
   .hero-texture {
     background-image: radial-gradient(circle, rgba(156, 74, 40, 0.14) 1.5px, transparent 1.5px);
     background-size: 22px 22px;
+    /* Drift, not animate-in-place: transform, never background-position, for the same
+       reason .card-geo's own bar sweeps on a transform — background-position is a
+       paint on every frame, transform is compositor-only. 40s for one 22px loop is
+       ~0.5px/second, at the edge of what the eye consciously registers as motion
+       rather than as a still texture; the point is "the page is alive", not
+       "something is moving over here". The element carrying this class is oversized
+       by the call site (-inset-6, 24px on every edge) so a 22px translate never
+       uncovers a bare edge, and the loop is exactly one tile so it never seams. */
+    animation: hero-texture-drift 40s linear infinite;
+  }
+
+  @keyframes hero-texture-drift {
+    to {
+      transform: translate(-22px, -22px);
+    }
   }
 
   /* -------------------------------------------------------------------------
