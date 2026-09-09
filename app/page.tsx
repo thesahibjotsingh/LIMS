@@ -17,7 +17,7 @@ import { Grid } from '@/components/primitives/Grid'
 import { Section } from '@/components/primitives/Section'
 import { Stack } from '@/components/primitives/Stack'
 import { SERVICES } from '@/lib/services'
-import { clinicalNav, siteConfig } from '@/lib/site-config'
+import { clinicalNav, contact, siteConfig } from '@/lib/site-config'
 
 // Content changes weekly at most — static with hourly revalidation keeps TTFB low.
 export const revalidate = 3600
@@ -26,44 +26,64 @@ export default function HomePage() {
   return (
     <>
       {/* -- Hero ---------------------------------------------------------- */}
-      <Section tone="tint" labelledBy="hero-heading">
-        <Stack gap="lg" className="max-w-prose">
-          {/* Eyebrow is copper-700, not copper-500: at this size the accent tone is
-              2.95:1 and fails AA outright. The text-safe copper is the only one that
-              may carry words. */}
-          <p className="eyebrow">{siteConfig.city}, Haryana</p>
-          <h1 id="hero-heading" className="text-step-5">
-            {siteConfig.name}
-          </h1>
-          <span className="rule-accent-lg" aria-hidden="true" />
-          <p className="text-step-1 text-ink-950">{siteConfig.description}</p>
+      {/* overflow-hidden clips the texture div below to the section's own bounds —
+          without it the dot grid's un-masked corner could bleed past the tint band
+          on a very short viewport. relative gives that absolutely-positioned div
+          something to anchor to. */}
+      <Section tone="tint" labelledBy="hero-heading" className="relative overflow-hidden">
+        <div className="relative">
+          {/* Decorative depth for a hero that was previously flat text-on-tint with
+              nothing behind it — see the audit note on app/globals.css's .hero-texture
+              for why this is the card's own hover motif rather than invented
+              photography. Faded toward the top-right via a mask, where the prose
+              column leaves the most open tint for it to sit in, rather than tiled
+              evenly across the whole band. aria-hidden and pointer-events-none: it
+              carries no information and must never intercept a tap meant for the
+              buttons below it. */}
+          <div
+            aria-hidden="true"
+            className="hero-texture pointer-events-none absolute inset-0 -z-10
+                       [mask-image:radial-gradient(circle_at_88%_12%,black,transparent_60%)]
+                       [-webkit-mask-image:radial-gradient(circle_at_88%_12%,black,transparent_60%)]"
+          />
+          <Stack gap="lg" className="max-w-prose">
+            {/* Eyebrow is copper-700, not copper-500: at this size the accent tone is
+                2.95:1 and fails AA outright. The text-safe copper is the only one that
+                may carry words. */}
+            <p className="eyebrow">{siteConfig.city}, Haryana</p>
+            <h1 id="hero-heading" className="text-step-5">
+              {siteConfig.name}
+            </h1>
+            <span className="rule-accent-lg" aria-hidden="true" />
+            <p className="text-step-1 text-ink-950">{siteConfig.description}</p>
 
-          <div className="flex flex-wrap gap-3">
-            <Link
-              href="/appointments"
-              className="btn-primary inline-flex min-h-[48px] items-center px-5
-                         font-semibold"
-            >
-              Book an appointment
-            </Link>
-            {/*
-              Both hero CTAs are solid fills with no stroke: copper for the primary
-              action, rich teal for the secondary. The label is white on both.
+            <div className="flex flex-wrap gap-3">
+              <Link
+                href="/appointments"
+                className="btn-primary inline-flex min-h-[48px] items-center px-5
+                           font-semibold"
+              >
+                Book an appointment
+              </Link>
+              {/*
+                Both hero CTAs are solid fills with no stroke: copper for the primary
+                action, rich teal for the secondary. The label is white on both.
 
-              The rich fill also closes something the pale version left open. As a
-              teal-200 tint this button's EDGE against the teal-50 hero band was
-              1.30:1, under the 3:1 WCAG 1.4.11 asks of a control's boundary — no
-              light tint clears that on this band. teal-800 puts it at 7.29:1.
-            */}
-            <Link
-              href="/doctors"
-              className="btn-secondary inline-flex min-h-[48px] items-center px-5
-                         font-semibold"
-            >
-              Find a doctor
-            </Link>
-          </div>
-        </Stack>
+                The rich fill also closes something the pale version left open. As a
+                teal-200 tint this button's EDGE against the teal-50 hero band was
+                1.30:1, under the 3:1 WCAG 1.4.11 asks of a control's boundary — no
+                light tint clears that on this band. teal-800 puts it at 7.29:1.
+              */}
+              <Link
+                href="/doctors"
+                className="btn-secondary inline-flex min-h-[48px] items-center px-5
+                           font-semibold"
+              >
+                Find a doctor
+              </Link>
+            </div>
+          </Stack>
+        </div>
       </Section>
 
       {/* -- Quick actions ------------------------------------------------- */}
@@ -75,20 +95,30 @@ export default function HomePage() {
         <span className="rule-accent mt-3" aria-hidden="true" />
         {/* .card-geo turns its left edge teal and its shadow deeper on hover AND on
             focus-within, so the affordance exists for someone tabbing through as
-            well as for a mouse. */}
+            well as for a mouse. Each tile now carries a small custom pictogram —
+            hand-drawn to match the stroke weight of SiteSearch's own icons, not a
+            generic icon-kit import — so the four actions are recognisable at a glance
+            rather than read one word at a time. */}
         <Grid min="sm" className="mt-8">
           {[
-            { label: 'Book an appointment', href: '/appointments' },
-            { label: 'Find a doctor', href: '/doctors' },
-            { label: 'Health check packages', href: '/health-packages' },
-            { label: 'Locations & directions', href: '/contact#locations' },
+            { label: 'Book an appointment', href: '/appointments', icon: CalendarIcon },
+            { label: 'Find a doctor', href: '/doctors', icon: DoctorIcon },
+            { label: 'Health check packages', href: '/health-packages', icon: PulseIcon },
+            { label: 'Locations & directions', href: '/contact#locations', icon: PinIcon },
           ].map((action) => (
             <Link
               key={action.href}
               href={action.href}
-              className="card-geo flex min-h-[48px] items-center p-5 text-step-1
+              className="card-geo flex min-h-[48px] items-center gap-4 p-5 text-step-1
                          font-semibold text-teal-800"
             >
+              <span
+                aria-hidden="true"
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl
+                           bg-teal-100 text-teal-800"
+              >
+                <action.icon className="h-5 w-5" />
+              </span>
               {action.label}
             </Link>
           ))}
@@ -122,13 +152,136 @@ export default function HomePage() {
       </Section>
 
       {/*
-        PHASE 1 — remaining sections, deliberately not stubbed with invented content:
+        PHASE 1 — remaining sections, still deliberately not stubbed with invented
+        content:
           • "Why LIMS" statistics   → needs verified figures from LIMS
           • Featured doctors        → needs the real doctor roster (Phase 3 components)
           • Patient stories         → needs recorded patient consent before publication
           • Health packages teaser  → needs pricing sign-off
-          • CTA band (tone="dark")
+
+        The closing CTA band below needed none of that — it restates two actions
+        already real on this page — so the homepage no longer trails off after the
+        centres grid with no ending.
       */}
+
+      {/* -- Closing CTA ----------------------------------------------------- */}
+      <Section tone="dark" labelledBy="cta-heading">
+        <div className="flex flex-col items-start gap-6 sm:flex-row sm:items-center sm:justify-between">
+          <div className="max-w-prose">
+            <p className="eyebrow-on-dark">{siteConfig.shortName}, {siteConfig.city}</p>
+            <h2 id="cta-heading" className="mt-2 text-step-3">
+              Need to see a doctor, or reach us right now?
+            </h2>
+            <span className="rule-accent-lg mt-3" aria-hidden="true" />
+          </div>
+
+          <div className="flex flex-wrap gap-3">
+            <Link
+              href="/appointments"
+              className="btn-primary inline-flex min-h-[48px] items-center px-5 font-semibold"
+            >
+              Book an appointment
+            </Link>
+            <a
+              href={`tel:${contact.primary}`}
+              className="inline-flex min-h-[48px] items-center rounded-full border-2
+                         border-white/40 px-5 font-semibold text-white transition-colors
+                         ease-standard hover:border-white hover:bg-white/10"
+            >
+              Call {contact.primaryDisplay}
+            </a>
+          </div>
+        </div>
+      </Section>
     </>
+  )
+}
+
+/* ---------------------------------------------------------------------------
+   Quick-action pictograms — hand-drawn to the same stroke weight and viewBox
+   discipline as SiteSearch's SearchIcon/CloseIcon, not pulled from an icon kit.
+   Server-renderable: plain SVG, no client JS.
+   --------------------------------------------------------------------------- */
+
+interface IconProps {
+  className?: string
+}
+
+function CalendarIcon({ className }: IconProps) {
+  return (
+    <svg
+      aria-hidden="true"
+      focusable="false"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+    >
+      <rect x="3.5" y="5" width="17" height="15" rx="2.5" />
+      <path d="M3.5 9.5h17" />
+      <path d="M8 3v3.5M16 3v3.5" />
+      <path d="M8 13.25h.01M12 13.25h.01M16 13.25h.01M8 16.75h.01M12 16.75h.01" />
+    </svg>
+  )
+}
+
+function DoctorIcon({ className }: IconProps) {
+  return (
+    <svg
+      aria-hidden="true"
+      focusable="false"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+    >
+      <circle cx="12" cy="8" r="3.25" />
+      <path d="M4.75 20c0-3.73 3.25-6 7.25-6s7.25 2.27 7.25 6" />
+      <circle cx="18.25" cy="16.5" r="3.25" className="fill-teal-100" />
+      <path d="M18.25 15.25v2.5M17 16.5h2.5" />
+    </svg>
+  )
+}
+
+function PulseIcon({ className }: IconProps) {
+  return (
+    <svg
+      aria-hidden="true"
+      focusable="false"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+    >
+      <path d="M3 12.5h3.5l2-4.5 3 9 2.25-6.5 1.75 2h5.5" />
+    </svg>
+  )
+}
+
+function PinIcon({ className }: IconProps) {
+  return (
+    <svg
+      aria-hidden="true"
+      focusable="false"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+    >
+      <path d="M12 21s6.5-6.1 6.5-11A6.5 6.5 0 1 0 5.5 10c0 4.9 6.5 11 6.5 11Z" />
+      <circle cx="12" cy="10" r="2.25" />
+    </svg>
   )
 }

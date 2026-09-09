@@ -35,13 +35,59 @@ export interface RequestCallbackButtonProps {
 
 type Status = 'idle' | 'pending' | 'success' | 'error'
 
+/** Same shape and reasoning as AppointmentForm's own validate() — see the note there.
+ *  No date field here, so the check set is smaller. */
+interface FieldErrors {
+  name?: string
+  phone?: string
+  email?: string
+}
+
+const FIELD_ORDER = ['name', 'phone', 'email'] as const
+
+function validate(formData: FormData): FieldErrors {
+  const errors: FieldErrors = {}
+
+  const name = (formData.get('name') as string | null)?.trim() ?? ''
+  if (!name) errors.name = 'Enter your name.'
+
+  const phone = (formData.get('phone') as string | null)?.trim() ?? ''
+  const phoneDigits = phone.replace(/\D/g, '')
+  if (!phone) {
+    errors.phone = 'Enter a phone number we can call you back on.'
+  } else if (phoneDigits.length < 10 || phoneDigits.length > 13) {
+    errors.phone = 'Enter a valid phone number, e.g. 98765 43210.'
+  }
+
+  const email = (formData.get('email') as string | null)?.trim() ?? ''
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    errors.email = 'Enter a valid email address, or leave it blank.'
+  }
+
+  return errors
+}
+
 export function RequestCallbackButton({ className = '', children }: RequestCallbackButtonProps) {
   const dialogRef = useRef<HTMLDialogElement>(null)
   const formRef = useRef<HTMLFormElement>(null)
   const [status, setStatus] = useState<Status>('idle')
   const [errorMessage, setErrorMessage] = useState('')
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
   const headingId = useId()
   const errorId = useId()
+
+  const nameRef = useRef<HTMLInputElement>(null)
+  const phoneRef = useRef<HTMLInputElement>(null)
+  const emailRef = useRef<HTMLInputElement>(null)
+
+  const clearFieldError = useCallback((field: keyof FieldErrors) => {
+    setFieldErrors((current) => {
+      if (!current[field]) return current
+      const next = { ...current }
+      delete next[field]
+      return next
+    })
+  }, [])
 
   const openDialog = useCallback(() => {
     dialogRef.current?.showModal()
@@ -56,6 +102,7 @@ export function RequestCallbackButton({ className = '', children }: RequestCallb
   const onDialogClose = useCallback(() => {
     setStatus('idle')
     setErrorMessage('')
+    setFieldErrors({})
     formRef.current?.reset()
   }, [])
 
@@ -69,6 +116,15 @@ export function RequestCallbackButton({ className = '', children }: RequestCallb
   const onSubmit = useCallback(async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     const formData = new FormData(event.currentTarget)
+
+    const validationErrors = validate(formData)
+    setFieldErrors(validationErrors)
+
+    const firstInvalidField = FIELD_ORDER.find((field) => validationErrors[field])
+    if (firstInvalidField === 'name') nameRef.current?.focus()
+    else if (firstInvalidField === 'phone') phoneRef.current?.focus()
+    else if (firstInvalidField === 'email') emailRef.current?.focus()
+    if (firstInvalidField) return
 
     setStatus('pending')
     setErrorMessage('')
@@ -172,6 +228,7 @@ export function RequestCallbackButton({ className = '', children }: RequestCallb
                     Name
                   </label>
                   <input
+                    ref={nameRef}
                     id="callback-name"
                     name="name"
                     type="text"
@@ -182,10 +239,21 @@ export function RequestCallbackButton({ className = '', children }: RequestCallb
                     // primary action does.
                     // eslint-disable-next-line jsx-a11y/no-autofocus
                     autoFocus
-                    className="mt-1.5 h-12 w-full rounded-full border-2 border-ink-200
-                               bg-white px-4 text-step--1 text-ink-950
-                               focus:border-teal-600 focus:outline-none focus:ring-0"
+                    aria-invalid={Boolean(fieldErrors.name)}
+                    aria-describedby={fieldErrors.name ? 'callback-name-error' : undefined}
+                    onChange={() => clearFieldError('name')}
+                    className={`mt-1.5 h-12 w-full rounded-full border-2 bg-white px-4
+                                text-step--1 text-ink-950 focus:outline-none focus:ring-0 ${
+                                  fieldErrors.name
+                                    ? 'border-emergency focus:border-emergency'
+                                    : 'border-ink-200 focus:border-teal-600'
+                                }`}
                   />
+                  {fieldErrors.name ? (
+                    <p id="callback-name-error" role="alert" className="mt-1.5 text-[0.8rem] text-emergency">
+                      {fieldErrors.name}
+                    </p>
+                  ) : null}
                 </div>
 
                 <div>
@@ -196,15 +264,27 @@ export function RequestCallbackButton({ className = '', children }: RequestCallb
                     Phone number
                   </label>
                   <input
+                    ref={phoneRef}
                     id="callback-phone"
                     name="phone"
                     type="tel"
                     required
                     autoComplete="tel"
-                    className="mt-1.5 h-12 w-full rounded-full border-2 border-ink-200
-                               bg-white px-4 text-step--1 text-ink-950
-                               focus:border-teal-600 focus:outline-none focus:ring-0"
+                    aria-invalid={Boolean(fieldErrors.phone)}
+                    aria-describedby={fieldErrors.phone ? 'callback-phone-error' : undefined}
+                    onChange={() => clearFieldError('phone')}
+                    className={`mt-1.5 h-12 w-full rounded-full border-2 bg-white px-4
+                                text-step--1 text-ink-950 focus:outline-none focus:ring-0 ${
+                                  fieldErrors.phone
+                                    ? 'border-emergency focus:border-emergency'
+                                    : 'border-ink-200 focus:border-teal-600'
+                                }`}
                   />
+                  {fieldErrors.phone ? (
+                    <p id="callback-phone-error" role="alert" className="mt-1.5 text-[0.8rem] text-emergency">
+                      {fieldErrors.phone}
+                    </p>
+                  ) : null}
                 </div>
 
                 <div>
@@ -215,14 +295,26 @@ export function RequestCallbackButton({ className = '', children }: RequestCallb
                     Email <span className="font-normal text-ink-600">(optional)</span>
                   </label>
                   <input
+                    ref={emailRef}
                     id="callback-email"
                     name="email"
                     type="email"
                     autoComplete="email"
-                    className="mt-1.5 h-12 w-full rounded-full border-2 border-ink-200
-                               bg-white px-4 text-step--1 text-ink-950
-                               focus:border-teal-600 focus:outline-none focus:ring-0"
+                    aria-invalid={Boolean(fieldErrors.email)}
+                    aria-describedby={fieldErrors.email ? 'callback-email-error' : undefined}
+                    onChange={() => clearFieldError('email')}
+                    className={`mt-1.5 h-12 w-full rounded-full border-2 bg-white px-4
+                                text-step--1 text-ink-950 focus:outline-none focus:ring-0 ${
+                                  fieldErrors.email
+                                    ? 'border-emergency focus:border-emergency'
+                                    : 'border-ink-200 focus:border-teal-600'
+                                }`}
                   />
+                  {fieldErrors.email ? (
+                    <p id="callback-email-error" role="alert" className="mt-1.5 text-[0.8rem] text-emergency">
+                      {fieldErrors.email}
+                    </p>
+                  ) : null}
                 </div>
 
                 <div>
@@ -270,10 +362,17 @@ export function RequestCallbackButton({ className = '', children }: RequestCallb
                     type="submit"
                     disabled={status === 'pending'}
                     aria-describedby={status === 'error' ? errorId : undefined}
-                    className="btn-primary inline-flex min-h-[48px] items-center px-5
+                    className="btn-primary inline-flex min-h-[48px] items-center gap-2 px-5
                                font-semibold disabled:cursor-not-allowed disabled:opacity-60"
                   >
-                    {status === 'pending' ? 'Sending…' : 'Request a call back'}
+                    {status === 'pending' ? (
+                      <>
+                        <SpinnerIcon className="h-4 w-4 animate-spin" />
+                        Sending…
+                      </>
+                    ) : (
+                      'Request a call back'
+                    )}
                   </button>
                   <button
                     type="button"
@@ -290,5 +389,19 @@ export function RequestCallbackButton({ className = '', children }: RequestCallb
         </div>
       </dialog>
     </>
+  )
+}
+
+function SpinnerIcon({ className }: { className?: string }) {
+  return (
+    <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" className={className}>
+      <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2.5" opacity="0.3" />
+      <path
+        d="M21 12a9 9 0 0 0-9-9"
+        stroke="currentColor"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+      />
+    </svg>
   )
 }

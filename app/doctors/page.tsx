@@ -36,6 +36,7 @@ export const runtime = 'edge';
 // The roster is real. Every optional field below is guarded rather than defaulted —
 // see the note at the top of lib/doctors.ts.
 
+import Image from 'next/image'
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { Section } from '@/components/primitives/Section'
@@ -212,67 +213,84 @@ export default async function DoctorsPage({ searchParams }: DoctorsPageProps) {
             <ul className="mt-6 flex flex-col gap-5">
               {doctors.map((doctor) => (
                 <li key={doctor.id}>
-                  <article className="card-geo flex flex-col gap-4 p-6">
-                    <h3 className="text-step-1">
+                  <article className="card-geo flex flex-col gap-4 p-6 sm:flex-row">
+                    {/* Portrait, or the shared silhouette placeholder when LIMS has not
+                        supplied one yet. alt="" either way: the doctor's name is already
+                        the card's own heading, so a screen reader naming the photo too
+                        would announce it twice. rounded-2xl (a squircle), not a circle —
+                        deliberately different from the avatar-circle default, and it
+                        reads as a smaller sibling of .card-geo's own asymmetric corners. */}
+                    <Image
+                      src={doctor.portrait?.src ?? '/images/placeholder-doctor.jpg'}
+                      alt=""
+                      width={doctor.portrait?.width ?? 160}
+                      height={doctor.portrait?.height ?? 160}
+                      className="h-20 w-20 shrink-0 rounded-2xl bg-teal-100 object-cover
+                                 sm:h-24 sm:w-24"
+                    />
+
+                    <div className="flex flex-1 flex-col gap-4">
+                      <h3 className="text-step-1">
+                        <Link
+                          href={`/doctors/${doctor.id}`}
+                          className="text-teal-800 underline-offset-4 hover:underline"
+                        >
+                          {doctor.name}
+                        </Link>
+                      </h3>
+
+                      {doctor.designation ? (
+                        <p className="-mt-2 text-step-0">{doctor.designation}</p>
+                      ) : null}
+
+                      {/* Structured facts as a definition list rather than a stack of
+                          unrelated paragraphs — qualifications and the registration
+                          number are name/value pairs, not prose. The registration number
+                          is the field a patient uses to verify a doctor against the
+                          council register: rendered verbatim, and labelled, since a bare
+                          number means nothing on its own. */}
+                      {doctor.qualifications || doctor.registrationNumber ? (
+                        <dl className="flex flex-wrap gap-x-6 gap-y-1 text-step--1">
+                          {doctor.qualifications ? (
+                            <div>
+                              <dt className="sr-only">Qualifications</dt>
+                              <dd className="text-ink-600">{doctor.qualifications}</dd>
+                            </div>
+                          ) : null}
+                          {doctor.registrationNumber ? (
+                            <div>
+                              <dt className="inline font-semibold text-ink-600">Reg. no. </dt>
+                              <dd className="inline tabular-nums text-ink-600">
+                                {registrationDisplay(doctor.registrationNumber)}
+                              </dd>
+                            </div>
+                          ) : null}
+                        </dl>
+                      ) : null}
+
+                      {/* Availability: dot AND text. Colour alone excludes colour-blind
+                          users, which on a directory is a real failure rate (WCAG 1.4.1).
+                          Omitted entirely until LIMS supplies real availability — a
+                          default of "available" would send patients to a doctor who is
+                          not in. */}
+                      {doctor.availability ? (
+                        <p className="inline-flex items-center gap-2 text-step--1">
+                          <span
+                            aria-hidden="true"
+                            className="h-2 w-2 shrink-0 rounded-full bg-success"
+                          />
+                          <span className="text-ink-950">{doctor.availability.label}</span>
+                        </p>
+                      ) : null}
+
                       <Link
                         href={`/doctors/${doctor.id}`}
-                        className="text-teal-800 underline-offset-4 hover:underline"
+                        className="card-cta inline-flex min-h-[48px] items-center self-start px-4"
                       >
-                        {doctor.name}
+                        View profile
+                        <span className="sr-only"> of {doctor.name}</span>
                       </Link>
-                    </h3>
-
-                    {doctor.designation ? (
-                      <p className="-mt-2 text-step-0">{doctor.designation}</p>
-                    ) : null}
-
-                    {/* Structured facts as a definition list rather than a stack of
-                        unrelated paragraphs — qualifications and the registration
-                        number are name/value pairs, not prose. The registration number
-                        is the field a patient uses to verify a doctor against the
-                        council register: rendered verbatim, and labelled, since a bare
-                        number means nothing on its own. */}
-                    {doctor.qualifications || doctor.registrationNumber ? (
-                      <dl className="flex flex-wrap gap-x-6 gap-y-1 text-step--1">
-                        {doctor.qualifications ? (
-                          <div>
-                            <dt className="sr-only">Qualifications</dt>
-                            <dd className="text-ink-600">{doctor.qualifications}</dd>
-                          </div>
-                        ) : null}
-                        {doctor.registrationNumber ? (
-                          <div>
-                            <dt className="inline font-semibold text-ink-600">Reg. no. </dt>
-                            <dd className="inline tabular-nums text-ink-600">
-                              {registrationDisplay(doctor.registrationNumber)}
-                            </dd>
-                          </div>
-                        ) : null}
-                      </dl>
-                    ) : null}
-
-                    {/* Availability: dot AND text. Colour alone excludes colour-blind
-                        users, which on a directory is a real failure rate (WCAG 1.4.1).
-                        Omitted entirely until LIMS supplies real availability — a
-                        default of "available" would send patients to a doctor who is
-                        not in. */}
-                    {doctor.availability ? (
-                      <p className="inline-flex items-center gap-2 text-step--1">
-                        <span
-                          aria-hidden="true"
-                          className="h-2 w-2 shrink-0 rounded-full bg-success"
-                        />
-                        <span className="text-ink-950">{doctor.availability.label}</span>
-                      </p>
-                    ) : null}
-
-                    <Link
-                      href={`/doctors/${doctor.id}`}
-                      className="card-cta inline-flex min-h-[48px] items-center self-start px-4"
-                    >
-                      View profile
-                      <span className="sr-only"> of {doctor.name}</span>
-                    </Link>
+                    </div>
                   </article>
                 </li>
               ))}
