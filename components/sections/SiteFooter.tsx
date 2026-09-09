@@ -23,7 +23,10 @@ export function SiteFooter({ centres, patientServices, primaryLocation }: SiteFo
   const year = new Date().getFullYear()
 
   return (
-    <footer className="on-dark bg-teal-900 text-white">
+    // max-md:pb-24 reserves room for the floating MobileTabBar pill, which is fixed
+    // over page content rather than pushing it up — without this the footer's own
+    // last row of links sits underneath the glass pill on a phone.
+    <footer className="on-dark bg-teal-900 text-white max-md:pb-24">
       {/* Thematic divider: the one copper line that marks the page ending and the
           institutional footer beginning. copper-500 on teal-900 is 3.89:1 — fine for
           a non-text element (WCAG 1.4.11 wants 3:1), and it would not be fine as text. */}

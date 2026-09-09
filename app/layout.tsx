@@ -15,6 +15,7 @@ import {
 } from '@/lib/site-config'
 import { SiteHeader } from '@/components/sections/SiteHeader'
 import { SiteFooter } from '@/components/sections/SiteFooter'
+import { MobileTabBar } from '@/components/sections/MobileTabBar'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -115,6 +116,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           patientServices={patientServicesNav}
           primaryLocation={primaryLocation}
         />
+
+        {/* Floating bottom tab bar — mobile only (md:hidden internally). Mounted at
+            the page root, not inside SiteHeader, because it is fixed furniture
+            independent of the header's own two tiers. */}
+        <MobileTabBar />
 
         <script
           type="application/ld+json"
