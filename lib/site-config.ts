@@ -88,6 +88,7 @@ export const primaryLocation: Location = {
  * `overviewLabel` is set only where the parent `href` resolves to a page that exists.
  */
 export const primaryNav: NavItem[] = [
+  { label: 'Home', href: '/' },
   {
     label: 'Specialities',
     href: getCategory('clinical').basePath,

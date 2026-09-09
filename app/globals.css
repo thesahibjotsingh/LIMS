@@ -676,19 +676,6 @@
            hover:decoration-copper-700;
   }
 
-  /* Quiet dot-grid texture for the homepage hero — the same motif .card-geo already
-     draws on hover (radial-gradient dots, copper at low opacity), reused here for a
-     section that otherwise has nothing behind its text but a flat tint. 14%, slightly
-     above the card's 12%, because this sits behind a whole hero rather than one hover
-     state and needs to read at a glance; still nowhere near a value that could shift
-     body-text contrast. Always paired with a mask-image at the call site so the dots
-     fade toward one corner instead of tiling evenly across the whole band — an even
-     grid reads as wallpaper, a fading one reads as a considered accent. */
-  .hero-texture {
-    background-image: radial-gradient(circle, rgba(156, 74, 40, 0.14) 1.5px, transparent 1.5px);
-    background-size: 22px 22px;
-  }
-
   /* -------------------------------------------------------------------------
      .nav-drawer — the mobile counterpart to the desktop nav ribbon.
      -------------------------------------------------------------------------

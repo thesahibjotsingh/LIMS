@@ -15,10 +15,12 @@
 // "0 consultants" on a service LIMS runs perfectly well would be an own goal, so the
 // line is absent rather than zero.
 
+import Image from 'next/image'
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { Grid } from '@/components/primitives/Grid'
 import { Section } from '@/components/primitives/Section'
+import { centreIconSrc } from '@/lib/centre-icons'
 import { getDoctorsByDepartment } from '@/lib/doctors'
 import {
   SERVICE_CATEGORIES,
@@ -78,25 +80,39 @@ export default function CentresPage() {
             <span className="rule-accent mt-3" aria-hidden="true" />
             <p className="mt-3 max-w-prose text-ink-600">{category.blurb}</p>
 
-            <Grid min="sm" className="mt-6">
+            {/* min="xs" + vertical icon-over-label reads as a scannable specialty
+                index, applied to all three categories for one consistent grid
+                language down the page. Almost every service has a supplied icon now
+                (see lib/centre-icons.ts) — the one gap is CT Scan / X-Ray, which
+                simply centres its label with no icon slot rather than a generic
+                stand-in, so a service without an asset yet reads as "not supplied",
+                not as a guess. */}
+            <Grid min="xs" gap="sm" className="mt-6">
               {services.map((service) => {
                 const doctors = getDoctorsByDepartment(service.slug)
+                const iconSrc = centreIconSrc(service.slug)
 
                 return (
                   <Link
                     key={service.slug}
                     href={serviceHref(service)}
-                    className="card-geo flex min-h-[48px] flex-col justify-center p-5"
+                    className="card-geo flex min-h-[48px] flex-col items-center gap-3 p-5
+                               text-center"
                   >
-                    <h3 className="text-step-1 font-semibold text-teal-800">
-                      {service.name}
-                    </h3>
-                    {doctors.length > 0 ? (
-                      <p className="mt-1 text-step--1 text-ink-600">
-                        {doctors.length}{' '}
-                        {doctors.length === 1 ? 'consultant' : 'consultants'}
-                      </p>
+                    {iconSrc ? (
+                      <Image src={iconSrc} alt="" width={80} height={80} className="h-12 w-12" />
                     ) : null}
+                    <div>
+                      <h3 className="text-step-0 font-semibold text-teal-800">
+                        {service.name}
+                      </h3>
+                      {doctors.length > 0 ? (
+                        <p className="mt-1 text-step--1 text-ink-600">
+                          {doctors.length}{' '}
+                          {doctors.length === 1 ? 'consultant' : 'consultants'}
+                        </p>
+                      ) : null}
+                    </div>
                   </Link>
                 )
               })}
