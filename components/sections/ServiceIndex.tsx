@@ -13,6 +13,7 @@
 import Link from 'next/link'
 import { Grid } from '@/components/primitives/Grid'
 import { Section } from '@/components/primitives/Section'
+import { DEPARTMENT_ICONS } from '@/components/icons/DepartmentIcons'
 import { getDoctorsByDepartment } from '@/lib/doctors'
 import { serviceHref, servicesByCategory, type ServiceCategoryDefinition } from '@/lib/services'
 
@@ -37,6 +38,11 @@ export function ServiceIndex({ category, eyebrow }: ServiceIndexProps) {
       <Grid min="sm" className="mt-10">
         {services.map((service) => {
           const doctors = getDoctorsByDepartment(service.slug)
+          // Only the 15 clinical departments have icons so far — see the note on
+          // DEPARTMENT_ICONS in components/icons/DepartmentIcons.tsx. Diagnostics and
+          // support services render the same tile without one until that follow-up
+          // round is built.
+          const Icon = DEPARTMENT_ICONS[service.slug]
 
           return (
             <Link
@@ -44,6 +50,7 @@ export function ServiceIndex({ category, eyebrow }: ServiceIndexProps) {
               href={serviceHref(service)}
               className="card-geo flex min-h-[48px] flex-col justify-center p-5"
             >
+              {Icon && <Icon className="mb-3 h-8 w-8" />}
               <h2 className="text-step-1 font-semibold text-teal-800">{service.name}</h2>
               {/* A consultant count only where a consultant is actually on the roster.
                   "0 consultants" on a service LIMS runs perfectly well is an own goal. */}

@@ -16,8 +16,25 @@ import Link from 'next/link'
 import { Grid } from '@/components/primitives/Grid'
 import { Section } from '@/components/primitives/Section'
 import { Stack } from '@/components/primitives/Stack'
-import { SERVICES } from '@/lib/services'
-import { clinicalNav, siteConfig } from '@/lib/site-config'
+import { DEPARTMENT_ICONS } from '@/components/icons/DepartmentIcons'
+import {
+  BookAppointmentIcon,
+  FindDoctorIcon,
+  HealthPackagesIcon,
+  LocationsIcon,
+} from '@/components/icons/QuickActionIcons'
+import { SERVICES, serviceHref, servicesByCategory } from '@/lib/services'
+import { siteConfig } from '@/lib/site-config'
+
+// Icon is optional per action — every Quick action tile has one today, but a tile
+// added later without a matching icon still renders (just without one) rather than
+// crashing the page.
+const quickActions = [
+  { label: 'Book an appointment', href: '/appointments', Icon: BookAppointmentIcon },
+  { label: 'Find a doctor', href: '/doctors', Icon: FindDoctorIcon },
+  { label: 'Health check packages', href: '/health-packages', Icon: HealthPackagesIcon },
+  { label: 'Locations & directions', href: '/contact#locations', Icon: LocationsIcon },
+]
 
 // Content changes weekly at most — static with hourly revalidation keeps TTFB low.
 export const revalidate = 3600
@@ -77,18 +94,14 @@ export default function HomePage() {
             focus-within, so the affordance exists for someone tabbing through as
             well as for a mouse. */}
         <Grid min="sm" className="mt-8">
-          {[
-            { label: 'Book an appointment', href: '/appointments' },
-            { label: 'Find a doctor', href: '/doctors' },
-            { label: 'Health check packages', href: '/health-packages' },
-            { label: 'Locations & directions', href: '/contact#locations' },
-          ].map((action) => (
+          {quickActions.map((action) => (
             <Link
               key={action.href}
               href={action.href}
-              className="card-geo flex min-h-[48px] items-center p-5 text-step-1
+              className="card-geo flex min-h-[48px] items-center gap-4 p-5 text-step-1
                          font-semibold text-teal-800"
             >
+              <action.Icon className="h-8 w-8 shrink-0" />
               {action.label}
             </Link>
           ))}
@@ -107,11 +120,15 @@ export default function HomePage() {
           patient support services on the same campus.
         </p>
         <Grid className="mt-8">
-          {clinicalNav.map((centre) => (
-            <Link key={centre.href} href={centre.href} className="card-geo p-6">
-              <h3 className="text-step-1">{centre.label}</h3>
-            </Link>
-          ))}
+          {servicesByCategory('clinical').map((centre) => {
+            const Icon = DEPARTMENT_ICONS[centre.slug]
+            return (
+              <Link key={centre.slug} href={serviceHref(centre)} className="card-geo p-6">
+                {Icon && <Icon className="h-8 w-8" />}
+                <h3 className="mt-3 text-step-1">{centre.name}</h3>
+              </Link>
+            )
+          })}
         </Grid>
 
         <p className="mt-8">
