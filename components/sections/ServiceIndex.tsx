@@ -15,7 +15,13 @@ import Link from 'next/link'
 import { Section } from '@/components/primitives/Section'
 import { centreIconSrc } from '@/lib/centre-icons'
 import { getDoctorsByDepartment } from '@/lib/doctors'
-import { gridColsClassName } from '@/lib/grid-cols'
+import {
+  SERVICE_CARD_CLASSNAME,
+  SERVICE_GRID_CLASSNAME,
+  SERVICE_ICON_CLASSNAME,
+  SERVICE_ICON_SIZE,
+  SERVICE_TITLE_CLASSNAME,
+} from '@/lib/service-grid'
 import { serviceHref, servicesByCategory, type ServiceCategoryDefinition } from '@/lib/services'
 
 export interface ServiceIndexProps {
@@ -36,54 +42,37 @@ export function ServiceIndex({ category, eyebrow }: ServiceIndexProps) {
       <span className="rule-accent-lg mt-3" aria-hidden="true" />
       <p className="mt-4 max-w-prose text-step-1 text-ink-950">{category.blurb}</p>
 
-      {/* Fixed column counts, not the shared Grid primitive's auto-fit — same choice
-          and the same reasoning as the home page's Centres of Excellence grid.
-          gridColsClassName (lib/grid-cols.ts) sizes the count to this particular
-          list — capped at 6 on desktop, and chosen so the last row is never a single
-          stranded card (7 diagnostics services would orphan one at a flat 6; 4
-          patient-care services would sit three-quarters empty at a flat 6). */}
-      <div className={`mt-10 grid gap-4 ${gridColsClassName(services.length)}`}>
+      {/* SERVICE_GRID_CLASSNAME / SERVICE_CARD_CLASSNAME (lib/service-grid.ts): shared
+          with the home page's Centres of Excellence grid and /centres, so all four
+          places this same service list is shown render the identical grid and the
+          identical card size — see that file for why a shared constant replaced each
+          page's own copy. */}
+      <div className={`mt-10 ${SERVICE_GRID_CLASSNAME}`}>
         {services.map((service) => {
           const doctors = getDoctorsByDepartment(service.slug)
           const iconSrc = centreIconSrc(service.slug)
 
           return (
-            <Link
-              key={service.slug}
-              href={serviceHref(service)}
-              className="card-geo flex min-h-[236px] flex-col items-center gap-3 p-5 pt-8
-                         text-center"
-            >
+            <Link key={service.slug} href={serviceHref(service)} className={SERVICE_CARD_CLASSNAME}>
               {/* Icon-only where LIMS has supplied one (see lib/centre-icons.ts) —
                   conditional, not a generic fallback glyph, so a service without an
-                  asset yet reads as "no icon" rather than a guess. Vertical
-                  icon-over-label, matching /centres and the home page's Centres of
-                  Excellence grid — one consistent card language across every place
-                  this same service list is shown.
-
-                  loading="eager": this grid starts right below the h1, so most of
-                  these tiles sit above the fold. The browser's native loading="lazy"
-                  only fires reliably for images that cross INTO view during a scroll
-                  — one already in the initial viewport before any scroll happens can
-                  simply never load. These icons are a few KB each, so eager-loading
-                  the whole (short) grid costs nothing worth trading for icons that
-                  silently never appear on first paint. */}
+                  asset yet reads as "no icon" rather than a guess. */}
               {iconSrc ? (
                 <Image
                   src={iconSrc}
                   alt=""
-                  width={96}
-                  height={96}
+                  width={SERVICE_ICON_SIZE}
+                  height={SERVICE_ICON_SIZE}
                   loading="eager"
-                  className="h-14 w-14 object-contain"
+                  className={SERVICE_ICON_CLASSNAME}
                 />
               ) : null}
-              <div>
-                <h2 className="text-step-0 font-semibold text-teal-800">{service.name}</h2>
+              <div className="min-w-0">
+                <h2 className={SERVICE_TITLE_CLASSNAME}>{service.name}</h2>
                 {/* A consultant count only where a consultant is actually on the roster.
                     "0 consultants" on a service LIMS runs perfectly well is an own goal. */}
                 {doctors.length > 0 ? (
-                  <p className="mt-1 text-step--1 text-ink-600">
+                  <p className="mt-0.5 text-[0.7rem] leading-tight text-ink-600">
                     {doctors.length} {doctors.length === 1 ? 'consultant' : 'consultants'}
                   </p>
                 ) : null}

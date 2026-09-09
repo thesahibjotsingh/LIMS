@@ -21,7 +21,13 @@ import type { Metadata } from 'next'
 import { Section } from '@/components/primitives/Section'
 import { centreIconSrc } from '@/lib/centre-icons'
 import { getDoctorsByDepartment } from '@/lib/doctors'
-import { gridColsClassName } from '@/lib/grid-cols'
+import {
+  SERVICE_CARD_CLASSNAME,
+  SERVICE_GRID_CLASSNAME,
+  SERVICE_ICON_CLASSNAME,
+  SERVICE_ICON_SIZE,
+  SERVICE_TITLE_CLASSNAME,
+} from '@/lib/service-grid'
 import {
   SERVICE_CATEGORIES,
   SERVICES,
@@ -86,51 +92,34 @@ export default function CentresPage() {
                 the conditional render stays in place so a service without an asset
                 in future reads as "not supplied", not as a guess.
 
-                Fixed column counts, not the shared Grid primitive's auto-fit — same
-                choice as the home page's Centres of Excellence grid and ServiceIndex.
-                gridColsClassName (lib/grid-cols.ts) sizes the count to each group —
-                capped at 6 on desktop, and chosen so the last row is never a single
-                stranded card.
-
-                min-h-[192px]: without it, a CSS grid row is only as tall as its own
-                content, so a row of one-line names sits visibly shorter than a row
-                with a three-line name — the grid looks uneven even though every card
-                is internally correct. Fixed to the tallest case so every row matches.
-
-                loading="eager": the clinical group starts right after the page
-                intro, so its first row sits above the fold. The browser's native
-                loading="lazy" only reliably fires for images that cross INTO view
-                during a scroll — one already in the initial viewport at load can
-                simply never load. These icons are a few KB each, so eager-loading
-                costs nothing worth trading for icons that silently never appear. */}
-            <div className={`mt-6 grid gap-4 ${gridColsClassName(services.length)}`}>
+                SERVICE_GRID_CLASSNAME / SERVICE_CARD_CLASSNAME (lib/service-grid.ts):
+                shared with ServiceIndex and the home page's Centres of Excellence
+                grid, so all three render the identical grid and the identical card
+                size — see that file for why a shared constant replaced each page's
+                own copy (this page's clinical group previously used a min-height
+                copied from the home page's shorter card, which didn't account for
+                the consultant-count line these cards also carry). */}
+            <div className={`mt-6 ${SERVICE_GRID_CLASSNAME}`}>
               {services.map((service) => {
                 const doctors = getDoctorsByDepartment(service.slug)
                 const iconSrc = centreIconSrc(service.slug)
 
                 return (
-                  <Link
-                    key={service.slug}
-                    href={serviceHref(service)}
-                    className="card-geo flex min-h-[192px] flex-col items-center gap-3 p-5
-                               text-center"
-                  >
+                  <Link key={service.slug} href={serviceHref(service)} className={SERVICE_CARD_CLASSNAME}>
                     {iconSrc ? (
                       <Image
                         src={iconSrc}
                         alt=""
-                        width={96}
-                        height={96}
+                        width={SERVICE_ICON_SIZE}
+                        height={SERVICE_ICON_SIZE}
                         loading="eager"
-                        className="h-14 w-14 object-contain"
+                        className={SERVICE_ICON_CLASSNAME}
                       />
                     ) : null}
-                    <div>
-                      <h3 className="text-step-0 font-semibold text-teal-800">
-                        {service.name}
-                      </h3>
+                    <div className="min-w-0">
+                      <h3 className={SERVICE_TITLE_CLASSNAME}>{service.name}</h3>
                       {doctors.length > 0 ? (
-                        <p className="mt-1 text-step--1 text-ink-600">
+                        <p className="mt-0.5 text-[0.7rem] leading-tight text-ink-600">
                           {doctors.length}{' '}
                           {doctors.length === 1 ? 'consultant' : 'consultants'}
                         </p>

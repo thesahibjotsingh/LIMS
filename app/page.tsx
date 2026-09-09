@@ -20,7 +20,13 @@ import { Section } from '@/components/primitives/Section'
 import { Stack } from '@/components/primitives/Stack'
 import { centreIconSrc } from '@/lib/centre-icons'
 import { DOCTORS } from '@/lib/doctors'
-import { gridColsClassName } from '@/lib/grid-cols'
+import {
+  SERVICE_CARD_CLASSNAME,
+  SERVICE_GRID_CLASSNAME,
+  SERVICE_ICON_CLASSNAME,
+  SERVICE_ICON_SIZE,
+  SERVICE_TITLE_CLASSNAME,
+} from '@/lib/service-grid'
 import { SERVICES, serviceHref, servicesByCategory } from '@/lib/services'
 import { contact, siteConfig } from '@/lib/site-config'
 
@@ -142,49 +148,29 @@ export default function HomePage() {
             label. .card-geo's own accent bar and cut corners carry over unchanged;
             only the content orientation and grid density are new.
 
-            FIXED COLUMN COUNTS, not the shared Grid primitive's auto-fit: auto-fit at
-            this card's min-width settles on 7 columns at typical desktop widths,
-            which is an arbitrary fit rather than a chosen density. gridColsClassName
-            (lib/grid-cols.ts) picks a count sized to the list instead — capped at 6
-            on desktop, and chosen so the last row is never a single stranded card.
-
-            min-h-[192px]: without it, a CSS grid row is only as tall as its own
-            content, so a row of one-line names (ENT, Urology) sits visibly shorter
-            than a row with a three-line name (General & Laparoscopic Surgery) — the
-            grid looks uneven top to bottom even though every card is internally
-            correct. Fixed to the tallest case so every row matches. */}
-        <div className={`mt-8 grid gap-4 ${gridColsClassName(clinicalServices.length)}`}>
+            SERVICE_GRID_CLASSNAME / SERVICE_CARD_CLASSNAME (lib/service-grid.ts):
+            shared with ServiceIndex and /centres, so all three render the identical
+            grid and the identical card size — see that file for why a shared
+            constant replaced each page's own copy. */}
+        <div className={`mt-8 ${SERVICE_GRID_CLASSNAME}`}>
           {clinicalServices.map((service) => {
             const iconSrc = centreIconSrc(service.slug)
             return (
-              <Link
-                key={service.slug}
-                href={serviceHref(service)}
-                className="card-geo flex min-h-[192px] flex-col items-center gap-3 p-5
-                           text-center"
-              >
+              <Link key={service.slug} href={serviceHref(service)} className={SERVICE_CARD_CLASSNAME}>
                 {/* Icon-only where LIMS has supplied one (public/images/centres) —
                     conditional, not a generic fallback glyph, so a department without
-                    an asset yet reads as "no icon" rather than a guess.
-
-                    loading="eager": this grid sits mid-page, but on shorter viewports
-                    its first row can still land inside the initial viewport, where
-                    the browser's native loading="lazy" only reliably fires for images
-                    that cross INTO view during a scroll — one already there at load
-                    can simply never load. These icons are a few KB each, so
-                    eager-loading the row costs nothing worth trading for icons that
-                    silently never appear on first paint. */}
+                    an asset yet reads as "no icon" rather than a guess. */}
                 {iconSrc ? (
                   <Image
                     src={iconSrc}
                     alt=""
-                    width={96}
-                    height={96}
+                    width={SERVICE_ICON_SIZE}
+                    height={SERVICE_ICON_SIZE}
                     loading="eager"
-                    className="h-14 w-14 object-contain"
+                    className={SERVICE_ICON_CLASSNAME}
                   />
                 ) : null}
-                <h3 className="text-step-0 font-semibold text-teal-800">{service.name}</h3>
+                <h3 className={SERVICE_TITLE_CLASSNAME}>{service.name}</h3>
               </Link>
             )
           })}
