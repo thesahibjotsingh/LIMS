@@ -20,6 +20,13 @@ import { Section } from '@/components/primitives/Section'
 import { Stack } from '@/components/primitives/Stack'
 import { centreIconSrc } from '@/lib/centre-icons'
 import { DOCTORS } from '@/lib/doctors'
+import {
+  SERVICE_CARD_CLASSNAME,
+  SERVICE_GRID_CLASSNAME,
+  SERVICE_ICON_CLASSNAME,
+  SERVICE_ICON_SIZE,
+  SERVICE_TITLE_CLASSNAME,
+} from '@/lib/service-grid'
 import { SERVICES, serviceHref, servicesByCategory } from '@/lib/services'
 import { contact, siteConfig } from '@/lib/site-config'
 
@@ -38,6 +45,8 @@ const HERO_INTRO =
   'imaging, and pathology under the same roof.'
 
 export default function HomePage() {
+  const clinicalServices = servicesByCategory('clinical')
+
   return (
     <>
       {/* -- Hero ---------------------------------------------------------- */}
@@ -132,32 +141,40 @@ export default function HomePage() {
           Specialist teams across our clinical departments, with diagnostics, imaging and
           patient support services on the same campus.
         </p>
-        {/* min="xs" + a vertical icon-over-label card reads as a scannable specialty
-            index — closer to how a patient actually uses this grid (find the
-            department at a glance) than the wider, horizontal icon-beside-text cards
-            used elsewhere on the site, where the content is prose rather than a
-            one-or-two-word label. .card-geo's own accent bar and cut corners carry
-            over unchanged; only the content orientation and grid density are new. */}
-        <Grid min="xs" gap="sm" className="mt-8">
-          {servicesByCategory('clinical').map((service) => {
+        {/* A vertical icon-over-label card reads as a scannable specialty index —
+            closer to how a patient actually uses this grid (find the department at a
+            glance) than the wider, horizontal icon-beside-text cards used elsewhere
+            on the site, where the content is prose rather than a one-or-two-word
+            label. .card-geo's own accent bar and cut corners carry over unchanged;
+            only the content orientation and grid density are new.
+
+            SERVICE_GRID_CLASSNAME / SERVICE_CARD_CLASSNAME (lib/service-grid.ts):
+            shared with ServiceIndex and /centres, so all three render the identical
+            grid and the identical card size — see that file for why a shared
+            constant replaced each page's own copy. */}
+        <div className={`mt-8 ${SERVICE_GRID_CLASSNAME}`}>
+          {clinicalServices.map((service) => {
             const iconSrc = centreIconSrc(service.slug)
             return (
-              <Link
-                key={service.slug}
-                href={serviceHref(service)}
-                className="card-geo flex flex-col items-center gap-3 p-5 text-center"
-              >
+              <Link key={service.slug} href={serviceHref(service)} className={SERVICE_CARD_CLASSNAME}>
                 {/* Icon-only where LIMS has supplied one (public/images/centres) —
                     conditional, not a generic fallback glyph, so a department without
                     an asset yet reads as "no icon" rather than a guess. */}
                 {iconSrc ? (
-                  <Image src={iconSrc} alt="" width={96} height={96} className="h-14 w-14" />
+                  <Image
+                    src={iconSrc}
+                    alt=""
+                    width={SERVICE_ICON_SIZE}
+                    height={SERVICE_ICON_SIZE}
+                    loading="eager"
+                    className={SERVICE_ICON_CLASSNAME}
+                  />
                 ) : null}
-                <h3 className="text-step-0 font-semibold text-teal-800">{service.name}</h3>
+                <h3 className={SERVICE_TITLE_CLASSNAME}>{service.name}</h3>
               </Link>
             )
           })}
-        </Grid>
+        </div>
 
         <p className="mt-8">
           <Link href="/centres" className="link-accent">

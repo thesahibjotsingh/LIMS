@@ -18,10 +18,16 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import type { Metadata } from 'next'
-import { Grid } from '@/components/primitives/Grid'
 import { Section } from '@/components/primitives/Section'
 import { centreIconSrc } from '@/lib/centre-icons'
 import { getDoctorsByDepartment } from '@/lib/doctors'
+import {
+  SERVICE_CARD_CLASSNAME,
+  SERVICE_GRID_CLASSNAME,
+  SERVICE_ICON_CLASSNAME,
+  SERVICE_ICON_SIZE,
+  SERVICE_TITLE_CLASSNAME,
+} from '@/lib/service-grid'
 import {
   SERVICE_CATEGORIES,
   SERVICES,
@@ -80,34 +86,40 @@ export default function CentresPage() {
             <span className="rule-accent mt-3" aria-hidden="true" />
             <p className="mt-3 max-w-prose text-ink-600">{category.blurb}</p>
 
-            {/* min="xs" + vertical icon-over-label reads as a scannable specialty
-                index, applied to all three categories for one consistent grid
-                language down the page. Almost every service has a supplied icon now
-                (see lib/centre-icons.ts) — the one gap is CT Scan / X-Ray, which
-                simply centres its label with no icon slot rather than a generic
-                stand-in, so a service without an asset yet reads as "not supplied",
-                not as a guess. */}
-            <Grid min="xs" gap="sm" className="mt-6">
+            {/* Vertical icon-over-label reads as a scannable specialty index, applied
+                to all three categories for one consistent grid language down the
+                page. Every service has a supplied icon now (see lib/centre-icons.ts);
+                the conditional render stays in place so a service without an asset
+                in future reads as "not supplied", not as a guess.
+
+                SERVICE_GRID_CLASSNAME / SERVICE_CARD_CLASSNAME (lib/service-grid.ts):
+                shared with ServiceIndex and the home page's Centres of Excellence
+                grid, so all three render the identical grid and the identical card
+                size — see that file for why a shared constant replaced each page's
+                own copy (this page's clinical group previously used a min-height
+                copied from the home page's shorter card, which didn't account for
+                the consultant-count line these cards also carry). */}
+            <div className={`mt-6 ${SERVICE_GRID_CLASSNAME}`}>
               {services.map((service) => {
                 const doctors = getDoctorsByDepartment(service.slug)
                 const iconSrc = centreIconSrc(service.slug)
 
                 return (
-                  <Link
-                    key={service.slug}
-                    href={serviceHref(service)}
-                    className="card-geo flex min-h-[48px] flex-col items-center gap-3 p-5
-                               text-center"
-                  >
+                  <Link key={service.slug} href={serviceHref(service)} className={SERVICE_CARD_CLASSNAME}>
                     {iconSrc ? (
-                      <Image src={iconSrc} alt="" width={80} height={80} className="h-12 w-12" />
+                      <Image
+                        src={iconSrc}
+                        alt=""
+                        width={SERVICE_ICON_SIZE}
+                        height={SERVICE_ICON_SIZE}
+                        loading="eager"
+                        className={SERVICE_ICON_CLASSNAME}
+                      />
                     ) : null}
-                    <div>
-                      <h3 className="text-step-0 font-semibold text-teal-800">
-                        {service.name}
-                      </h3>
+                    <div className="min-w-0">
+                      <h3 className={SERVICE_TITLE_CLASSNAME}>{service.name}</h3>
                       {doctors.length > 0 ? (
-                        <p className="mt-1 text-step--1 text-ink-600">
+                        <p className="mt-0.5 text-[0.7rem] leading-tight text-ink-600">
                           {doctors.length}{' '}
                           {doctors.length === 1 ? 'consultant' : 'consultants'}
                         </p>
@@ -116,7 +128,7 @@ export default function CentresPage() {
                   </Link>
                 )
               })}
-            </Grid>
+            </div>
           </section>
         )
       })}
