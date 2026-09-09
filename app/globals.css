@@ -678,14 +678,19 @@
 
   /* Quiet dot-grid texture for the homepage hero — the same motif .card-geo already
      draws on hover (radial-gradient dots, copper at low opacity), reused here for a
-     section that otherwise has nothing behind its text but a flat tint. 14%, slightly
-     above the card's 12%, because this sits behind a whole hero rather than one hover
-     state and needs to read at a glance; still nowhere near a value that could shift
-     body-text contrast. Always paired with a mask-image at the call site so the dots
-     fade toward one corner instead of tiling evenly across the whole band — an even
-     grid reads as wallpaper, a fading one reads as a considered accent. */
+     section that otherwise has nothing behind its text but a flat tint.
+
+     55%, turned up from two earlier passes (14%, then 32%) that both turned out to
+     still be imperceptible in normal viewing — copper this light over teal-50
+     (#EFFAFB) blends too close to the background itself to consciously register,
+     even at 2x the original value. 55% is deliberately well past "subtle" so it is
+     unmistakable at a glance; once that is confirmed actually visible, dial the
+     opacity back down from here rather than guessing at another small nudge. Always
+     paired with a mask-image at the call site so the dots fade toward one area
+     instead of tiling evenly across the whole band — an even grid reads as
+     wallpaper, a fading one reads as a considered accent. */
   .hero-texture {
-    background-image: radial-gradient(circle, rgba(156, 74, 40, 0.14) 1.5px, transparent 1.5px);
+    background-image: radial-gradient(circle, rgba(156, 74, 40, 0.55) 2.5px, transparent 2.5px);
     background-size: 22px 22px;
     /* Drift, not animate-in-place: transform, never background-position, for the same
        reason .card-geo's own bar sweeps on a transform — background-position is a

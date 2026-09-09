@@ -48,11 +48,12 @@ export default function HomePage() {
           {/* Decorative depth for a hero that was previously flat text-on-tint with
               nothing behind it — see the audit note on app/globals.css's .hero-texture
               for why this is the card's own hover motif rather than invented
-              photography. Faded toward the top-right via a mask, where the prose
-              column leaves the most open tint for it to sit in, rather than tiled
-              evenly across the whole band. aria-hidden and pointer-events-none: it
-              carries no information and must never intercept a tap meant for the
-              buttons below it.
+              photography. Faded toward the right, vertically centred on the hero
+              rather than tucked into a corner, via a mask — that is where the prose
+              column (max-w-prose) leaves the most open tint for it to sit in, rather
+              than tiled evenly across the whole band. aria-hidden and
+              pointer-events-none: it carries no information and must never intercept
+              a tap meant for the buttons below it.
 
               -inset-6 (24px on every edge) rather than inset-0: .hero-texture drifts
               on a 22px transform loop, and this is what keeps that loop from ever
@@ -62,8 +63,8 @@ export default function HomePage() {
           <div
             aria-hidden="true"
             className="hero-texture pointer-events-none absolute -inset-6 -z-10
-                       [mask-image:radial-gradient(circle_at_88%_12%,black,transparent_60%)]
-                       [-webkit-mask-image:radial-gradient(circle_at_88%_12%,black,transparent_60%)]"
+                       [mask-image:radial-gradient(circle_at_85%_45%,black,transparent_75%)]
+                       [-webkit-mask-image:radial-gradient(circle_at_85%_45%,black,transparent_75%)]"
           />
           <Stack gap="lg" className="max-w-prose">
             {/* Eyebrow is copper-700, not copper-500: at this size the accent tone is
