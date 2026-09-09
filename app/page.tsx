@@ -132,22 +132,28 @@ export default function HomePage() {
           Specialist teams across our clinical departments, with diagnostics, imaging and
           patient support services on the same campus.
         </p>
-        <Grid className="mt-8">
+        {/* min="xs" + a vertical icon-over-label card reads as a scannable specialty
+            index — closer to how a patient actually uses this grid (find the
+            department at a glance) than the wider, horizontal icon-beside-text cards
+            used elsewhere on the site, where the content is prose rather than a
+            one-or-two-word label. .card-geo's own accent bar and cut corners carry
+            over unchanged; only the content orientation and grid density are new. */}
+        <Grid min="xs" gap="sm" className="mt-8">
           {servicesByCategory('clinical').map((service) => {
             const iconSrc = centreIconSrc(service.slug)
             return (
               <Link
                 key={service.slug}
                 href={serviceHref(service)}
-                className="card-geo flex items-center gap-4 p-6"
+                className="card-geo flex flex-col items-center gap-3 p-5 text-center"
               >
                 {/* Icon-only where LIMS has supplied one (public/images/centres) —
                     conditional, not a generic fallback glyph, so a department without
                     an asset yet reads as "no icon" rather than a guess. */}
                 {iconSrc ? (
-                  <Image src={iconSrc} alt="" width={80} height={80} className="h-12 w-12 shrink-0" />
+                  <Image src={iconSrc} alt="" width={96} height={96} className="h-14 w-14" />
                 ) : null}
-                <h3 className="text-step-1">{service.name}</h3>
+                <h3 className="text-step-0 font-semibold text-teal-800">{service.name}</h3>
               </Link>
             )
           })}

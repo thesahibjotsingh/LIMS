@@ -80,7 +80,12 @@ export default function CentresPage() {
             <span className="rule-accent mt-3" aria-hidden="true" />
             <p className="mt-3 max-w-prose text-ink-600">{category.blurb}</p>
 
-            <Grid min="sm" className="mt-6">
+            {/* min="xs" + vertical icon-over-label reads as a scannable specialty
+                index, applied to all three categories for one consistent grid
+                language down the page — even though only clinical has a supplied
+                icon today, so diagnostics/support tiles simply centre their label
+                with no icon slot, rather than looking like a different component. */}
+            <Grid min="xs" gap="sm" className="mt-6">
               {services.map((service) => {
                 const doctors = getDoctorsByDepartment(service.slug)
                 const iconSrc = centreIconSrc(service.slug)
@@ -89,17 +94,18 @@ export default function CentresPage() {
                   <Link
                     key={service.slug}
                     href={serviceHref(service)}
-                    className="card-geo flex min-h-[48px] items-center gap-3 p-5"
+                    className="card-geo flex min-h-[48px] flex-col items-center gap-3 p-5
+                               text-center"
                   >
                     {/* Only clinical departments have a supplied icon today — see
                         lib/centre-icons.ts. Absent elsewhere rather than a generic
                         stand-in, so a diagnostics or support tile without one reads
                         as "not supplied yet", not as a guess. */}
                     {iconSrc ? (
-                      <Image src={iconSrc} alt="" width={72} height={72} className="h-10 w-10 shrink-0" />
+                      <Image src={iconSrc} alt="" width={80} height={80} className="h-12 w-12" />
                     ) : null}
                     <div>
-                      <h3 className="text-step-1 font-semibold text-teal-800">
+                      <h3 className="text-step-0 font-semibold text-teal-800">
                         {service.name}
                       </h3>
                       {doctors.length > 0 ? (

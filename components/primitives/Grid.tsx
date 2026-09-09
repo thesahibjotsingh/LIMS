@@ -11,13 +11,17 @@ import type { ReactNode } from 'react'
 export interface GridProps {
   children: ReactNode
   /** Minimum comfortable width of one item before the grid drops a column. */
-  min?: 'sm' | 'md' | 'lg'
+  min?: 'xs' | 'sm' | 'md' | 'lg'
   gap?: 'sm' | 'md' | 'lg'
   className?: string
 }
 
 /** Tailwind needs literal class strings, so these are enumerated rather than computed. */
 const mins = {
+  // For icon-led tiles read as a scannable index (a specialty grid), not prose cards —
+  // narrow enough to fit 5-6 across on a desktop container, which is the density that
+  // makes a department grid readable as one glance rather than a scroll.
+  xs: 'grid-cols-[repeat(auto-fit,minmax(9.5rem,1fr))]',
   sm: 'grid-cols-[repeat(auto-fit,minmax(14rem,1fr))]',
   md: 'grid-cols-[repeat(auto-fit,minmax(18rem,1fr))]',
   lg: 'grid-cols-[repeat(auto-fit,minmax(24rem,1fr))]',
