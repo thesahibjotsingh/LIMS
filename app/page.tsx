@@ -44,7 +44,14 @@ export default function HomePage() {
           on a very short viewport. relative gives that absolutely-positioned div
           something to anchor to. */}
       <Section tone="tint" labelledBy="hero-heading" className="relative overflow-hidden">
-        <div className="relative">
+        {/* isolate is load-bearing, not decorative — the exact pairing .btn-primary's
+            own -z-10 sweep layer already relies on in app/globals.css. position:
+            relative alone does not create a stacking context; without an explicit
+            isolate (or z-index) here, the texture div's -z-10 below escapes past this
+            div entirely and paints behind the page's own background rather than just
+            behind the Stack beside it — which is why the texture rendered as fully
+            invisible regardless of any opacity or mask value tried before this. */}
+        <div className="relative isolate">
           {/* Decorative depth for a hero that was previously flat text-on-tint with
               nothing behind it — see the audit note on app/globals.css's .hero-texture
               for why this is the card's own hover motif rather than invented
@@ -59,12 +66,22 @@ export default function HomePage() {
               on a 22px transform loop, and this is what keeps that loop from ever
               uncovering a bare edge — the Section's own overflow-hidden (see its
               className above) clips the 24px overhang back down to the hero's actual
-              bounds, so nothing here changes the hero's visible size. */}
+              bounds, so nothing here changes the hero's visible size.
+
+              WHITE at the mask's visible stop, not black — this is the actual reason
+              three opacity bumps in a row rendered nothing. mask-image gradients are
+              ambiguous between luminance masking (black = 0 luminance = fully masked
+              OUT) and alpha masking (black at alpha 1 = fully visible); which one a
+              browser applies depends on the mask source, so the value that means
+              "show" is not the same in both models. White is the one colour that
+              means "fully visible" under EITHER model — full luminance in one, full
+              alpha in the other — which is why it is the standard safe choice for a
+              mask's visible stop, not a stylistic pick. */}
           <div
             aria-hidden="true"
             className="hero-texture pointer-events-none absolute -inset-6 -z-10
-                       [mask-image:radial-gradient(circle_at_85%_45%,black,transparent_75%)]
-                       [-webkit-mask-image:radial-gradient(circle_at_85%_45%,black,transparent_75%)]"
+                       [mask-image:radial-gradient(circle_at_85%_45%,white,transparent_75%)]
+                       [-webkit-mask-image:radial-gradient(circle_at_85%_45%,white,transparent_75%)]"
           />
           <Stack gap="lg" className="max-w-prose">
             {/* Eyebrow is copper-700, not copper-500: at this size the accent tone is
