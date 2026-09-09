@@ -82,9 +82,11 @@ export default function CentresPage() {
 
             {/* min="xs" + vertical icon-over-label reads as a scannable specialty
                 index, applied to all three categories for one consistent grid
-                language down the page — even though only clinical has a supplied
-                icon today, so diagnostics/support tiles simply centre their label
-                with no icon slot, rather than looking like a different component. */}
+                language down the page. Almost every service has a supplied icon now
+                (see lib/centre-icons.ts) — the one gap is CT Scan / X-Ray, which
+                simply centres its label with no icon slot rather than a generic
+                stand-in, so a service without an asset yet reads as "not supplied",
+                not as a guess. */}
             <Grid min="xs" gap="sm" className="mt-6">
               {services.map((service) => {
                 const doctors = getDoctorsByDepartment(service.slug)
@@ -97,10 +99,6 @@ export default function CentresPage() {
                     className="card-geo flex min-h-[48px] flex-col items-center gap-3 p-5
                                text-center"
                   >
-                    {/* Only clinical departments have a supplied icon today — see
-                        lib/centre-icons.ts. Absent elsewhere rather than a generic
-                        stand-in, so a diagnostics or support tile without one reads
-                        as "not supplied yet", not as a guess. */}
                     {iconSrc ? (
                       <Image src={iconSrc} alt="" width={80} height={80} className="h-12 w-12" />
                     ) : null}
