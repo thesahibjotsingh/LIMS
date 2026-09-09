@@ -15,6 +15,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { DoctorCarousel } from '@/components/sections/DoctorCarousel'
+import { HeroDoctorSearch } from '@/components/sections/HeroDoctorSearch'
 import { Grid } from '@/components/primitives/Grid'
 import { Section } from '@/components/primitives/Section'
 import { Stack } from '@/components/primitives/Stack'
@@ -44,14 +45,70 @@ const HERO_INTRO =
   'on-site surgery, orthopaedics, and obstetrics & gynaecology, plus diagnostics, ' +
   'imaging, and pathology under the same roof.'
 
+/**
+ * The four quick actions, shared between the mobile icon-tile grid and the desktop
+ * card list below so the two never drift into different destinations or labels.
+ */
+const QUICK_ACTIONS = [
+  { label: 'Book an appointment', href: '/appointments', icon: 'book-an-appointment' },
+  { label: 'Find a doctor', href: '/doctors', icon: 'find-a-doctor' },
+  { label: 'Health check packages', href: '/health-packages', icon: 'health-check-packages' },
+  { label: 'Locations & directions', href: '/contact#locations', icon: 'locations-and-directions' },
+] as const
+
 export default function HomePage() {
   const clinicalServices = servicesByCategory('clinical')
 
   return (
     <>
       {/* -- Hero ---------------------------------------------------------- */}
-      <Section tone="tint" labelledBy="hero-heading">
-        <Stack gap="lg" className="max-w-prose">
+      {/* max-md:pt-0/pb-8 trims the tint band's own top-and-bottom rhythm on a
+          phone — the mobile hero is a photo flush under the sticky header, not
+          a padded band of text, so the section's usual breathing room would
+          just be a gap between the header and the image. */}
+      <Section tone="tint" labelledBy="hero-heading" className="max-md:pb-8 max-md:pt-0">
+        {/* MOBILE H1 — sr-only, not visible. The desktop Stack below carries the
+            real, visible h1#hero-heading; this one exists purely so a phone still
+            has exactly one real page heading once that Stack is hidden below md
+            (Google indexes mobile-first, and a screen reader's heading list should
+            not go empty just because the visual hero became a photo). md:hidden
+            drops it once the desktop heading takes over, so there is never a
+            duplicate. */}
+        <h1 className="sr-only md:hidden">{siteConfig.name}</h1>
+
+        {/* MOBILE HERO — photo + floating search, no visible text. The photo
+            breaks out to the full viewport width regardless of the container's
+            fluid gutter (left-1/2 + -translate-x-1/2 is what does that, not a
+            fixed negative margin, since px-gutter is a clamp() and has no single
+            pixel value to cancel). The search bar stays inside the container's
+            normal padding and rides up over the photo's bottom edge on a
+            negative margin, which is the "floating" read. */}
+        <div className="md:hidden">
+          <div className="relative left-1/2 w-screen -translate-x-1/2">
+            <div className="relative aspect-[16/9] w-full overflow-hidden">
+              <Image
+                src="/images/hero-doctor.jpg"
+                alt="A LIMS doctor reviewing a patient's chart on a tablet"
+                fill
+                sizes="100vw"
+                priority
+                className="object-cover"
+              />
+            </div>
+          </div>
+
+          <div className="relative z-10 -mt-7">
+            <HeroDoctorSearch />
+          </div>
+        </div>
+
+        {/* DESKTOP/TABLET HERO — unchanged text hero, eyebrow through CTAs.
+            max-md:hidden rather than the reverse (hidden md:flex) because Stack
+            already emits a bare `flex` unconditionally; adding an unprefixed
+            `hidden` alongside it would leave two same-specificity display
+            utilities fighting over source order instead of a variant cleanly
+            overriding the base. */}
+        <Stack gap="lg" className="max-w-prose max-md:hidden">
           {/* Eyebrow is copper-700, not copper-500: at this size the accent tone is
               2.95:1 and fails AA outright. The text-safe copper is the only one that
               may carry words. */}
@@ -97,20 +154,43 @@ export default function HomePage() {
           How can we help today?
         </h2>
         <span className="rule-accent mt-3" aria-hidden="true" />
-        {/* .card-geo turns its left edge teal and its shadow deeper on hover AND on
+
+        {/* MOBILE — a 4-column icon-tile grid: icon centred over a short label,
+            .card-geo's own copper accent bar carried over unchanged. A grid
+            reads as a scannable app-style menu at this width; the wide
+            icon-beside-text row below needs more horizontal room than a phone
+            has to spare, which is why it is the md+ layout instead. */}
+        <div className="mt-8 grid grid-cols-4 gap-3 md:hidden">
+          {QUICK_ACTIONS.map((action) => (
+            <Link
+              key={action.href}
+              href={action.href}
+              className="card-geo flex min-h-[44px] flex-col items-center gap-2
+                         px-2 py-4 text-center text-[0.6875rem] font-semibold
+                         leading-tight text-teal-800"
+            >
+              <Image
+                src={`/images/quick-actions/${action.icon}.png`}
+                alt=""
+                width={56}
+                height={56}
+                className="h-9 w-9 shrink-0"
+              />
+              {action.label}
+            </Link>
+          ))}
+        </div>
+
+        {/* DESKTOP/TABLET — the original wide icon-beside-text row. .card-geo
+            turns its left edge teal and its shadow deeper on hover AND on
             focus-within, so the affordance exists for someone tabbing through as
             well as for a mouse. Each tile carries LIMS's own icon (public/images/
             quick-actions) — supplied pre-built with its own light-teal circular
             backdrop, which is why there's no wrapping box here the way the old
             hand-drawn placeholders needed one: adding a second background behind an
             icon that already carries its own would double up. */}
-        <Grid min="sm" className="mt-8">
-          {[
-            { label: 'Book an appointment', href: '/appointments', icon: 'book-an-appointment' },
-            { label: 'Find a doctor', href: '/doctors', icon: 'find-a-doctor' },
-            { label: 'Health check packages', href: '/health-packages', icon: 'health-check-packages' },
-            { label: 'Locations & directions', href: '/contact#locations', icon: 'locations-and-directions' },
-          ].map((action) => (
+        <Grid min="sm" className="mt-8 max-md:hidden">
+          {QUICK_ACTIONS.map((action) => (
             <Link
               key={action.href}
               href={action.href}

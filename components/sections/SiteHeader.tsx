@@ -285,21 +285,19 @@ export function SiteHeader({
                 .btn-secondary is the same pair inverted. The white label never changes
                 colour, which is what lets the fill travel rather than fade — mid-sweep
                 the label sits on both fills at once, so one colour has to clear AA on
-                each. The working is in app/globals.css. */}
+                each. The working is in app/globals.css.
+
+                max-md:hidden, not shrunk to an icon: the mobile hero now carries its
+                own "Book an appointment" quick-action tile, and MobileTabBar's own
+                calendar icon rides the bottom of every page, so a third copy crammed
+                into this row would be redundant rather than useful — the row is
+                better spent as empty breathing room next to Emergency. */}
             <Link
               href="/appointments"
-              className="btn-primary inline-flex min-h-[48px] items-center gap-2 px-5
-                         font-semibold max-md:h-11 max-md:min-h-[44px] max-md:w-11
-                         max-md:justify-center max-md:gap-0 max-md:px-0"
+              className="btn-primary inline-flex min-h-[48px] items-center px-5
+                         font-semibold max-md:hidden"
             >
-              {/* Below md the row has no width left for a text CTA beside a
-                  now-circular Emergency control, so the label is replaced with a
-                  calendar glyph rather than shrunk further — "Book" at 8px was
-                  already the limit. The text survives for assistive tech via
-                  max-md:sr-only, so the accessible name never changes across the
-                  breakpoint. */}
-              <CalendarIcon aria-hidden="true" className="hidden h-5 w-5 shrink-0 max-md:block" />
-              <span className="max-md:sr-only">Book appointment</span>
+              Book appointment
             </Link>
           </div>
         </div>
@@ -364,25 +362,6 @@ export function SiteHeader({
         </div>
       </nav>
     </header>
-  )
-}
-
-function CalendarIcon({ className, ...props }: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      focusable="false"
-      viewBox="0 0 20 20"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.75"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-      {...props}
-    >
-      <rect x="3" y="4.5" width="14" height="12" rx="2" />
-      <path d="M3 8.5h14M7 3v3M13 3v3" />
-    </svg>
   )
 }
 
