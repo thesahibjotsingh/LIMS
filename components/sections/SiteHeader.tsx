@@ -70,6 +70,15 @@ export interface SiteHeaderProps {
 const LOGO_WIDTH = 220
 const LOGO_HEIGHT = 112
 
+// Intrinsic ratio of public/images/mobile-logo.png (1756x896 — near-identical to the
+// desktop mark above). Unlike lims-logo.png, the institution name is baked into this
+// file below the wordmark, so on a phone one image replaces the icon-plus-two-lines-
+// of-typeset-text lockup entirely. It renders small enough that the baked-in name is
+// decorative rather than legible — the accessible name still comes from the Link's own
+// aria-label, exactly as it does for the desktop mark below.
+const MOBILE_LOGO_WIDTH = 1756
+const MOBILE_LOGO_HEIGHT = 896
+
 // Intrinsic ratio of public/images/beacon.png (150x109). Declared so the browser
 // reserves the box on first paint — this sits above the fold on every route, and a
 // stale ratio here lands directly in CLS. It read 321x292 until the asset was
@@ -82,7 +91,7 @@ const BEACON_HEIGHT = 109
  * alignment with the lockup above it — the two are only aligned because they share this
  * exact string.
  */
-const PADDING_X = 'w-full px-6 lg:px-12'
+const PADDING_X = 'w-full px-4 sm:px-6 lg:px-12'
 
 /**
  * The nav tier's own px-3 on each item means the ribbon's visual edge sits 12px inside
@@ -106,7 +115,7 @@ export function SiteHeader({
         {/* justify-between with no container: the lockup is flush to the left screen
             padding and the actions flush to the right, with the gap between them
             absorbing whatever width is left. */}
-        <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3 py-3">
+        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-3 py-2 sm:gap-x-6 sm:py-3">
           {/*
             The lockup, from the official LIMS stationery: the mark, the institution
             name, then the tagline beneath it.
@@ -121,58 +130,65 @@ export function SiteHeader({
             aria-label={`${name}, ${city} — home`}
           >
             {/*
-              alt="" — the link's aria-label already names the destination, and a
-              duplicate alt makes a screen reader announce the institution twice.
-
-              priority: the logo is in the first viewport on every route. Without it
-              Next lazy-loads the image and the header visibly pops in.
+              MOBILE LOCKUP — one image, nothing else. Below md the icon-plus-two-
+              lines-of-text lockup to the right is the whole reason the header used to
+              wrap onto a second row, so it is replaced outright rather than shrunk:
+              this single file already carries the institution name (see the constant
+              above), so dropping the separate text costs nothing a patient can read
+              anyway at this size, and buys back the header's second row.
             */}
             <Image
-              src="/images/lims-logo.png"
+              src="/images/mobile-logo.png"
               alt=""
-              width={LOGO_WIDTH}
-              height={LOGO_HEIGHT}
+              width={MOBILE_LOGO_WIDTH}
+              height={MOBILE_LOGO_HEIGHT}
               priority
-              sizes="(min-width: 640px) 110px, 86px"
-              className="h-11 w-auto shrink-0 sm:h-14"
+              sizes="80px"
+              className="h-10 w-auto shrink-0 md:hidden"
             />
 
-            <span className="flex flex-col gap-0.5">
+            {/* DESKTOP/TABLET LOCKUP — unchanged: icon, name, tagline. */}
+            <span className="hidden min-w-0 items-center gap-3 md:flex">
               {/*
-                One line from 640px up. Below that it wraps naturally rather than
-                shrinking: the full name is 44 characters, and forcing it onto one line
-                at 360px means ~8px type. LIMS traffic skews to 360-412px Android, so
-                that trade would make the name unreadable for most of the audience.
-              */}
-              <span
-                className="text-[0.6875rem] font-semibold uppercase leading-[1.35]
-                           tracking-[0.06em] text-teal-800 sm:whitespace-nowrap
-                           sm:text-[0.8125rem]"
-              >
-                {name}, {city}
-              </span>
+                alt="" — the link's aria-label already names the destination, and a
+                duplicate alt makes a screen reader announce the institution twice.
 
-              {/*
-                Tagline. ink-600 is 7.12:1 — muted by weight and size, not by dropping
-                below AA. The separators are the copper micro-accent: copper-800 is
-                6.13:1 on white. aria-hidden so it reads as "Compassion Excellence Care"
-                rather than as punctuation.
+                priority: the logo is in the first viewport on every route. Without it
+                Next lazy-loads the image and the header visibly pops in.
               */}
-              <span
-                className="flex flex-wrap items-center gap-x-1.5 text-[0.5625rem]
-                           font-medium uppercase leading-[1.4] tracking-[0.18em]
-                           text-ink-600 sm:text-[0.625rem]"
-              >
-                {tagline.map((word, i) => (
-                  <span key={word} className="flex items-center gap-x-1.5">
-                    {i > 0 ? (
-                      <span aria-hidden="true" className="text-copper-800">
-                        &middot;
-                      </span>
-                    ) : null}
-                    {word}
-                  </span>
-                ))}
+              <Image
+                src="/images/lims-logo.png"
+                alt=""
+                width={LOGO_WIDTH}
+                height={LOGO_HEIGHT}
+                priority
+                sizes="110px"
+                className="h-14 w-auto shrink-0"
+              />
+
+              <span className="flex flex-col gap-0.5">
+                <span className="whitespace-nowrap text-[0.8125rem] font-semibold uppercase leading-[1.35] tracking-[0.06em] text-teal-800">
+                  {name}, {city}
+                </span>
+
+                {/*
+                  Tagline. ink-600 is 7.12:1 — muted by weight and size, not by
+                  dropping below AA. The separators are the copper micro-accent:
+                  copper-800 is 6.13:1 on white. aria-hidden so it reads as
+                  "Compassion Excellence Care" rather than as punctuation.
+                */}
+                <span className="flex flex-wrap items-center gap-x-1.5 text-[0.625rem] font-medium uppercase leading-[1.4] tracking-[0.18em] text-ink-600">
+                  {tagline.map((word, i) => (
+                    <span key={word} className="flex items-center gap-x-1.5">
+                      {i > 0 ? (
+                        <span aria-hidden="true" className="text-copper-800">
+                          &middot;
+                        </span>
+                      ) : null}
+                      {word}
+                    </span>
+                  ))}
+                </span>
               </span>
             </span>
           </Link>
@@ -184,7 +200,7 @@ export function SiteHeader({
               the row and the bar would grow wide enough to overlap both. See the note
               at the top of SiteSearch.tsx for the full reasoning, including why the
               mobile panel needs neither this nor that local anchor. */}
-          <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex items-center gap-1 sm:gap-3">
             {/*
               THE DRAWER TRIGGER LIVES HERE, NOT IN ITS OWN ROW BELOW TIER 2. It
               used to sit alone as a full-width "Menu" bar, which worked but cost
@@ -220,9 +236,11 @@ export function SiteHeader({
             <EmergencyCallButton
               phone={emergencyPhone}
               phoneDisplay={emergencyPhoneDisplay}
-              className="inline-flex min-h-[48px] items-center gap-2 rounded-full
-                         bg-beacon py-1 pl-2 pr-4 font-semibold text-white
-                         transition-colors ease-standard hover:bg-beacon-dark"
+              className="beacon-pill inline-flex min-h-[48px] items-center gap-2
+                         rounded-full bg-beacon py-1 pl-2 pr-4 font-semibold text-white
+                         transition-colors ease-standard hover:bg-beacon-dark
+                         max-md:h-11 max-md:min-h-[44px] max-md:w-11 max-md:justify-center
+                         max-md:gap-0 max-md:p-0"
             >
               {/*
                 NO CHIP BEHIND THE BEACON, and that is the point of matching the fill.
@@ -250,14 +268,17 @@ export function SiteHeader({
               />
 
               {/*
-                The visible label is "24×7" to match the compact mock. On its own that
-                does not say what the button does — a beacon glyph is the only cue, and
-                icon-alone identification on the site's highest-stakes control is not
-                something to leave to inference. The word is kept for assistive tech, so
-                the accessible name is "Emergency 24×7" rather than "24×7".
+                BELOW md THE WORD "24×7" IS GONE — .beacon-pill's own ring pulse (see
+                globals.css) is what says "this is live/urgent" in its place, so a
+                glancing patient reads it the way a beaming light on any other device
+                reads: on, and meant to be noticed. The word survives for assistive
+                tech at every width, so the accessible name stays "Emergency 24×7"
+                rather than shrinking to "Emergency" the moment the label hides.
               */}
               <span className="sr-only">Emergency</span>
-              <span aria-hidden="true">24&times;7</span>
+              <span aria-hidden="true" className="max-md:hidden">
+                24&times;7
+              </span>
             </EmergencyCallButton>
 
             {/* .btn-primary rests copper-700 and teal-800 sweeps in from the left;
@@ -267,15 +288,18 @@ export function SiteHeader({
                 each. The working is in app/globals.css. */}
             <Link
               href="/appointments"
-              className="btn-primary inline-flex min-h-[48px] items-center px-5
-                         font-semibold"
+              className="btn-primary inline-flex min-h-[48px] items-center gap-2 px-5
+                         font-semibold max-md:h-11 max-md:min-h-[44px] max-md:w-11
+                         max-md:justify-center max-md:gap-0 max-md:px-0"
             >
-              {/* Full label from `sm` up, where the row has room for it — see the
-                  note above NavDrawer for why the base case is one word. Both
-                  spans name the identical action, so nothing changes for anyone
-                  who resizes or zooms across the breakpoint mid-visit. */}
-              <span className="sm:hidden">Book</span>
-              <span className="hidden sm:inline">Book appointment</span>
+              {/* Below md the row has no width left for a text CTA beside a
+                  now-circular Emergency control, so the label is replaced with a
+                  calendar glyph rather than shrunk further — "Book" at 8px was
+                  already the limit. The text survives for assistive tech via
+                  max-md:sr-only, so the accessible name never changes across the
+                  breakpoint. */}
+              <CalendarIcon aria-hidden="true" className="hidden h-5 w-5 shrink-0 max-md:block" />
+              <span className="max-md:sr-only">Book appointment</span>
             </Link>
           </div>
         </div>
@@ -340,6 +364,25 @@ export function SiteHeader({
         </div>
       </nav>
     </header>
+  )
+}
+
+function CalendarIcon({ className, ...props }: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      focusable="false"
+      viewBox="0 0 20 20"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      {...props}
+    >
+      <rect x="3" y="4.5" width="14" height="12" rx="2" />
+      <path d="M3 8.5h14M7 3v3M13 3v3" />
+    </svg>
   )
 }
 
